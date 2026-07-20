@@ -16,7 +16,7 @@ const db = new Client({
 
 db.connect();
 
-// Funkcja inicjalizująca wszystkie tabele oraz konta domyślne
+// Funkcja inicjalizująca tabele oraz konta domyślne z uwzględnieniem roli
 async function inicjalizacjaBazy() {
     try {
         await db.query(`
@@ -41,18 +41,19 @@ async function inicjalizacjaBazy() {
                 id SERIAL PRIMARY KEY,
                 odznaka VARCHAR(50) UNIQUE NOT NULL,
                 stopien_nazwisko VARCHAR(100) NOT NULL,
-                haslo VARCHAR(100) NOT NULL
+                haslo VARCHAR(100) NOT NULL,
+                rola VARCHAR(50) DEFAULT 'user'
             );
         `);
 
-        // Automatyczne dodanie kont testowych, jeśli jeszcze ich nie ma
+        // Automatyczne dodanie kont testowych z odpowiednimi rolami
         await db.query(`
-            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) 
-            VALUES ('99', 'Komendant Główny', 'lspd')
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
+            VALUES ('99', 'Officer Smith', 'lspd', 'user')
             ON CONFLICT (odznaka) DO NOTHING;
 
-            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) 
-            VALUES ('admin', 'Administrator Systemu', 'admin123')
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
+            VALUES ('admin', 'Komendant Główny', 'admin123', 'admin')
             ON CONFLICT (odznaka) DO NOTHING;
         `);
 
@@ -62,23 +63,27 @@ async function inicjalizacjaBazy() {
     }
 }
 
-// Uruchomienie inicjalizacji bazy przed startem serwera
 inicjalizacjaBazy();
 
-// Logowanie funkcjonariusza
+// Logowanie funkcjonariusza (dostosowane do zmiennych badge i password wysyłanych przez script.js)
 app.post("/api/login", async (req, res) => {
-    const { odznaka, haslo } = req.body;
+    const { badge, password } = req.body;
     
-    console.log("Próba logowania dla odznaka:", odznaka);
+    console.log("Próba logowania dla odznaka:", badge);
 
     try {
         const query = "SELECT * FROM kadry WHERE odznaka = $1 AND haslo = $2";
-        const result = await db.query(query, [odznaka, haslo]);
+        const result = await db.query(query, [badge, password]);
 
         console.log("Znaleziono w bazie:", result.rows.length);
 
         if (result.rows.length > 0) {
-            res.json({ success: true, kadr: result.rows[0] });
+            const user = result.rows[0];
+            res.json({ 
+                success: true, 
+                officer: user.stopien_nazwisko, 
+                rola: user.rola 
+            });
         } else {
             res.status(401).json({ success: false, message: "Błędne dane logowania" });
         }
@@ -88,16 +93,16 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// Dodawanie nowego funkcjonariusza (Kadr) - Obsługa endpointu /api/officers
+// Dodawanie nowego funkcjonariusza (Kadr)
 app.post("/api/officers", async (req, res) => {
-    const { odznaka, stopien_nazwisko, haslo } = req.body;
+    const { badge, name, password } = req.body;
     try {
-        const query = "INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) VALUES ($1, $2, $3)";
-        await db.query(query, [odznaka, stopien_nazwisko, haslo]);
-        res.json({ success: true });
+        const query = "INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) VALUES ($1, $2, $3, 'user')";
+        await db.query(query, [badge, name, password]);
+        res.json({ success: true, message: "Pomyślnie dodano funkcjonariusza!" });
     } catch (err) {
         console.error("Błąd dodawania kadra:", err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ success: false, message: "Błąd bazy danych (prawdopodobnie odznaka już istnieje)." });
     }
 });
 
