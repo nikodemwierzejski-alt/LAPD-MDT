@@ -6,15 +6,13 @@ setInterval(() => {
     if (timeEl) timeEl.innerText = timeString;
 }, 1000);
 
-// Przełączanie wszystkich zakładek panelu bocznego
+// Przełączanie zakładek
 function zmienZakladke(nazwaZakladki, event) {
     if (event) event.preventDefault();
     
-    // Ukryj wszystkie zakładki
     document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-    // Pokaż wybraną
     const wybrana = document.getElementById(`tab-${nazwaZakladki}`);
     if (wybrana) wybrana.style.display = 'block';
 
@@ -24,6 +22,8 @@ function zmienZakladke(nazwaZakladki, event) {
 
     if (nazwaZakladki === 'citizens') {
         szukajObywatela();
+    } else if (nazwaZakladki === 'reports') {
+        pobierzRaporty();
     }
 }
 
@@ -45,14 +45,12 @@ async function zaloguj() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-system').style.display = 'flex';
             
-            // Ustawienia danych funkcjonariusza w nagłówku
             document.getElementById('officer-session-name').innerText = data.officer;
             
-            // Określenie roli i zapamiętanie w localStorage
             const rolaUzytkownika = (badge === 'admin' || data.rola === 'admin') ? 'admin' : (data.rola || 'user');
-            localStorage.setItem('userRola', rolaUzytkownika);
+            localStorage.setItem('userRola', ropaUzytkownika = rolaUzytkownika);
+            localStorage.setItem('officerName', data.officer);
 
-            // Pokazywanie lub ukrywanie przycisku/zakładki Admin w menu bocznym
             const navAdmin = document.getElementById('nav-admin');
             if (rolaUzytkownika === 'admin') {
                 navAdmin.style.display = 'block';
@@ -71,6 +69,7 @@ async function zaloguj() {
 
 function wyloguj() {
     localStorage.removeItem('userRola');
+    localStorage.removeItem('officerName');
     location.reload();
 }
 
@@ -88,6 +87,7 @@ async function sprawdzStatus() {
     }
 }
 
+// --- MODUŁ OBYWATELI ---
 async function szukajObywatela() {
     const query = document.getElementById('searchInput').value;
     const wynikiDiv = document.getElementById('wynikiWyszukiwania');
@@ -202,6 +202,101 @@ async function dodajObywatela(event) {
     }
 }
 
+// --- MODUŁ RAPORTÓW (NOWOŚĆ) ---
+async function utworzRaport(event) {
+    event.preventDefault();
+    
+    const tytul = document.getElementById('raportTytul').value.trim();
+    const kategoria = document.getElementById('raportKategoria').value;
+    const obywatel = document.getElementById('raportObywatel').value.trim() || 'Brak';
+    const opis = document.getElementById('raportOpis').value.trim();
+    const autor = localStorage.getItem('officerName') || 'Oficer LSPD';
+    const data = new Date().toLocaleString('pl-PL');
+
+    const nowyRaport = { tytul, kategoria, obywatel, opis, autor, data };
+
+    try {
+        const res = await fetch('/api/raporty', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nowyRaport)
+        });
+
+        if (res.ok) {
+            document.getElementById('dodajRaportForm').reset();
+            alert('Raport został pomyślnie zapisany w bazie!');
+            pobierzRaporty();
+        } else {
+            // Fallback lokalny jeśli backend nie ma jeszcze endpointu raportów
+            zapiszRaportLokalnie(nowyRaport);
+        }
+    } catch (e) {
+        zapiszRaportLokalnie(nowyRaport);
+    }
+}
+
+function zapiszRaportLokalnie(raport) {
+    let raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
+    raport.id = Date.now();
+    raporty.unshift(raport);
+    localStorage.setItem('mdt_raporty', JSON.stringify(raporty));
+    document.getElementById('dodajRaportForm').reset();
+    alert('Raport zapisany lokalnie w terminalu!');
+    pobierzRaporty();
+}
+
+async function pobierzRaporty() {
+    const listaDiv = document.getElementById('listaRaportow');
+    const szukajVal = (document.getElementById('searchRaportInput')?.value || '').toLowerCase();
+    
+    listaDiv.innerHTML = 'Ładowanie raportów...';
+
+    try {
+        const res = await fetch('/api/raporty');
+        if (res.ok) {
+            const raporty = await res.json();
+            wyswietlListeRaportow(raporty, szukajVal);
+            return;
+        }
+    } catch (e) {}
+
+    // Pobranie z localStorage w przypadku braku dedykowanej tabeli SQL
+    let raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
+    if (raporty.length === 0) {
+        raporty = [
+            { id: 1, tytul: "Zatrzymanie pojazdu za przekroczenie prędkości", kategoria: "Mandat", obywatel: "Jan Kowalski", opis: "Kierowca poruszał się 90mph w strefie 45mph.", autor: "Lukas Weber", data: "19.04.2026, 22:15:00" }
+        ];
+        localStorage.setItem('mdt_raporty', JSON.stringify(raporty));
+    }
+    wyswietlListeRaportow(raporty, szukajVal);
+}
+
+function wyswietlListeRaportow(raporty, filtr) {
+    const listaDiv = document.getElementById('listaRaportow');
+    
+    const przefiltrowane = raporty.filter(r => 
+        r.tytul.toLowerCase().includes(filtr) || 
+        r.obywatel.toLowerCase().includes(filtr) || 
+        r.autor.toLowerCase().includes(filtr)
+    );
+
+    if (przefiltrowane.length === 0) {
+        listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px;">Brak raportów spełniających kryteria.</p>';
+        return;
+    }
+
+    listaDiv.innerHTML = przefiltrowane.map(r => `
+        <div class="report-card">
+            <span class="report-tag">${r.kategoria}</span>
+            <h3>${r.tytul}</h3>
+            <p><strong>Podejrzany:</strong> ${r.obywatel}</p>
+            <p><strong>Opis:</strong> ${r.opis}</p>
+            <p style="font-size:11px; color:#64748b; margin-top:8px;">Autor: ${r.autor} | ${r.data}</p>
+        </div>
+    `).join('');
+}
+
+// --- MODUŁ ADMINISTRACYJNY ---
 async function dodajFunkcjonariusza(event) {
     event.preventDefault();
     
