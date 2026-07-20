@@ -41,15 +41,20 @@ const funkcjonariusze = {
 };
 
 // Logowanie
-app.post("/api/login", (req, res) => {
-    const { badge, password } = req.body;
-    if (funkcjonariusze[badge] && funkcjonariusze[badge].haslo === password) {
-        res.json({ success: true, officer: funkcjonariusze[badge].imie, rola: funkcjonariusze[badge].rola });
-    } else {
-        res.status(401).json({ success: false, message: "Błędne dane!" });
+app.post("/api/officers", async (req, res) => {
+    // Dopasuj poniższe nazwy zmiennych do tego, co wysyłasz ze skryptu JS
+    const { odznaka, stopien_nazwisko, haslo } = req.body;
+
+    try {
+        const query = "INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) VALUES ($1, $2, $3)";
+        await db.query(query, [odznaka, stopien_nazwisko, haslo]);
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Błąd dodawania kadra:", err);
+        res.status(500).send(err.message);
     }
 });
-
 // Pobieranie obywateli z ich mandatami
 app.get("/api/obywatele", async (req, res) => {
     const search = req.query.search || "";
