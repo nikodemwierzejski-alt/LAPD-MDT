@@ -102,20 +102,38 @@ async function przelaczPoszukiwany(id, nowyStatus) {
 }
 
 async function wystawMandat(obywatel_id) {
-    const powod = document.getElementById(`powod-${obywatel_id}`).value;
-    const kwota = document.getElementById(`kwota-${obywatel_id}`).value;
+    const powodInput = document.getElementById(`powod-${obywatel_id}`);
+    const kwotaInput = document.getElementById(`kwota-${obywatel_id}`);
+
+    const powod = powodInput.value;
+    const kwota = kwotaInput.value;
+    
+    // Automatycznie generowana aktualna data w formacie np. 21.07.2026
     const data = new Date().toLocaleDateString('pl-PL');
 
-    if(!powod || !kwota) return alert('Uzupełnij powód i kwotę mandatu!');
+    if (!powod || !kwota) {
+        alert('Uzupełnij powód i kwotę mandatu!');
+        return;
+    }
 
-    await fetch('/api/mandaty', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ obywatel_id, powod, kwota: parseInt(kwota), data })
-    });
-    szukajObywatela();
+    try {
+        const res = await fetch('/api/mandaty', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ obywatel_id, powod, kwota: parseInt(kwota), data })
+        });
+
+        if (res.ok) {
+            powodInput.value = '';
+            kwotaInput.value = '';
+            szukajObywatela();
+        } else {
+            alert('Błąd podczas zapisywania mandatu.');
+        }
+    } catch (err) {
+        console.error('Błąd:', err);
+    }
 }
-
 async function dodajObywatela(event) {
     event.preventDefault();
     const dane = {
