@@ -54,11 +54,14 @@ app.post("/api/login", (req, res) => {
 app.get("/api/obywatele", async (req, res) => {
     const search = req.query.search || "";
     try {
-        const result = await db.query(
-            "SELECT o.*, json_agg(m.*) FILTER (WHERE m.id IS NOT NULL) as mandaty FROM obywatele o LEFT JOIN mandaty m ON o.id = m.obywatel_id WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1 GROUP BY o.id",
-            [`%${search}%`]
+       const result = await db.query(
+            `SELECT o.*, COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]'::json) as mandaty 
+             FROM obywatele o 
+             LEFT JOIN mandaty m ON o.id = m.obywatel_id 
+             WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1 
+             GROUP BY o.id`,
+     ['%' + search + '%']
         );
-        res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
