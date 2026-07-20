@@ -43,10 +43,14 @@ const funkcjonariusze = {
 // Logowanie
 app.post("/api/login", async (req, res) => {
     const { odznaka, haslo } = req.body;
+    
+    console.log("Próba logowania dla odznaka:", odznaka);
 
     try {
         const query = "SELECT * FROM kadry WHERE odznaka = $1 AND haslo = $2";
         const result = await db.query(query, [odznaka, haslo]);
+
+        console.log("Znaleziono w bazie:", result.rows.length);
 
         if (result.rows.length > 0) {
             res.json({ success: true, kadr: result.rows[0] });
