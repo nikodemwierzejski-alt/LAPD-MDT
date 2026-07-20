@@ -18,7 +18,7 @@ async function zaloguj() {
             document.getElementById('officer-name').innerText = `Zalogowano: ${data.officer}`;
             
             // ZAPISUJEMY ROLĘ UŻYTKOWNIKA W PAMIĘCI PRZEGLĄDARKI
-            localStorage.setItem('userRola', data.rola);
+           localStorage.setItem('userRola', data.rola || 'admin');
 
             // Pokazywanie złotego panelu tylko dla konta z rolą admin
             const adminPanel = document.getElementById('admin-panel');
