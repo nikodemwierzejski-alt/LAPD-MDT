@@ -12,7 +12,7 @@ async function zaloguj() {
         });
         const data = await res.json();
 
-     if (data.success) {
+        if (data.success) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-system').style.display = 'block';
             document.getElementById('officer-name').innerText = `Zalogowano: ${data.officer}`;
@@ -30,7 +30,14 @@ async function zaloguj() {
             
             sprawdzStatus();
             szukajObywatela(); // Automatyczne załadowanie listy po zalogowaniu
+        } else {
+            errorDiv.innerText = data.message;
         }
+    } catch (e) {
+        errorDiv.innerText = "Błąd połączenia z serwerem.";
+    }
+}
+
 async function sprawdzStatus() {
     try {
         const res = await fetch('/api/status');
@@ -56,34 +63,39 @@ async function szukajObywatela() {
             wynikiDiv.innerHTML = '<p>Brak wyników.</p>';
             return;
         }
-// Zmieniamy z: wynikiDiv.innerHTML = obywatele.map(...)
-// Na zabezpieczone:
-wynikiDiv.innerHTML = Array.isArray(obywatele) ? obywatele.map(o => `
-        <div class="citizen-card ${o.poszukiwany ? 'wanted-border' : ''}">
-            <h3>${o.imie} ${o.nazwisko}</h3>
-            <p><strong>Urodzony:</strong> ${o.data_urodzenia || 'Brak'}</p>
-            <p><strong>Status:</strong> ${o.poszukiwany ? '<span class="pulse-wanted">🔴 POSZUKIWANY</span>' : '🟢 Czysty'}</p>
-            <p><strong>Uwagi:</strong> ${o.uwagi || 'Brak wpisów'}</p>
-            
-            <div class="action-buttons">
-                <button class="btn-small btn-warn" onclick="przelaczPoszukiwany(${o.id}, ${o.poszukiwany ? 0 : 1})">
-                    ${o.poszukiwany ? 'Odwołaj poszukiwania' : 'Oznacz jako Poszukiwany'}
-                </button>
-            </div>
 
-            <div class="mandates-section">
-                ${(o.mandaty && o.mandaty.length > 0) 
-                    ? o.mandaty.map(m => `<div class="mandate-item">⚠️ ${m.data} - ${m.powod} [${m.kwota}$]</div>`).join('') 
-                    : '<p style="font-size:12px; color:#64748b;">Czyste konto</p>'}
-            </div>
+        wynikiDiv.innerHTML = Array.isArray(obywatele) ? obywatele.map(o => `
+            <div class="citizen-card ${o.poszukiwany ? 'wanted-border' : ''}">
+                <h3>${o.imie} ${o.nazwisko}</h3>
+                <p><strong>Urodzony:</strong> ${o.data_urodzenia || 'Brak'}</p>
+                <p><strong>Status:</strong> ${o.poszukiwany ? '<span class="pulse-wanted">🔴 POSZUKIWANY</span>' : '🟢 Czysty'}</p>
+                <p><strong>Uwagi:</strong> ${o.uwagi || 'Brak wpisów'}</p>
+                
+                <div class="action-buttons">
+                    <button class="btn-small btn-warn" onclick="przelaczPoszukiwany(${o.id}, ${o.poszukiwany ? 0 : 1})">
+                        ${o.poszukiwany ? 'Odwołaj poszukiwania' : 'Oznacz jako Poszukiwany'}
+                    </button>
+                    
+                    ${localStorage.getItem('userRola') === 'admin' ? `
+                        <button class="btn-small" style="background-color: #dc2626; color: white;" onclick="usunObywatela(${o.id})">
+                            🗑️ Usuń obywatela
+                        </button>
+                    ` : ''}
+                </div>
 
-            <div class="add-mandate-box">
-                <input type="text" id="powod-${o.id}" placeholder="Powód mandatu" style="font-size:12px; padding:5px; width:60%;">
-                <input type="number" id="kwota-${o.id}" placeholder="Kwota $" style="font-size:12px; padding:5px; width:25%;">
-                <button class="btn-small" onclick="wystawMandat(${o.id})">+</button>
+                <div class="mandates-section">
+                    ${(o.mandaty && o.mandaty.length > 0) 
+                        ? o.mandaty.map(m => `<div class="mandate-item">⚠️ ${m.data} - ${m.powod} [${m.kwota}$]</div>`).join('') 
+                        : '<p style="font-size:12px; color:#64748b;">Czyste konto</p>'}
+                </div>
+
+                <div class="add-mandate-box">
+                    <input type="text" id="powod-${o.id}" placeholder="Powód mandatu" style="font-size:12px; padding:5px; width:60%;">
+                    <input type="number" id="kwota-${o.id}" placeholder="Kwota $" style="font-size:12px; padding:5px; width:25%;">
+                    <button class="btn-small" onclick="wystawMandat(${o.id})">+</button>
+                </div>
             </div>
-        </div>
-    `).join('') : '<p>Brak wyników.</p>';
+        `).join('') : '<p>Brak wyników.</p>';
     } catch (err) {
         wynikiDiv.innerHTML = '<p style="color:red;">Błąd bazy danych.</p>';
     }
@@ -91,11 +103,11 @@ wynikiDiv.innerHTML = Array.isArray(obywatele) ? obywatele.map(o => `
 
 async function przelaczPoszukiwany(id, nowyStatus) {
     await fetch(`/api/obywatele/${id}/poszukiwany`, {
-        method: 'POST', // Musi być POST, skoro taki adres dodaliśmy na serwerze
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ poszukiwany: nowyStatus })
     });
-    szukajObywatela(); // Odświeża listę, żeby status zmienił się na ekranie
+    szukajObywatela();
 }
 
 async function wystawMandat(obywatel_id) {
@@ -105,7 +117,6 @@ async function wystawMandat(obywatel_id) {
     const powod = powodInput.value;
     const kwota = kwotaInput.value;
     
-    // Automatycznie generowana aktualna data w formacie np. 21.07.2026
     const data = new Date().toLocaleDateString('pl-PL');
 
     if (!powod || !kwota) {
@@ -131,6 +142,7 @@ async function wystawMandat(obywatel_id) {
         console.error('Błąd:', err);
     }
 }
+
 async function dodajObywatela(event) {
     event.preventDefault();
     const dane = {
@@ -149,24 +161,21 @@ async function dodajObywatela(event) {
     if (res.ok) {
         document.getElementById('dodajObywatelaForm').reset();
         alert('Dodano do systemu LSPD!');
-        // DODAJ TĘ LINIKĘ PONIŻEJ:
         szukajObywatela(); 
     }
 }
+
 // Funkcja obsługująca dodawanie funkcjonariusza w panelu administratora
 async function dodajFunkcjonariusza(event) {
-    event.preventDefault(); // Zapobiega odświeżeniu strony
+    event.preventDefault();
     
-    // Pobieramy wartości z formularza
     const badge = document.getElementById('activeBadge').value.trim();
     const name = document.getElementById('activeName').value.trim();
     const password = document.getElementById('activePassword').value;
     const messageDiv = document.getElementById('admin-message');
     
     try {
-        // Uwaga: Endpoint musi być taki sam jak w server.js
-        // Jeśli w server.js użyłeś /api/funkcionariusze, to tutaj też musi być tak samo!
-    const res = await fetch('/api/officers', {
+        const res = await fetch('/api/officers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ badge, name, password })
@@ -175,15 +184,36 @@ async function dodajFunkcjonariusza(event) {
         const data = await res.json();
         
         if (data.success) {
-            messageDiv.style.color = '#00ff00'; // Kolor zielony dla sukcesu
+            messageDiv.style.color = '#00ff00';
             messageDiv.innerText = data.message;
-            document.getElementById('dodajFunkcjonariuszaForm').reset(); // Czyścimy formularz
+            document.getElementById('dodajFunkcjonariuszaForm').reset();
         } else {
-            messageDiv.style.color = '#ff0000'; // Kolor czerwony dla błędu
+            messageDiv.style.color = '#ff0000';
             messageDiv.innerText = data.message;
         }
     } catch (e) {
         messageDiv.style.color = '#ff0000';
         messageDiv.innerText = "Błąd połączenia z serwerem.";
+    }
+}
+
+// Nowa funkcja usuwania obywatela (tylko dla admina)
+async function usunObywatela(id) {
+    if (!confirm("Czy na pewno chcesz trwale usunąć tego obywatela z bazy?")) return;
+
+    try {
+        const res = await fetch(`/api/obywatele/${id}`, {
+            method: 'DELETE'
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            szukajObywatela();
+        } else {
+            alert('Błąd podczas usuwania obywatela.');
+        }
+    } catch (err) {
+        console.error('Błąd:', err);
+        alert('Błąd połączenia z serwerem.');
     }
 }
