@@ -16,31 +16,56 @@ const db = new Client({
 
 db.connect();
 
-async function initDb() {
-    await db.query(`CREATE TABLE IF NOT EXISTS obywatele (
-        id SERIAL PRIMARY KEY,
-        imie TEXT,
-        nazwisko TEXT,
-        data_urodzenia TEXT,
-        poszukiwany INTEGER DEFAULT 0,
-        uwagi TEXT
-    )`);
-    await db.query(`CREATE TABLE IF NOT EXISTS mandaty (
-        id SERIAL PRIMARY KEY,
-        obywatel_id INTEGER REFERENCES obywatele(id) ON DELETE CASCADE,
-        powod TEXT,
-        kwota INTEGER,
-        data TEXT
-    )`);
+// Funkcja inicjalizująca wszystkie tabele oraz konta domyślne
+async function inicjalizacjaBazy() {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS obywatele (
+                id SERIAL PRIMARY KEY,
+                imie TEXT,
+                nazwisko TEXT,
+                data_urodzenia TEXT,
+                poszukiwany INTEGER DEFAULT 0,
+                uwagi TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS mandaty (
+                id SERIAL PRIMARY KEY,
+                obywatel_id INTEGER REFERENCES obywatele(id) ON DELETE CASCADE,
+                powod TEXT,
+                kwota INTEGER,
+                data TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS kadry (
+                id SERIAL PRIMARY KEY,
+                odznaka VARCHAR(50) UNIQUE NOT NULL,
+                stopien_nazwisko VARCHAR(100) NOT NULL,
+                haslo VARCHAR(100) NOT NULL
+            );
+        `);
+
+        // Automatyczne dodanie kont testowych, jeśli jeszcze ich nie ma
+        await db.query(`
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) 
+            VALUES ('99', 'Komendant Główny', 'lspd')
+            ON CONFLICT (odznaka) DO NOTHING;
+
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) 
+            VALUES ('admin', 'Administrator Systemu', 'admin123')
+            ON CONFLICT (odznaka) DO NOTHING;
+        `);
+
+        console.log("Tabele w bazie danych zostały sprawdzone/utworzone pomyślnie.");
+    } catch (err) {
+        console.error("Błąd podczas inicjalizacji bazy danych:", err);
+    }
 }
-initDb();
 
-const funkcjonariusze = {
-    "99": { haslo: "lspd", imie: "Officer Smith", rola: "user" },
-    "admin": { haslo: "admin123", imie: "Komendant Główny", rola: "admin" }
-};
+// Uruchomienie inicjalizacji bazy przed startem serwera
+inicjalizacjaBazy();
 
-// Logowanie
+// Logowanie funkcjonariusza
 app.post("/api/login", async (req, res) => {
     const { odznaka, haslo } = req.body;
     
@@ -62,6 +87,20 @@ app.post("/api/login", async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
+// Dodawanie nowego funkcjonariusza (Kadr) - Obsługa endpointu /api/officers
+app.post("/api/officers", async (req, res) => {
+    const { odznaka, stopien_nazwisko, haslo } = req.body;
+    try {
+        const query = "INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) VALUES ($1, $2, $3)";
+        await db.query(query, [odznaka, stopien_nazwisko, haslo]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Błąd dodawania kadra:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Pobieranie obywateli z ich mandatami
 app.get("/api/obywatele", async (req, res) => {
     const search = req.query.search || "";
@@ -69,7 +108,6 @@ app.get("/api/obywatele", async (req, res) => {
         let query, params;
 
         if (search.trim() === "") {
-            // Pobieramy obywateli wraz z ich mandatami
             query = `
                 SELECT o.*, 
                        COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]') AS mandaty
@@ -110,6 +148,7 @@ app.get("/api/obywatele", async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
 // Dodawanie obywatela
 app.post("/api/obywatele", async (req, res) => {
     const { imie, nazwisko, data_urodzenia, uwagi } = req.body;
@@ -131,13 +170,15 @@ app.post("/api/mandaty", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // Endpoint sprawdzający status
 app.get("/api/status", (req, res) => {
     res.json({ status: "ONLINE", system: "LAPD-MDT" });
 });
+
 app.post("/api/obywatele/:id/poszukiwany", async (req, res) => {
     const { id } = req.params;
-    const { poszukiwany } = req.body; // To jest 0 lub 1 wysyłane z przycisku
+    const { poszukiwany } = req.body;
 
     try {
         const query = "UPDATE obywatele SET poszukiwany = $1 WHERE id = $2";
@@ -149,50 +190,7 @@ app.post("/api/obywatele/:id/poszukiwany", async (req, res) => {
         res.status(500).send("Błąd serwera");
     }
 });
-async function inicjalizacjaBazy() {
-    try {
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS obywatele (
-                id SERIAL PRIMARY KEY,
-                imie VARCHAR(100),
-                nazwisko VARCHAR(100),
-                data_urodzenia VARCHAR(50),
-                poszukiwany INT DEFAULT 0,
-                uwagi TEXT
-            );
 
-            CREATE TABLE IF NOT EXISTS mandaty (
-                id SERIAL PRIMARY KEY,
-                obywatel_id INT REFERENCES obywatele(id) ON DELETE CASCADE,
-                powod TEXT,
-                kwota INT,
-                data VARCHAR(50)
-            );
-
-            CREATE TABLE IF NOT EXISTS kadry (
-                id SERIAL PRIMARY KEY,
-                odznaka VARCHAR(50) UNIQUE NOT NULL,
-                stopien_nazwisko VARCHAR(100) NOT NULL,
-                haslo VARCHAR(100) NOT NULL
-            );
-        `);
-
-        // Automatyczne dodanie konta testowego, jeśli jeszcze go nie ma
-        await db.query(`
-            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) 
-            VALUES ('99', 'Komendant Główny', 'lspd')
-            ON CONFLICT (odznaka) DO NOTHING;
-        `);
-
-        console.log("Tabele w bazie danych zostały sprawdzone/utworzone pomyślnie.");
-    } catch (err) {
-        console.error("Błąd podczas inicjalizacji bazy danych:", err);
-    }
-}
-
-// Wywołaj tę funkcję tuż przed uruchomieniem serwera
-inicjalizacjaBazy();
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serwer działa na http://localhost:${PORT}`);
 });
-
