@@ -57,20 +57,36 @@ app.get("/api/obywatele", async (req, res) => {
         let query, params;
 
         if (search.trim() === "") {
-            // Jeśli puste pole, zwracamy wszystkich
-            query = "SELECT * FROM obywatele";
+            // Pobieramy obywateli wraz z ich mandatami
+            query = `
+                SELECT o.*, 
+                       COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]') AS mandaty
+                FROM obywatele o
+                LEFT JOIN mandaty m ON m.obywatel_id = o.id
+                GROUP BY o.id
+            `;
             params = [];
         } else {
-            // Dzielimy wpisany tekst na słowa po spacji
             const parts = search.trim().split(" ");
-            
             if (parts.length > 1) {
-                // Jeśli wpisano imię i nazwisko (np. Jan Kowalski)
-                query = "SELECT * FROM obywatele WHERE (imie ILIKE $1 AND nazwisko ILIKE $2) OR (imie ILIKE $2 AND nazwisko ILIKE $1)";
+                query = `
+                    SELECT o.*, 
+                           COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]') AS mandaty
+                    FROM obywatele o
+                    LEFT JOIN mandaty m ON m.obywatel_id = o.id
+                    WHERE (o.imie ILIKE $1 AND o.nazwisko ILIKE $2) OR (o.imie ILIKE $2 AND o.nazwisko ILIKE $1)
+                    GROUP BY o.id
+                `;
                 params = [`%${parts[0]}%`, `%${parts[1]}%`];
             } else {
-                // Jeśli wpisano tylko jedno słowo (np. Jan)
-                query = "SELECT * FROM obywatele WHERE imie ILIKE $1 OR nazwisko ILIKE $1";
+                query = `
+                    SELECT o.*, 
+                           COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]') AS mandaty
+                    FROM obywatele o
+                    LEFT JOIN mandaty m ON m.obywatel_id = o.id
+                    WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1
+                    GROUP BY o.id
+                `;
                 params = [`%${search}%`];
             }
         }
