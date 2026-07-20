@@ -86,4 +86,7 @@ app.post("/api/mandaty", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Serwer działa na http://localhost:${PORT}`);
+});
 
