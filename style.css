@@ -82,7 +82,7 @@ body {
     height: 100vh;
 }
 
-/* SIDEBAR Z PRZEWIJANIEM DLA DUŻEJ ILOŚCI KATEGORII */
+/* SIDEBAR */
 .sidebar {
     width: 240px;
     background: #0d1322;
@@ -249,10 +249,10 @@ body {
     margin-top: 10px;
 }
 
-/* CITIZENS LAYOUT */
+/* CITIZENS / REPORTS GRID */
 .citizens-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 25px;
 }
 
@@ -318,7 +318,7 @@ body {
     margin-bottom: 5px;
 }
 
-.form-group input, .form-group textarea {
+.form-group input, .form-group textarea, .form-control-select {
     width: 100%;
     padding: 10px;
     background: #1f2937;
@@ -327,8 +327,12 @@ body {
     color: white;
 }
 
+.form-control-select {
+    cursor: pointer;
+}
+
 .form-group textarea {
-    height: 80px;
+    height: 90px;
     resize: vertical;
 }
 
@@ -337,16 +341,16 @@ body {
     font-size: 13px;
 }
 
-/* KARTY OBYWATELI I WYNIKI */
+/* KARTY WYNIKÓW I RAPORTÓW */
 .results-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    max-height: 60vh;
+    max-height: 55vh;
     overflow-y: auto;
 }
 
-.citizen-card {
+.citizen-card, .report-card {
     background: #1a2234;
     border: 1px solid #2d3748;
     border-radius: 8px;
@@ -357,16 +361,26 @@ body {
     border-left: 4px solid #ef4444;
 }
 
-.citizen-card h3 {
+.citizen-card h3, .report-card h3 {
     font-size: 16px;
     color: #f8fafc;
     margin-bottom: 5px;
 }
 
-.citizen-card p {
+.citizen-card p, .report-card p {
     font-size: 13px;
     color: #94a3b8;
     margin-bottom: 4px;
+}
+
+.report-tag {
+    display: inline-block;
+    background: #0369a1;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-bottom: 8px;
 }
 
 .pulse-wanted {
