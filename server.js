@@ -52,20 +52,33 @@ app.post("/api/login", (req, res) => {
 
 // Pobieranie obywateli z ich mandatami
 app.get("/api/obywatele", async (req, res) => {
-    // Pobieramy szukaną frazę
     const search = req.query.search || "";
-    
     try {
-        // Tworzymy wzorzec dla SQL (np. "%Jan%")
-        const searchPattern = `%${search}%`;
-        
-        // Wykonujemy zapytanie używając jednego parametru dla obu kolumn
-        const query = "SELECT * FROM obywatele WHERE imie ILIKE $1 OR nazwisko ILIKE $1";
-        const result = await db.query(query, [searchPattern]);
-        
+        let query, params;
+
+        if (search.trim() === "") {
+            // Jeśli puste pole, zwracamy wszystkich
+            query = "SELECT * FROM obywatele";
+            params = [];
+        } else {
+            // Dzielimy wpisany tekst na słowa po spacji
+            const parts = search.trim().split(" ");
+            
+            if (parts.length > 1) {
+                // Jeśli wpisano imię i nazwisko (np. Jan Kowalski)
+                query = "SELECT * FROM obywatele WHERE (imie ILIKE $1 AND nazwisko ILIKE $2) OR (imie ILIKE $2 AND nazwisko ILIKE $1)";
+                params = [`%${parts[0]}%`, `%${parts[1]}%`];
+            } else {
+                // Jeśli wpisano tylko jedno słowo (np. Jan)
+                query = "SELECT * FROM obywatele WHERE imie ILIKE $1 OR nazwisko ILIKE $1";
+                params = [`%${search}%`];
+            }
+        }
+
+        const result = await db.query(query, params);
         res.json(result.rows);
     } catch (err) {
-        console.error("Błąd SQL:", err); // To pokaże błąd w logach Render
+        console.error("Błąd SQL:", err);
         res.status(500).send(err.message);
     }
 });
