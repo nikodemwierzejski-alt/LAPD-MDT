@@ -107,6 +107,20 @@ app.post("/api/mandaty", async (req, res) => {
 app.get("/api/status", (req, res) => {
     res.json({ status: "ONLINE", system: "LAPD-MDT" });
 });
+app.post("/api/obywatele/:id/poszukiwany", async (req, res) => {
+    const { id } = req.params;
+    const { poszukiwany } = req.body; // To jest 0 lub 1 wysyłane z przycisku
+
+    try {
+        const query = "UPDATE obywatele SET poszukiwany = $1 WHERE id = $2";
+        await db.query(query, [poszukiwany, id]);
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Błąd aktualizacji statusu:", err);
+        res.status(500).send("Błąd serwera");
+    }
+});
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serwer działa na http://localhost:${PORT}`);
 });
