@@ -4,6 +4,7 @@ const { Client } = require("pg");
 const cors = require("cors");
 
 const app = express();
+app.use(express.static('public'));S
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
@@ -85,5 +86,4 @@ app.post("/api/mandaty", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-app.listen(PORT, () => console.log(`Serwer działa na http://localhost:${PORT}`));
+[https://lapd-mdt-5y78.onrender.com/api/obywatele](https://lapd-mdt-5y78.onrender.com/api/obywatele)
