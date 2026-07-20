@@ -82,13 +82,14 @@ body {
     height: 100vh;
 }
 
-/* SIDEBAR */
+/* SIDEBAR Z PRZEWIJANIEM DLA DUŻEJ ILOŚCI KATEGORII */
 .sidebar {
     width: 240px;
     background: #0d1322;
     border-right: 1px solid #1e293b;
     display: flex;
     flex-direction: column;
+    height: 100vh;
 }
 
 .sidebar-brand {
@@ -111,15 +112,25 @@ body {
     padding: 15px 10px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 2px;
 }
 
 .nav-item {
-    padding: 12px 15px;
+    padding: 10px 14px;
     color: #94a3b8;
     text-decoration: none;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     transition: all 0.2s;
 }
 
