@@ -24,12 +24,13 @@ function zmienZakladke(nazwaZakladki, event) {
         szukajObywatela();
     } else if (nazwaZakladki === 'vehicles') {
         pobierzPojazdy();
+        aktualizujPodgladAuta();
     } else if (nazwaZakladki === 'reports') {
         pobierzRaporty();
     }
 }
 
-// System Logowania (NAPRAWIONY - działa zawsze, lokalnie i z backendem)
+// System Logowania
 async function zaloguj() {
     const badge = document.getElementById('badgeInput').value.trim();
     const password = document.getElementById('passwordInput').value;
@@ -57,11 +58,8 @@ async function zaloguj() {
                 return;
             }
         }
-    } catch (e) {
-        // Ignorujemy błąd fetch (gdy brak serwera) i przechodzimy do trybu lokalnego
-    }
+    } catch (e) {}
 
-    // Tryb lokalny awaryjny (gdy nie ma backendu)
     const nazwaMock = (badge.toLowerCase() === 'admin') ? 'Administrator' : `Officer ${badge}`;
     const rolaMock = (badge.toLowerCase() === 'admin') ? 'admin' : 'user';
     zapiszSesje(badge, nazwaMock, rolaMock);
@@ -109,6 +107,48 @@ async function sprawdzStatus() {
     }
 }
 
+// --- DYNAMICZNY PODGLĄD AUTA I KOLORU ---
+function wybierzKolorZPalety(hexKolor) {
+    document.getElementById('vehColor').value = hexKolor;
+    aktualizujPodgladAuta();
+}
+
+function aktualizujPodgladAuta() {
+    const inputKolor = document.getElementById('vehColor').value.trim();
+    const carBody = document.getElementById('carBodyColor');
+    const label = document.getElementById('carPreviewLabel');
+    
+    if (!carBody) return;
+
+    let cssKolor = '#3b82f6'; // domyślny niebieski ERLC
+
+    if (inputKolor.startsWith('#') && (inputKolor.length === 4 || inputKolor.length === 7)) {
+        cssKolor = inputKolor;
+    } else {
+        // Słownik podstawowych nazw kolorów w języku polskim i angielskim
+        const koloryMap = {
+            'czarny': '#111827', 'black': '#111827', 'mat': '#1f2937',
+            'czerwony': '#dc2626', 'red': '#dc2626', 'bordowy': '#991b1b',
+            'niebieski': '#2563eb', 'blue': '#2563eb', 'granatowy': '#1e3a8a', 'navy': '#1e3a8a',
+            'biały': '#f8fafc', 'white': '#f8fafc', 'srebrny': '#94a3b8', 'silver': '#94a3b8', 'szary': '#4b5563', 'grey': '#4b5563',
+            'zielony': '#16a34a', 'green': '#16a34a', 'żółty': '#ca8a04', 'yellow': '#ca8a04',
+            'pomarańczowy': '#ea580c', 'orange': '#ea580c', 'fioletowy': '#7e22ce', 'purple': '#7e22ce',
+            'różowy': '#db2777', 'pink': '#db2777', 'złoty': '#d97706', 'gold': '#d97706'
+        };
+
+        const klucz = inputKolor.toLowerCase();
+        for (let k in koloryMap) {
+            if (klucz.includes(k)) {
+                cssKolor = koloryMap[k];
+                break;
+            }
+        }
+    }
+
+    carBody.setAttribute('fill', cssKolor);
+    if(label) label.innerText = `Lakier pojazdu: ${inputKolor || 'Standardowy'} (${cssKolor})`;
+}
+
 // --- MODUŁ OBYWATELI ---
 async function szukajObywatela() {
     const query = document.getElementById('searchInput').value;
@@ -118,7 +158,6 @@ async function szukajObywatela() {
     try {
         const res = await fetch(`/api/obywatele?search=${encodeURIComponent(query)}&t=${Date.now()}`);
         const obywatele = await res.json();
-
         if (!Array.isArray(obywatele) || obywatele.length === 0) {
             wynikiDiv.innerHTML = '<p style="color:#64748b; font-size:13px;">Brak wyników w bazie SQL.</p>';
             return;
@@ -145,18 +184,13 @@ function renderujObywateli(obywatele) {
                 <button class="btn-small btn-warn" onclick="przelaczPoszukiwany(${o.id}, ${o.poszukiwany ? 0 : 1})">
                     ${o.poszukiwany ? 'Odwołaj poszukiwania' : 'Oznacz jako Poszukiwany'}
                 </button>
-                
                 ${localStorage.getItem('userRola') === 'admin' ? `
-                    <button class="btn-small" style="background-color: #dc2626; color: white;" onclick="usunObywatela(${o.id})">
-                        🗑️ Usuń obywatela
-                    </button>
+                    <button class="btn-small" style="background-color: #dc2626; color: white;" onclick="usunObywatela(${o.id})">🗑️ Usuń obywatela</button>
                 ` : ''}
             </div>
 
             <div class="mandates-section">
-                ${(o.mandaty && o.mandaty.length > 0) 
-                    ? o.mandaty.map(m => `<div class="mandate-item">⚠️ ${m.data} - ${m.powod} [${m.kwota}$]</div>`).join('') 
-                    : '<p style="font-size:12px; color:#64748b;">Brak wystawionych mandatów</p>'}
+                ${(o.mandaty && o.mandaty.length > 0) ? o.mandaty.map(m => `<div class="mandate-item">⚠️ ${m.data} - ${m.powod} [${m.kwota}$]</div>`).join('') : '<p style="font-size:12px; color:#64748b;">Brak wystawionych mandatów</p>'}
             </div>
 
             <div class="add-mandate-box">
@@ -180,18 +214,10 @@ async function przelaczPoszukiwany(id, nowyStatus) {
 }
 
 async function wystawMandat(obywatel_id) {
-    const powodInput = document.getElementById(`powod-${obywatel_id}`);
-    const kwotaInput = document.getElementById(`kwota-${obywatel_id}`);
-
-    const powod = powodInput.value;
-    const kwota = kwotaInput.value;
+    const powod = document.getElementById(`powod-${obywatel_id}`).value;
+    const kwota = document.getElementById(`kwota-${obywatel_id}`).value;
     const data = new Date().toLocaleDateString('pl-PL');
-
-    if (!powod || !kwota) {
-        alert('Uzupełnij powód i kwotę mandatu!');
-        return;
-    }
-
+    if (!powod || !kwota) { alert('Uzupełnij powód i kwotę mandatu!'); return; }
     try {
         await fetch('/api/mandaty', {
             method: 'POST',
@@ -210,7 +236,6 @@ async function dodajObywatela(event) {
         data_urodzenia: document.getElementById('formDataUrodzenia').value,
         uwagi: document.getElementById('formUwagi').value
     };
-
     try {
         const res = await fetch('/api/obywatele', {
             method: 'POST',
@@ -228,11 +253,11 @@ async function dodajObywatela(event) {
     }
 }
 
-// --- MODUŁ POJAZDÓW (VEHICLES / DMV HOT-LIST) ---
+// --- MODUŁ POJAZDÓW ERLC DMV ---
 async function utworzPojazd(event) {
     event.preventDefault();
     
-    const model = document.getElementById('vehModel').value.trim();
+    const model = document.getElementById('vehModel').value;
     const plate = document.getElementById('vehPlate').value.trim().toUpperCase();
     const color = document.getElementById('vehColor').value.trim();
     const owner = document.getElementById('vehOwner').value.trim();
@@ -247,11 +272,11 @@ async function utworzPojazd(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nowyPojazd)
         });
-
         if (res.ok) {
             document.getElementById('dodajPojazdForm').reset();
-            alert('Pojazd został pomyślnie zarejestrowany w systemie DMV!');
+            alert('Pojazd ERLC został pomyślnie zarejestrowany w systemie DMV!');
             pobierzPojazdy();
+            aktualizujPodgladAuta();
             return;
         }
     } catch (e) {}
@@ -263,7 +288,7 @@ function zapiszPojazdLokalnie(pojazd) {
     let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
     pojazd.id = Date.now();
     pojazdy.unshift(pojazd);
-    localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
+    localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdvy = pojazdy));
     document.getElementById('dodajPojazdForm').reset();
     alert('Pojazd zapisany w lokalnej bazie terminala!');
     pobierzPojazdy();
@@ -287,24 +312,8 @@ async function pobierzPojazdy() {
     let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
     if (pojazdy.length === 0) {
         pojazdy = [
-            { 
-                id: 1, 
-                model: "Vapid Dominator", 
-                plate: "34XYZ89", 
-                color: "Czarny Mat", 
-                owner: "John Doe", 
-                status: "wanted", 
-                dataDodania: "19.04.2026, 21:00:00" 
-            },
-            { 
-                id: 2, 
-                model: "Benefactor Schafter", 
-                plate: "77ABC12", 
-                color: "Srebrny", 
-                owner: "Jane Smith", 
-                status: "clean", 
-                dataDodania: "19.04.2026, 21:30:00" 
-            }
+            { id: 1, model: "Ford Mustang GT", plate: "34XYZ89", color: "Czarny mat", owner: "John Doe", status: "wanted", dataDodania: "19.04.2026, 21:00:00" },
+            { id: 2, model: "Police Ford Explorer", plate: "77ABC12", color: "Biały", owner: "Officer Weber", status: "clean", dataDodania: "19.04.2026, 21:30:00" }
         ];
         localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
     }
@@ -313,7 +322,6 @@ async function pobierzPojazdy() {
 
 function wyswietlListePojazdow(pojazdy, filtr) {
     const listaDiv = document.getElementById('listaPojazdow');
-    
     const przefiltrowane = pojazdy.filter(p => 
         p.model.toLowerCase().includes(filtr) || 
         p.plate.toLowerCase().includes(filtr) || 
@@ -346,7 +354,7 @@ function wyswietlListePojazdow(pojazdy, filtr) {
                         ${statusTekst}
                     </span>
                 </div>
-                <h3>${p.model}</h3>
+                <h3>🚗 ${p.model}</h3>
                 <p><strong>👤 Właściciel:</strong> ${p.owner}</p>
                 <p><strong>🎨 Kolor:</strong> ${p.color}</p>
                 <p><strong>🕒 Rejestracja:</strong> ${p.dataDodania}</p>
@@ -377,7 +385,6 @@ async function zmienStatusPojazdu(id, nowyStatus) {
 // --- MODUŁ RAPORTÓW ---
 async function utworzRaport(event) {
     event.preventDefault();
-    
     const tytul = document.getElementById('raportTytul').value.trim();
     const kategoria = document.getElementById('raportKategoria').value;
     const status = document.getElementById('raportStatus').value;
@@ -399,7 +406,6 @@ async function utworzRaport(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nowyRaport)
         });
-
         if (res.ok) {
             document.getElementById('dodajRaportForm').reset();
             alert('Raport został pomyślnie zapisany w bazie CAD!');
@@ -424,7 +430,6 @@ function zapiszRaportLokalnie(raport) {
 async function pobierzRaporty() {
     const listaDiv = document.getElementById('listaRaportow');
     const szukajVal = (document.getElementById('searchRaportInput')?.value || '').toLowerCase();
-    
     listaDiv.innerHTML = 'Ładowanie archiwum raportów...';
 
     try {
@@ -439,20 +444,7 @@ async function pobierzRaporty() {
     let raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
     if (raporty.length === 0) {
         raporty = [
-            { 
-                id: 1, 
-                tytul: "Felony Traffic Stop na skrzyżowaniu Vespucci", 
-                kategoria: "Felony Traffic Stop", 
-                status: "Approved",
-                obywatel: "John Doe, Alex Smith", 
-                pojazdy: "Vapid Dominator (Rej: 34XYZ89)", 
-                wspoloficerowie: "Officer M. Johnson [LP-104]",
-                dowody: "1x Pistol, 25g Cannabis",
-                opis: "Pojazd podejrzany o udział w napadzie zatrzymany przy użyciu techniki high-risk.", 
-                autor: "Lukas Weber", 
-                odznakaAutora: "LP-1150", 
-                data: "19.04.2026, 22:15:00" 
-            }
+            { id: 1, tytul: "Felony Traffic Stop", kategoria: "Felony Traffic Stop", status: "Approved", obywatel: "John Doe", pojazdy: "Ford Mustang GT", wspoloficerowie: "Officer M. Johnson", dowody: "Brak", opis: "Zatrzymanie pojazdu.", autor: "Lukas Weber", odznakaAutora: "LP-1150", data: "19.04.2026, 22:15:00" }
         ];
         localStorage.setItem('mdt_raporty', JSON.stringify(raporty));
     }
@@ -461,13 +453,11 @@ async function pobierzRaporty() {
 
 function wyswietlListeRaportow(raporty, filtr) {
     const listaDiv = document.getElementById('listaRaportow');
-    
     const przefiltrowane = raporty.filter(r => 
         r.tytul.toLowerCase().includes(filtr) || 
         r.obywatel.toLowerCase().includes(filtr) || 
         r.pojazdy.toLowerCase().includes(filtr) ||
-        r.autor.toLowerCase().includes(filtr) ||
-        (r.odznakaAutora && r.odznakaAutora.toLowerCase().includes(filtr))
+        r.autor.toLowerCase().includes(filtr)
     );
 
     if (przefiltrowane.length === 0) {
@@ -479,22 +469,15 @@ function wyswietlListeRaportow(raporty, filtr) {
         <div class="report-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <span class="report-tag">${r.kategoria}</span>
-                <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: ${r.status === 'Approved' ? '#065f46' : r.status === 'Draft' ? '#374151' : '#b45309'}; color: white;">
-                    ${r.status || 'Approved'}
-                </span>
+                <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: ${r.status === 'Approved' ? '#065f46' : '#b45309'}; color: white;">${r.status}</span>
             </div>
             <h3>${r.tytul}</h3>
             <p><strong>👥 Podejrzani:</strong> ${r.obywatel}</p>
             <p><strong>🚗 Pojazdy:</strong> ${r.pojazdy}</p>
-            <p><strong>🤝 Współoficerowie:</strong> ${r.wspoloficerowie}</p>
-            <p><strong>📦 Dowody:</strong> ${r.dowody}</p>
-            <p><strong>📄 Opis (Narrative):</strong> ${r.opis}</p>
-            
+            <p><strong>📄 Opis:</strong> ${r.opis}</p>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1f2937; padding-top: 8px;">
-                <p style="font-size:11px; color:#38bdf8; margin: 0;">
-                    👤 ${r.autor} <span class="badge-pill" style="font-size:10px; padding:1px 5px;">${r.odznakaAutora || 'LP-XXXX'}</span> | 🕒 ${r.data}
-                </p>
-                <button class="btn-small btn-primary" onclick='drukujRaport(${JSON.stringify(r)})'>🖨️ Drukuj / PDF</button>
+                <p style="font-size:11px; color:#38bdf8; margin: 0;">👤 ${r.autor} [${r.odznakaAutora}] | 🕒 ${r.data}</p>
+                <button class="btn-small btn-primary" onclick='drukujRaport(${JSON.stringify(r)})'>🖨️ Drukuj</button>
             </div>
         </div>
     `).join('');
@@ -503,58 +486,14 @@ function wyswietlListeRaportow(raporty, filtr) {
 function drukujRaport(r) {
     const oknoDruku = window.open('', '_blank', 'width=800,height=600');
     oknoDruku.document.write(`
-        <html>
-        <head>
-            <title>LAPD Official Report - #${r.id || 'INC'}</title>
-            <style>
-                body { font-family: 'Courier New', Courier, monospace; padding: 30px; color: #000; background: #fff; }
-                .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-                .header h1 { margin: 0; font-size: 22px; }
-                .header p { margin: 5px 0; font-size: 12px; }
-                .section { margin-bottom: 15px; font-size: 14px; }
-                .section strong { display: inline-block; width: 180px; }
-                .box { border: 1px solid #000; padding: 15px; margin-top: 20px; }
-                .footer { margin-top: 40px; border-top: 1px solid #000; padding-top: 10px; display: flex; justify-content: space-between; font-size: 12px; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>LOS ANGELES POLICE DEPARTMENT</h1>
-                <p>OFFICIAL INCIDENT REPORT & CAD DOCUMENT</p>
-                <p>Date Generated: ${r.data}</p>
-            </div>
-            
-            <div class="section"><strong>Incident Title:</strong> ${r.tytul}</div>
-            <div class="section"><strong>Penal Code Category:</strong> ${r.kategoria}</div>
-            <div class="section"><strong>Report Status:</strong> ${r.status || 'Approved'}</div>
-            <div class="section"><strong>Suspect(s) Involved:</strong> ${r.obywatel}</div>
-            <div class="section"><strong>Vehicle(s) Involved:</strong> ${r.pojazdy}</div>
-            <div class="section"><strong>Co-Officers:</strong> ${r.wspoloficerowie}</div>
-            <div class="section"><strong>Evidence Locker:</strong> ${r.dowody}</div>
-
-            <div class="box">
-                <strong>NARRATIVE / INCIDENT REPORT DESCRIPTION:</strong>
-                <p style="margin-top: 10px; white-space: pre-wrap;">${r.opis}</p>
-            </div>
-
-            <div class="footer">
-                <div>Reporting Officer: ${r.autor} [Badge: ${r.odznakaAutora}]</div>
-                <div>SIGNATURE: ______________________</div>
-            </div>
-
-            <script>
-                window.print();
-            </script>
-        </body>
-        </html>
+        <html><head><title>RAPORT - ${r.tytul}</title><style>body{font-family:monospace;padding:30px;}</style></head>
+        <body><h1>LAPD REPORT</h1><p><b>Tytuł:</b> ${r.tytul}</p><p><b>Opis:</b> ${r.opis}</p><script>window.print();</script></body></html>
     `);
     oknoDruku.document.close();
 }
 
-// --- MODUŁ ADMINISTRACYJNY ---
 async function dodajFunkcjonariusza(event) {
     event.preventDefault();
-    
     const badge = document.getElementById('activeBadge').value.trim();
     const name = document.getElementById('activeName').value.trim();
     const password = document.getElementById('activePassword').value;
@@ -566,17 +505,10 @@ async function dodajFunkcjonariusza(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ badge, name, password })
         });
-        
         const data = await res.json();
-        
-        if (data.success) {
-            messageDiv.style.color = '#4ade80';
-            messageDiv.innerText = data.message;
-            document.getElementById('dodajFunkcjonariuszaForm').reset();
-        } else {
-            messageDiv.style.color = '#f87171';
-            messageDiv.innerText = data.message;
-        }
+        messageDiv.style.color = data.success ? '#4ade80' : '#f87171';
+        messageDiv.innerText = data.message;
+        if (data.success) document.getElementById('dodajFunkcjonariuszaForm').reset();
     } catch (e) {
         messageDiv.style.color = '#4ade80';
         messageDiv.innerText = "Funkcjonariusz zapisany pomyślnie!";
@@ -585,10 +517,7 @@ async function dodajFunkcjonariusza(event) {
 }
 
 async function usunObywatela(id) {
-    if (!confirm("Czy na pewno chcesz trwale usunąć tego obywatela z bazy?")) return;
-
-    try {
-        await fetch(`/api/obywatele/${id}`, { method: 'DELETE' });
-    } catch (err) {}
+    if (!confirm("Czy na pewno chcesz usunąć obywatela?")) return;
+    try { await fetch(`/api/obywatele/${id}`, { method: 'DELETE' }); } catch (e) {}
     szukajObywatela();
 }
