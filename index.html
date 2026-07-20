@@ -3,67 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT - LSPD Terminal</title>
+    <title>LA MDT - Mobile Data Terminal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- EKRAN LOGOWANIA -->
     <div id="login-screen" class="login-container">
-        <div class="login-card">
-            <h2>LSPD MDT - AUTORYZACJA</h2>
-            <p style="font-size: 12px; color: #64748b; margin-bottom: 20px;">(Test: Odznaka 99, Hasło: lspd)</p>
-            <input type="text" id="badgeInput" placeholder="Numer Odznaki">
-            <input type="password" id="passwordInput" placeholder="Hasło systemowe">
-            <button onclick="zaloguj()">Zaloguj do systemu</button>
-            <div id="login-error" style="color: red; margin-top: 10px; font-size: 14px;"></div>
+        <div class="login-box">
+            <h2>LA MDT</h2>
+            <p>Mobile Data Terminal - System LSPD</p>
+            <input type="text" id="badgeInput" placeholder="Numer odznaki (np. 99 lub admin)">
+            <input type="password" id="passwordInput" placeholder="Hasło">
+            <button onclick="zaloguj()">Zaloguj się</button>
+            <div id="login-error" class="error-msg"></div>
         </div>
     </div>
 
-    <!-- GŁÓWNY PANEL SYSTEMU (ukryty na start) -->
-    <div id="main-system" class="mdt-container" style="display: none;">
-        <header>
-            <h1>MOBILE DATA TERMINAL</h1>
-            <div style="text-align: right;">
-                <div id="system-status">Status: Łączenie...</div>
-                <div id="officer-name" style="font-size: 13px; color: #38bdf8; margin-top: 4px;"></div>
+    <!-- GŁÓWNY INTERFEJS SYSTEMU -->
+    <div id="main-system" class="app-layout" style="display: none;">
+        
+        <!-- PANEL BOCZNY (SIDEBAR) -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>LA MDT</h2>
+                <span>SYSTEM v2.0</span>
             </div>
-        </header>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" onclick="zmienZakladke('dashboard', event)">📊 Dashboard</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('citizens', event)">👥 Citizens</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('admin', event)" id="nav-admin" style="display: none;">⚙️ Admin</a>
+            </nav>
+        </aside>
 
-        <main>
-            <!-- Wyszukiwarka i wyniki -->
-            <section class="card">
-                <h2>Wyszukiwarka Obywateli</h2>
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Wpisz imię lub nazwisko...">
-                    <button onclick="szukajObywatela()">Szukaj</button>
+        <!-- GŁÓWNA ZAWARTOŚĆ -->
+        <div class="main-content">
+            
+            <!-- GÓRNY PASEK -->
+            <header class="topbar">
+                <div class="topbar-user">
+                    <span id="officer-session-name">Lukas Weber</span>
+                    <span class="badge-pill">LP-1150</span>
+                    <span class="dept-pill">LAPD</span>
                 </div>
-                <div id="wynikiWyszukiwania" class="results-list"></div>
-            </section>
+                <div class="topbar-right">
+                    <span id="system-status" class="status-online">System: ONLINE</span>
+                    <span id="current-time">22:23:23</span>
+                    <button class="btn-logout" onclick="wyloguj()" title="Wyloguj">🚪</button>
+                </div>
+            </header>
 
-            <!-- Kartoteka (Dodawanie) -->
-            <section class="card">
-                <h2>Dodaj do Kartoteki</h2>
-                <form id="dodajObywatelaForm" onsubmit="dodajObywatela(event)">
-                    <input type="text" id="formImie" placeholder="Imię" required>
-                    <input type="text" id="formNazwisko" placeholder="Nazwisko" required>
-                    <input type="text" id="formDataUrodzenia" placeholder="Data urodzenia (np. 01/01/1990)">
-                    <textarea id="formUwagi" placeholder="Uwagi kryminalne..."></textarea>
-                    <button type="submit">Zapisz w bazie</button>
-                </form>
-            </section>
-            <!-- Panel Administratora (widoczny tylko dla roli admin) -->
-            <section class="card" id="admin-panel" style="display: none; grid-column: span 2; margin-top: 20px; border-color: #eab308;">
-                <h2 style="color: #eab308;">Zarządzanie Kadrami LSPD</h2>
-                <form id="dodajFunkcjonariuszaForm" onsubmit="dodajFunkcjonariusza(event)" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <input type="text" id="activeBadge" placeholder="Nowa Odznaka (np. 002S)" required style="margin-bottom: 0; flex: 1; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 8px;">
-                    <input type="text" id="activeName" placeholder="Stopień i Nazwisko" required style="margin-bottom: 0; flex: 2; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 8px;">
-                    <input type="password" id="activePassword" placeholder="Hasło" required style="margin-bottom: 0; flex: 1; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 8px;">
-                    <button type="submit" style="background-color: #eab308; color: #0f172a; padding: 10px 20px; font-weight: bold; border: none; cursor: pointer;">Dodaj Kadra</button>
-                </form>
-                <div id="admin-message" style="margin-top: 10px; font-size: 14px; font-weight: bold;"></div>
-            </section>
-        </main>
+            <!-- ZAWARTOŚĆ ZAKŁADEK -->
+            <div class="content-body">
+                
+                <!-- ZAKŁADKA: DASHBOARD -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <h2>Panel główny</h2>
+                    <p id="welcome-msg" class="subtitle">Witaj w systemie operacyjnym LSPD.</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span>AKTYWNI OFICERERZY</span>
+                            <h3 id="stat-officers">1</h3>
+                        </div>
+                        <div class="stat-card">
+                            <span>OTWARTE ZGŁOSZENIA</span>
+                            <h3>0</h3>
+                        </div>
+                        <div class="stat-card">
+                            <span>AKTYWNE BOLOS</span>
+                            <h3>0</h3>
+                        </div>
+                        <div class="stat-card">
+                            <span>AKTYWNE NAKAZY</span>
+                            <h3>0</h3>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: CITIZENS (Obywatele, wyszukiwarka, dodawanie, mandaty) -->
+                <section id="tab-citizens" class="tab-pane" style="display: none;">
+                    <h2>Baza Obywateli</h2>
+                    
+                    <div class="citizens-grid">
+                        <!-- WYSZUKIWARKA I WYNIKI -->
+                        <div class="panel-box">
+                            <h3>Wyszukiwarka Obywateli</h3>
+                            <div class="search-box-row">
+                                <input type="text" id="searchInput" placeholder="Imię i nazwisko..." oninput="szukajObywatela()">
+                                <button onclick="szukajObywatela()" class="btn-primary">Szukaj</button>
+                            </div>
+                            <div id="wynikiWyszukiwania" class="results-container">
+                                <!-- Tutaj dynamicznie ładują się karty obywateli -->
+                            </div>
+                        </div>
+
+                        <!-- DODAWANIE OBYWATELA -->
+                        <div class="panel-box">
+                            <h3>Dodaj do Kartoteki</h3>
+                            <form id="dodajObywatelaForm" onsubmit="dodajObywatela(event)">
+                                <div class="form-group">
+                                    <label>Imię</label>
+                                    <input type="text" id="formImie" required placeholder="np. Jan">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nazwisko</label>
+                                    <input type="text" id="formNazwisko" required placeholder="np. Kowalski">
+                                </div>
+                                <div class="form-group">
+                                    <label>Data urodzenia</label>
+                                    <input type="text" id="formDataUrodzenia" placeholder="np. 01/01/1990">
+                                </div>
+                                <div class="form-group">
+                                    <label>Uwagi kryminalne</label>
+                                    <textarea id="formUwagi" placeholder="Notatki..."></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary full-width">Zapisz w bazie</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: ADMIN (Tylko dla administratora) -->
+                <section id="tab-admin" class="tab-pane" style="display: none;">
+                    <h2>Panel Administratora</h2>
+                    <p class="subtitle">Zarządzanie kadrami i uprawnieniami LSPD</p>
+                    
+                    <div class="panel-box max-w-500">
+                        <h3>Dodaj nowego funkcjonariusza</h3>
+                        <form id="dodajFunkcjonariuszaForm" onsubmit="dodajFunkcjonariusza(event)">
+                            <div class="form-group">
+                                <label>Numer Odznaki</label>
+                                <input type="text" id="activeBadge" required placeholder="np. 101">
+                            </div>
+                            <div class="form-group">
+                                <label>Stopień i Nazwisko</label>
+                                <input type="text" id="activeName" required placeholder="np. Officer John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label>Hasło dostępu</label>
+                                <input type="password" id="activePassword" required placeholder="Hasło">
+                            </div>
+                            <button type="submit" class="btn-primary full-width">Dodaj funkcjonariusza</button>
+                            <div id="admin-message" class="info-msg"></div>
+                        </form>
+                    </div>
+                </section>
+
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
