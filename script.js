@@ -45,7 +45,6 @@ async function zaloguj() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-system').style.display = 'flex';
             
-            // Przypisanie danych do interfejsu
             document.getElementById('officer-session-name').innerText = data.officer;
             document.getElementById('officer-session-badge').innerText = badge.toUpperCase();
             document.getElementById('card-officer-name').innerText = data.officer;
@@ -68,7 +67,6 @@ async function zaloguj() {
             errorDiv.innerText = data.message;
         }
     } catch (e) {
-        // Fallback dla szybkiego testowania lokalnego bez uruchomionego backendu Node.js
         if (badge.length > 0) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-system').style.display = 'flex';
@@ -130,7 +128,6 @@ async function szukajObywatela() {
         }
         renderujObywateli(obywatele);
     } catch (err) {
-        // Fallback lokalny dla obywateli
         renderujObywateli([
             { id: 1, imie: "John", nazwisko: "Doe", data_urodzenia: "12/05/1992", poszukiwany: true, uwagi: "Unikaj kontaktu, uzbrojony w przeszłości.", mandaty: [{data: "18.04.2026", powod: "Przekroczenie prędkości", kwota: 350}] },
             { id: 2, imie: "Jane", nazwisko: "Smith", data_urodzenia: "04/11/1998", poszukiwany: false, uwagi: "Czysta kartoteka.", mandaty: [] }
@@ -199,16 +196,11 @@ async function wystawMandat(obywatel_id) {
     }
 
     try {
-        const res = await fetch('/api/mandaty', {
+        await fetch('/api/mandaty', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ obywatel_id, powod, kwota: parseInt(kwota), data })
         });
-
-        if (res.ok) {
-            powodInput.value = '';
-            kwotaInput.value = '';
-        }
     } catch (err) {}
     szukajObywatela();
 }
@@ -239,21 +231,24 @@ async function dodajObywatela(event) {
     }
 }
 
-// --- MODUŁ RAPORTÓW (Z NUMEREM ODZNAKI AUTORA) ---
+// --- MODUŁ RAPORTÓW (ROZBUDOWANY CAD/MDT) ---
 async function utworzRaport(event) {
     event.preventDefault();
     
     const tytul = document.getElementById('raportTytul').value.trim();
     const kategoria = document.getElementById('raportKategoria').value;
+    const status = document.getElementById('raportStatus').value;
     const obywatel = document.getElementById('raportObywatel').value.trim() || 'Brak / Nieznany';
+    const pojazdy = document.getElementById('raportPojazdy').value.trim() || 'Brak';
+    const wspoloficerowie = document.getElementById('raportWspoloficerowie').value.trim() || 'Brak';
+    const dowody = document.getElementById('raportDowody').value.trim() || 'Brak zabezpieczeń';
     const opis = document.getElementById('raportOpis').value.trim();
     
-    // Pobranie danych zalogowanego oficera i jego numeru odznaki
     const autor = localStorage.getItem('officerName') || 'Lukas Weber';
     const odznakaAutora = localStorage.getItem('officerBadge') || 'LP-1150';
     const data = new Date().toLocaleString('pl-PL');
 
-    const nowyRaport = { tytul, kategoria, obywatel, opis, autor, odznakaAutora, data };
+    const nowyRaport = { tytul, kategoria, status, obywatel, pojazdy, wspoloficerowie, dowody, opis, autor, odznakaAutora, data };
 
     try {
         const res = await fetch('/api/raporty', {
@@ -264,7 +259,7 @@ async function utworzRaport(event) {
 
         if (res.ok) {
             document.getElementById('dodajRaportForm').reset();
-            alert('Raport został pomyślnie zapisany w bazie!');
+            alert('Raport został pomyślnie zapisany w bazie CAD!');
             pobierzRaporty();
         } else {
             zapiszRaportLokalnie(nowyRaport);
@@ -299,7 +294,6 @@ async function pobierzRaporty() {
         }
     } catch (e) {}
 
-    // Pobranie z localStorage w przypadku pracy offline / lokalnej
     let raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
     if (raporty.length === 0) {
         raporty = [
@@ -307,7 +301,11 @@ async function pobierzRaporty() {
                 id: 1, 
                 tytul: "Felony Traffic Stop na skrzyżowaniu Vespucci", 
                 kategoria: "Felony Traffic Stop", 
-                obywatel: "John Doe", 
+                status: "Approved",
+                obywatel: "John Doe, Alex Smith", 
+                pojazdy: "Vapid Dominator (Rej: 34XYZ89)", 
+                wspoloficerowie: "Officer M. Johnson [LP-104]",
+                dowody: "1x Pistol, 25g Cannabis",
                 opis: "Pojazd podejrzany o udział w napadzie zatrzymany przy użyciu techniki high-risk.", 
                 autor: "Lukas Weber", 
                 odznakaAutora: "LP-1150", 
@@ -325,6 +323,7 @@ function wyswietlListeRaportow(raporty, filtr) {
     const przefiltrowane = raporty.filter(r => 
         r.tytul.toLowerCase().includes(filtr) || 
         r.obywatel.toLowerCase().includes(filtr) || 
+        r.pojazdy.toLowerCase().includes(filtr) ||
         r.autor.toLowerCase().includes(filtr) ||
         (r.odznakaAutora && r.odznakaAutora.toLowerCase().includes(filtr))
     );
@@ -336,15 +335,79 @@ function wyswietlListeRaportow(raporty, filtr) {
 
     listaDiv.innerHTML = przefiltrowane.map(r => `
         <div class="report-card">
-            <span class="report-tag">${r.kategoria}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span class="report-tag">${r.kategoria}</span>
+                <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: ${r.status === 'Approved' ? '#065f46' : r.status === 'Draft' ? '#374151' : '#b45309'}; color: white;">
+                    ${r.status || 'Approved'}
+                </span>
+            </div>
             <h3>${r.tytul}</h3>
-            <p><strong>Podejrzany:</strong> ${r.obywatel}</p>
-            <p><strong>Narrative / Opis:</strong> ${r.opis}</p>
-            <p style="font-size:11px; color:#38bdf8; margin-top:8px;">
-                👤 Autor: ${r.autor} <span class="badge-pill" style="font-size:10px; padding:1px 5px;">${r.odznakaAutora || 'LP-XXXX'}</span> | 🕒 ${r.data}
-            </p>
+            <p><strong>👥 Podejrzani:</strong> ${r.obywatel}</p>
+            <p><strong>🚗 Pojazdy:</strong> ${r.pojazdy}</p>
+            <p><strong>🤝 Współoficerowie:</strong> ${r.wspoloficerowie}</p>
+            <p><strong>📦 Dowody:</strong> ${r.dowody}</p>
+            <p><strong>📄 Opis (Narrative):</strong> ${r.opis}</p>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1f2937; pt: 8px;">
+                <p style="font-size:11px; color:#38bdf8; margin: 0;">
+                    👤 ${r.autor} <span class="badge-pill" style="font-size:10px; padding:1px 5px;">${r.odznakaAutora || 'LP-XXXX'}</span> | 🕒 ${r.data}
+                </p>
+                <button class="btn-small btn-primary" onclick='drukujRaport(${JSON.stringify(r)})'>🖨️ Drukuj / PDF</button>
+            </div>
         </div>
     `).join('');
+}
+
+// Funkcja generująca oficjalny widok wydruku raportu policyjnego
+function drukujRaport(r) {
+    const oknoDruku = window.open('', '_blank', 'width=800,height=600');
+    oknoDruku.document.write(`
+        <html>
+        <head>
+            <title>LAPD Official Report - #${r.id || 'INC'}</title>
+            <style>
+                body { font-family: 'Courier New', Courier, monospace; padding: 30px; color: #000; background: #fff; }
+                .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                .header h1 { margin: 0; font-size: 22px; }
+                .header p { margin: 5px 0; font-size: 12px; }
+                .section { margin-bottom: 15px; font-size: 14px; }
+                .section strong { display: inline-block; width: 180px; }
+                .box { border: 1px solid #000; padding: 15px; margin-top: 20px; }
+                .footer { margin-top: 40px; border-top: 1px solid #000; padding-top: 10px; display: flex; justify-content: space-between; font-size: 12px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>LOS ANGELES POLICE DEPARTMENT</h1>
+                <p>OFFICIAL INCIDENT REPORT & CAD DOCUMENT</p>
+                <p>Date Generated: ${r.data}</p>
+            </div>
+            
+            <div class="section"><strong>Incident Title:</strong> ${r.tytul}</div>
+            <div class="section"><strong>Penal Code Category:</strong> ${r.kategoria}</div>
+            <div class="section"><strong>Report Status:</strong> ${r.status || 'Approved'}</div>
+            <div class="section"><strong>Suspect(s) Involved:</strong> ${r.obywatel}</div>
+            <div class="section"><strong>Vehicle(s) Involved:</strong> ${r.pojazdy}</div>
+            <div class="section"><strong>Co-Officers:</strong> ${r.wspoloficerowie}</div>
+            <div class="section"><strong>Evidence Locker:</strong> ${r.dowody}</div>
+
+            <div class="box">
+                <strong>NARRATIVE / INCIDENT REPORT DESCRIPTION:</strong>
+                <p style="margin-top: 10px; white-space: pre-wrap;">${r.opis}</p>
+            </div>
+
+            <div class="footer">
+                <div>Reporting Officer: ${r.autor} [Badge: ${r.odznakaAutora}]</div>
+                <div>SIGNATURE: ______________________</div>
+            </div>
+
+            <script>
+                window.print();
+            </script>
+        </body>
+        </html>
+    `);
+    oknoDruku.document.close();
 }
 
 // --- MODUŁ ADMINISTRACYJNY ---
@@ -384,12 +447,7 @@ async function usunObywatela(id) {
     if (!confirm("Czy na pewno chcesz trwale usunąć tego obywatela z bazy?")) return;
 
     try {
-        const res = await fetch(`/api/obywatele/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.success) {
-            szukajObywatela();
-        }
-    } catch (err) {
-        szukajObywatela();
-    }
+        await fetch(`/api/obywatele/${id}`, { method: 'DELETE' });
+    } catch (err) {}
+    szukajObywatela();
 }
