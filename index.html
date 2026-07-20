@@ -139,85 +139,75 @@
                     </div>
                 </section>
 
-                <!-- ZAKŁADKA: VEHICLES (ERLC DMV & LIVE COLOR PREVIEW) -->
+                <!-- ZAKŁADKA: VEHICLES (ERLC DMV & REAL IMAGES) -->
                 <section id="tab-vehicles" class="tab-pane" style="display: none;">
                     <h2>Rejestr Pojazdów ERLC DMV (Liberty County)</h2>
-                    <p class="subtitle">Wybór oficjalnych modeli z gry z dynamicznym renderowaniem koloru lakieru w czasie rzeczywistym</p>
+                    <p class="subtitle">Oficjalne modele z gry Roblox ERLC z rzeczywistym podglądem fotograficznym</p>
                     
                     <div class="citizens-grid">
                         <!-- Panel rejestracji pojazdu -->
                         <div class="panel-box" style="border-left: 4px solid #38bdf8;">
-                            <h3>🚗 Rejestracja Nowego Pojazdu ERLC</h3>
+                            <h3>🚗 Rejestracja Pojazdu ERLC</h3>
                             <form id="dodajPojazdForm" onsubmit="utworzPojazd(event)">
                                 <div class="form-group">
-                                    <label>Model Pojazdu ERLC (Oficjalna baza z gry)</label>
+                                    <label>Model Pojazdu ERLC (Roblox Liberty County)</label>
                                     <select id="vehModel" class="form-control-select" required onchange="aktualizujPodgladAuta()">
-                                        <optgroup label="--- OSOBOWE / CYWILNE ---">
-                                            <option value="Aston Martin Vantage">Aston Martin Vantage (Stirling GT)</option>
-                                            <option value="Audi R8">Audi R8 (Cavalcade / Sultan)</option>
-                                            <option value="BMW M3 E46">BMW M3 E46 (Sentinel Classic)</option>
-                                            <option value="BMW M4">BMW M4 (Sentinel)</option>
-                                            <option value="Bugatti Chiron">Bugatti Chiron (Adder)</option>
-                                            <option value="Chevrolet Camaro ZL1">Chevrolet Camaro ZL1 (Nightshade)</option>
-                                            <option value="Chevrolet Corvette C8">Chevrolet Corvette C8 (Coquette)</option>
-                                            <option value="Chevrolet Tahoe">Chevrolet Tahoe (Granger)</option>
-                                            <option value="Dodge Charger SRT">Dodge Charger SRT (Buffalo)</option>
-                                            <option value="Dodge Challenger SRT">Dodge Challenger SRT (Gauntlet)</option>
-                                            <option value="Ford Mustang GT">Ford Mustang GT (Dominator)</option>
-                                            <option value="Ford F-150 Raptor">Ford F-150 Raptor (Sandking)</option>
-                                            <option value="Lamborghini Urus">Lamborghini Urus (Toros)</option>
-                                            <option value="McLaren 720S">McLaren 720S (T20)</option>
-                                            <option value="Mercedes-Benz G63 AMG">Mercedes-Benz G63 AMG (Dubsta 6x6)</option>
-                                            <option value="Nissan GT-R R35">Nissan GT-R R35 (Elegy Retro Custom)</option>
-                                            <option value="Tesla Model S">Tesla Model S (Dilettante EV)</option>
-                                            <option value="Toyota Supra MK5">Toyota Supra MK5 (Jester RR)</option>
+                                        <optgroup label="--- OSOBOWE / CYWILNE (CIVILIAN) ---">
+                                            <option value="Aston Martin Vantage">Aston Martin Vantage</option>
+                                            <option value="Audi R8">Audi R8</option>
+                                            <option value="BMW M3 E46">BMW M3 E46</option>
+                                            <option value="BMW M4">BMW M4</option>
+                                            <option value="Bugatti Chiron">Bugatti Chiron</option>
+                                            <option value="Chevrolet Camaro ZL1">Chevrolet Camaro ZL1</option>
+                                            <option value="Chevrolet Corvette C8">Chevrolet Corvette C8</option>
+                                            <option value="Chevrolet Tahoe">Chevrolet Tahoe</option>
+                                            <option value="Dodge Charger SRT">Dodge Charger SRT</option>
+                                            <option value="Dodge Challenger SRT">Dodge Challenger SRT</option>
+                                            <option value="Ford Mustang GT">Ford Mustang GT</option>
+                                            <option value="Ford F-150 Raptor">Ford F-150 Raptor</option>
+                                            <option value="Lamborghini Urus">Lamborghini Urus</option>
+                                            <option value="McLaren 720S">McLaren 720S</option>
+                                            <option value="Mercedes-Benz G63 AMG">Mercedes-Benz G63 AMG</option>
+                                            <option value="Nissan GT-R R35">Nissan GT-R R35</option>
+                                            <option value="Tesla Model S">Tesla Model S</option>
+                                            <option value="Toyota Supra MK5">Toyota Supra MK5</option>
                                         </optgroup>
                                         <optgroup label="--- POLICYJNE / POLICE & SHERIFF ---">
-                                            <option value="Police Crown Victoria">Police Crown Victoria (Stanier Cruiser)</option>
-                                            <option value="Police Ford Explorer">Police Ford Explorer (Scout Interceptor)</option>
-                                            <option value="Police Dodge Charger">Police Dodge Charger (Buffalo Interceptor)</option>
-                                            <option value="Police Chevrolet Tahoe">Police Chevrolet Tahoe (Granger SUV Police)</option>
-                                            <option value="Police Mustang GT">Police Mustang GT (Dominator Interceptor)</option>
-                                            <option value="Sheriff Ford F-150">Sheriff Ford F-150 (Sandking Sheriff)</option>
+                                            <option value="Police Crown Victoria">Police Crown Victoria</option>
+                                            <option value="Police Ford Explorer">Police Ford Explorer</option>
+                                            <option value="Police Dodge Charger">Police Dodge Charger</option>
+                                            <option value="Police Chevrolet Tahoe">Police Chevrolet Tahoe</option>
+                                            <option value="Police Mustang GT">Police Mustang GT</option>
+                                            <option value="Sheriff Ford F-150">Sheriff Ford F-150</option>
                                         </optgroup>
                                         <optgroup label="--- STRAŻ POŻARNA / FIRE & EMS ---">
-                                            <option value="Fire Engine Pumper">Fire Engine Pumper (Fire Truck)</option>
-                                            <option value="Ambulance ERLC">Ambulance ERLC (Ambulance)</option>
-                                            <option value="Chief SUV">Chief SUV (Fire Chief Command)</option>
+                                            <option value="Fire Engine Pumper">Fire Engine Pumper</option>
+                                            <option value="Ambulance ERLC">Ambulance ERLC</option>
+                                            <option value="Chief SUV">Chief SUV</option>
                                         </optgroup>
                                         <optgroup label="--- DOT / INNE ---">
-                                            <option value="DOT Utility Truck">DOT Utility Truck (Bison Utility)</option>
-                                            <option value="Tow Truck">Tow Truck (Towtruck Flatbed)</option>
+                                            <option value="DOT Utility Truck">DOT Utility Truck</option>
+                                            <option value="Tow Truck">Tow Truck</option>
                                         </optgroup>
                                     </select>
                                 </div>
 
                                 <div class="form-group">
                                     <label>Numer Rejestracyjny (Plate)</label>
-                                    <input type="text" id="vehPlate" required placeholder="np. 34XYZ89 (Wielkimi literami)" style="text-transform: uppercase;">
+                                    <input type="text" id="vehPlate" required placeholder="np. 34XYZ89" style="text-transform: uppercase;">
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Kolor Nadwozia (Wpisz nazwę lub wybierz z palety)</label>
-                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                        <input type="text" id="vehColor" required placeholder="np. Czarny mat / Midnight Blue" oninput="aktualizujPodgladAuta()" style="flex: 1;">
-                                        <input type="color" id="vehColorPicker" value="#1e293b" onchange="wybierzKolorZPalety(this.value)" style="width: 45px; height: 38px; border: 1px solid #374151; background: #111827; border-radius: 6px; cursor: pointer;">
-                                    </div>
+                                    <label>Kolor Nadwozia</label>
+                                    <input type="text" id="vehColor" required placeholder="np. Czarny mat / Srebrny">
                                 </div>
 
-                                <!-- WIZUALNY PODGLĄD AUTA DOPASOWANY DO KOLORU -->
-                                <div class="form-group" style="text-align: center; background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid #334155;">
-                                    <label style="display: block; margin-bottom: 8px; font-size: 12px; color: #38bdf8;">DYNAMICZNY PODGLĄD LAKIERU</label>
-                                    <div id="carPreviewContainer" style="display: flex; justify-content: center; align-items: center; height: 90px;">
-                                        <!-- Generowany SVG pojazdu o wybranym kolorze -->
-                                        <svg id="carSvgPreview" width="180" height="70" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M20 45 L45 25 L135 25 L165 45 L180 55 C185 58 185 65 175 65 L25 65 C15 65 15 58 20 55 Z" id="carBodyColor" fill="#3b82f6" stroke="#ffffff" stroke-width="2" />
-                                            <path d="M50 27 L70 12 L130 12 L145 27 Z" fill="#0f172a" opacity="0.8" />
-                                            <circle cx="50" cy="65" r="14" fill="#111" stroke="#64748b" stroke-width="3"/>
-                                            <circle cx="150" cy="65" r="14" fill="#111" stroke="#64748b" stroke-width="3"/>
-                                        </svg>
+                                <!-- PRAWDZIWE ZDJĘCIE / RENDER Z GRY ERLC -->
+                                <div class="form-group" style="text-align: center; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155;">
+                                    <label style="display: block; margin-bottom: 6px; font-size: 11px; color: #38bdf8;">OFICJALNE ZDJĘCIE POJAZDU Z ERLC</label>
+                                    <div id="carImageContainer" style="height: 110px; display: flex; align-items: center; justify-content: center;">
+                                        <img id="erlcVehicleImg" src="" alt="Podgląd pojazdu ERLC" style="max-height: 100px; max-width: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">
                                     </div>
-                                    <span id="carPreviewLabel" style="font-size: 11px; color: #94a3b8;">Kolor: Niebieski (#3b82f6)</span>
                                 </div>
 
                                 <div class="form-group">
@@ -243,9 +233,7 @@
                             <div class="search-box-row" style="margin-bottom: 15px;">
                                 <input type="text" id="searchVehicleInput" placeholder="Szukaj po tablicach, modelu, właścicielu..." oninput="pobierzPojazdy()">
                             </div>
-                            <div id="listaPojazdow" class="results-container">
-                                <!-- Dynamiczna lista pojazdów -->
-                            </div>
+                            <div id="listaPojazdow" class="results-container"></div>
                         </div>
                     </div>
                 </section>
@@ -279,7 +267,7 @@
                                         <optgroup label="Zbrodnie (Felonies)">
                                             <option value="Felony Traffic Stop">Felony Traffic Stop (Zatrzymanie wysokiego ryzyka)</option>
                                             <option value="Armed Robbery">Armed Robbery (Napad z bronią w ręku)</option>
-                                            <option value="Grand Theft Auto">Grand Theft Auto (Kradzież pojazdu - GTA)</option>
+                                            <option value="Grand Theft Auto">Grand Theft Auto (Kradzież pojazdu)</option>
                                             <option value="Homicide / Murder">Homicide / Murder (Zabójstwo)</option>
                                             <option value="Kidnapping">Kidnapping (Porwanie)</option>
                                             <option value="Assault on LEO">Assault on LEO (Napaść na funkcjonariusza)</option>
@@ -321,17 +309,17 @@
 
                                 <div class="form-group">
                                     <label>Współoficerowie na miejscu (Co-Officers)</label>
-                                    <input type="text" id="raportWspoloficerowie" placeholder="np. Officer M. Johnson [LP-104], Det. Miller [LP-210]">
+                                    <input type="text" id="raportWspoloficerowie" placeholder="np. Officer M. Johnson [LP-104]">
                                 </div>
 
                                 <div class="form-group">
                                     <label>Zabezpieczone Dowody (Evidence Locker)</label>
-                                    <input type="text" id="raportDowody" placeholder="np. 1x Pistol (S/N: 99482), 45g Methamphetamine">
+                                    <input type="text" id="raportDowody" placeholder="np. 1x Pistol, 45g Methamphetamine">
                                 </div>
 
                                 <div class="form-group">
                                     <label>Narrative / Szczegółowy Opis Przebiegu Zdarzenia</label>
-                                    <textarea id="raportOpis" required placeholder="Opisz dokładnie przebieg interwencji, użycie siły, zeznania..."></textarea>
+                                    <textarea id="raportOpis" required placeholder="Opisz dokładnie przebieg interwencji..."></textarea>
                                 </div>
 
                                 <button type="submit" class="btn-primary full-width">Opublikuj Raport w Systemie</button>
