@@ -17,19 +17,20 @@ async function zaloguj() {
             document.getElementById('main-system').style.display = 'block';
             document.getElementById('officer-name').innerText = `Zalogowano: ${data.officer}`;
             
-            // ZAPISUJEMY ROLĘ UŻYTKOWNIKA W PAMIĘCI PRZEGLĄDARKI
-           localStorage.setItem('userRola', data.rola || 'admin');
+            // --- TUTAJ JEST NAPRAWA ---
+            // Jeśli logujesz się jako admin (lub odznaka to admin), wymusimy rolę 'admin'
+            const rolaUzytkownika = (badge === 'admin' || data.rola === 'admin') ? 'admin' : (data.rola || 'user');
+            localStorage.setItem('userRola', rolaUzytkownika);
 
-            // Pokazywanie złotego panelu tylko dla konta z rolą admin
             const adminPanel = document.getElementById('admin-panel');
-            if (data.rola === 'admin') {
+            if (rolaUzytkownika === 'admin') {
                 adminPanel.style.display = 'block';
             } else {
                 adminPanel.style.display = 'none';
             }
             
             sprawdzStatus();
-            szukajObywatela(); // Automatyczne załadowanie listy po zalogowaniu
+            szukajObywatela();
         } else {
             errorDiv.innerText = data.message;
         }
