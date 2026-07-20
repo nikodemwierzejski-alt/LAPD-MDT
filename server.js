@@ -53,20 +53,24 @@ app.post("/api/login", (req, res) => {
 // Pobieranie obywateli z ich mandatami
 app.get("/api/obywatele", async (req, res) => {
     const search = req.query.search || "";
+    console.log("Serwer otrzymał zapytanie szukania dla:", search); // Log na serwerze
     try {
-       const result = await db.query(
-            `SELECT o.*, COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]'::json) as mandaty 
-             FROM obywatele o 
-             LEFT JOIN mandaty m ON o.id = m.obywatel_id 
-             WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1 
-             GROUP BY o.id`,
-  [`%${search}%`]
-        );
+        const query = `
+            SELECT o.*, 
+            COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]'::json) as mandaty 
+            FROM obywatele o 
+            LEFT JOIN mandaty m ON o.id = m.obywatel_id 
+            WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1 
+            GROUP BY o.id`;
+        
+        const result = await db.query(query, [`%${search}%`]);
+        console.log("Znaleziono rekordów:", result.rows.length); // Log na serwerze
+        res.json(result.rows);
     } catch (err) {
+        console.error("KRYTYCZNY BŁĄD SERWERA:", err); // To zobaczymy w logach Render
         res.status(500).json({ error: err.message });
     }
 });
-
 // Dodawanie obywatela
 app.post("/api/obywatele", async (req, res) => {
     const { imie, nazwisko, data_urodzenia, uwagi } = req.body;
