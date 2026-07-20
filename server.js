@@ -86,4 +86,4 @@ app.post("/api/mandaty", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-[https://lapd-mdt-5y78.onrender.com/api/obywatele](https://lapd-mdt-5y78.onrender.com/api/obywatele)
+
