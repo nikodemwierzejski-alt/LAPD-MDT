@@ -145,6 +145,49 @@ app.post("/api/obywatele/:id/poszukiwany", async (req, res) => {
         res.status(500).send("Błąd serwera");
     }
 });
+async function inicjalizacjaBazy() {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS obywatele (
+                id SERIAL PRIMARY KEY,
+                imie VARCHAR(100),
+                nazwisko VARCHAR(100),
+                data_urodzenia VARCHAR(50),
+                poszukiwany INT DEFAULT 0,
+                uwagi TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS mandaty (
+                id SERIAL PRIMARY KEY,
+                obywatel_id INT REFERENCES obywatele(id) ON DELETE CASCADE,
+                powod TEXT,
+                kwota INT,
+                data VARCHAR(50)
+            );
+
+            CREATE TABLE IF NOT EXISTS kadry (
+                id SERIAL PRIMARY KEY,
+                odznaka VARCHAR(50) UNIQUE NOT NULL,
+                stopien_nazwisko VARCHAR(100) NOT NULL,
+                haslo VARCHAR(100) NOT NULL
+            );
+        `);
+
+        // Automatyczne dodanie konta testowego, jeśli jeszcze go nie ma
+        await db.query(`
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) 
+            VALUES ('99', 'Komendant Główny', 'lspd')
+            ON CONFLICT (odznaka) DO NOTHING;
+        `);
+
+        console.log("Tabele w bazie danych zostały sprawdzone/utworzone pomyślnie.");
+    } catch (err) {
+        console.error("Błąd podczas inicjalizacji bazy danych:", err);
+    }
+}
+
+// Wywołaj tę funkcję tuż przed uruchomieniem serwera
+inicjalizacjaBazy();
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serwer działa na http://localhost:${PORT}`);
 });
