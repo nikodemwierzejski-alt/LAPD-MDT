@@ -60,7 +60,7 @@ app.get("/api/obywatele", async (req, res) => {
              LEFT JOIN mandaty m ON o.id = m.obywatel_id 
              WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1 
              GROUP BY o.id`,
-     ['%' + search + '%']
+  [`%${search}%`]
         );
     } catch (err) {
         res.status(500).json({ error: err.message });
