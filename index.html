@@ -54,7 +54,7 @@
             <header class="topbar">
                 <div class="topbar-user">
                     <span id="officer-session-name">Lukas Weber</span>
-                    <span class="badge-pill">LP-1150</span>
+                    <span class="badge-pill" id="officer-session-badge">LP-1150</span>
                     <span class="dept-pill">LAPD</span>
                 </div>
                 <div class="topbar-right">
@@ -158,10 +158,10 @@
                     </div>
                 </section>
 
-                <!-- ZAKŁADKA: REPORTS (ROZBUDOWANY MODUŁ RAPORTÓW) -->
+                <!-- ZAKŁADKA: REPORTS (Z ROZSZERZONYMI AMERYKAŃSKIMI KATEGORIAMI) -->
                 <section id="tab-reports" class="tab-pane" style="display: none;">
-                    <h2>Raporty Policyjne</h2>
-                    <p class="subtitle">Archiwum raportów i rejestracja nowych interwencji</p>
+                    <h2>Raporty Policyjne (Incident Reports)</h2>
+                    <p class="subtitle">Archiwum incydentów i rejestracja nowych raportów w standardzie US Law Enforcement</p>
                     
                     <div class="citizens-grid">
                         <!-- Formularz tworzenia raportu -->
@@ -170,27 +170,45 @@
                             <form id="dodajRaportForm" onsubmit="utworzRaport(event)">
                                 <div class="form-group">
                                     <label>Tytuł / Incydent</label>
-                                    <input type="text" id="raportTytul" required placeholder="np. Napad na sklep / Zatrzymanie drogowe">
+                                    <input type="text" id="raportTytul" required placeholder="np. Armed Robbery / Felony Traffic Stop">
                                 </div>
                                 <div class="form-group">
-                                    <label>Kategoria</label>
+                                    <label>Kategoria Incydentu (US Penal Code)</label>
                                     <select id="raportKategoria" class="form-control-select">
-                                        <option value="Zatrzymanie">Zatrzymanie kryminalne</option>
-                                        <option value="Mandat">Wystawiony mandat</option>
-                                        <option value="Interwencja">Interwencja publiczna</option>
-                                        <option value="Wypadek">Wypadek drogowy</option>
-                                        <option value="Inne">Inne zgłoszenie</option>
+                                        <optgroup label="Zbrodnie i Przestępstwa (Felonies)">
+                                            <option value="Felony Traffic Stop">Felony Traffic Stop (Zatrzymanie wysokiego ryzyka)</option>
+                                            <option value="Armed Robbery">Armed Robbery (Napad z bronią w ręku)</option>
+                                            <option value="Grand Theft Auto">Grand Theft Auto (Kradzież pojazdu - GTA)</option>
+                                            <option value="Homicide / Murder">Homicide / Murder (Zabójstwo / Zabójstwo z premedytacją)</option>
+                                            <option value="Kidnapping">Kidnapping (Porwanie)</option>
+                                            <option value="Assault on LEO">Assault on LEO (Napaść na funkcjonariusza)</option>
+                                            <option value="Drug Trafficking">Drug Trafficking (Handel narkotykami / Narcotics)</option>
+                                            <option value="Bank Robbery">Bank Robbery (Napad na bank)</option>
+                                        </optgroup>
+                                        <optgroup label="Wykroczenia (Misdemeanors / Infractions)">
+                                            <option value="Traffic Infraction">Traffic Infraction (Przekroczenie prędkości / Wykroczenie drogowe)</option>
+                                            <option value="DUI (Driving Under Influence)">DUI (Jazda pod wpływem alkoholu/narkotyków)</option>
+                                            <option value="Resisting Arrest">Resisting Arrest (Stawianie oporu przy aresztowaniu)</option>
+                                            <option value="Vandalism">Vandalism (Wandalizm / Uszkodzenie mienia)</option>
+                                            <option value="Disturbing the Peace">Disturbing the Peace (Zakłócanie porządku publicznego)</option>
+                                            <option value="Trespassing">Trespassing (Wkroczenie na teren prywatny)</option>
+                                        </optgroup>
+                                        <optgroup label="Operacyjne / Inne">
+                                            <option value="Public Service">Public Service (Pomoc publiczna / Asysta)</option>
+                                            <option value="Traffic Accident">Traffic Accident (Kolizja / Wypadek drogowy)</option>
+                                            <option value="Internal / Other">Internal / Other (Inny incydent)</option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Zaangażowany podejrzany / Obywatel</label>
-                                    <input type="text" id="raportObywatel" placeholder="np. Jan Kowalski (opcjonalnie)">
+                                    <label>Zaangażowany podejrzany / Obywatel (Suspect / Civilian)</label>
+                                    <input type="text" id="raportObywatel" placeholder="np. John Doe (opcjonalnie)">
                                 </div>
                                 <div class="form-group">
-                                    <label>Treść raportu / Opis zdarzenia</label>
-                                    <textarea id="raportOpis" required placeholder="Szczegółowy opis przebiegu interwencji..."></textarea>
+                                    <label>Treść raportu / Opis zdarzenia (Narrative)</label>
+                                    <textarea id="raportOpis" required placeholder="Szczegółowy opis przebiegu interwencji, użycia siły i działań patrolu..."></textarea>
                                 </div>
-                                <button type="submit" class="btn-primary full-width">Zapisz i opublikuj raport</button>
+                                <button type="submit" class="btn-primary full-width">Zapisz i Opublikuj Raport</button>
                             </form>
                         </div>
 
@@ -198,7 +216,7 @@
                         <div class="panel-box">
                             <h3>📂 Archiwum Raportów</h3>
                             <div class="search-box-row" style="margin-bottom: 15px;">
-                                <input type="text" id="searchRaportInput" placeholder="Szukaj raportu..." oninput="pobierzRaporty()">
+                                <input type="text" id="searchRaportInput" placeholder="Szukaj po tytule, podejrzanym lub autorze..." oninput="pobierzRaporty()">
                             </div>
                             <div id="listaRaportow" class="results-container">
                                 <!-- Tutaj ładowane są raporty dynamicznie -->
@@ -240,8 +258,8 @@
                     <p class="subtitle">Twoja licencja i odznaka służbowa</p>
                     <div class="panel-box max-w-500">
                         <h3 style="color:#38bdf8;">LAPD Department ID Card</h3>
-                        <p><strong>Odznaka:</strong> LP-1150</p>
-                        <p><strong>Funkcjonariusz:</strong> Lukas Weber</p>
+                        <p><strong>Odznaka:</strong> <span id="card-badge-num">LP-1150</span></p>
+                        <p><strong>Funkcjonariusz:</strong> <span id="card-officer-name">Lukas Weber</span></p>
                         <p><strong>Ranga:</strong> Sierżant</p>
                         <p><strong>Status służbowy:</strong> Aktywny w terenie</p>
                     </div>
@@ -271,8 +289,8 @@
                     <p class="subtitle">Historia logowań i aktywności w systemie MDT</p>
                     <div class="panel-box">
                         <div class="mandates-section">
-                            <div class="mandate-item">🟢 Lukas Weber — Login (Auth 20:22:21)</div>
-                            <div class="mandate-item">🔴 Lukas Weber — Logout (Auth 20:22:11)</div>
+                            <div class="mandate-item">🟢 Lukas Weber [LP-1150] — Login (Auth 20:22:21)</div>
+                            <div class="mandate-item">🔴 Lukas Weber [LP-1150] — Logout (Auth 20:22:11)</div>
                         </div>
                     </div>
                 </section>
@@ -280,14 +298,14 @@
                 <!-- ZAKŁADKA: ADMIN -->
                 <section id="tab-admin" class="tab-pane" style="display: none;">
                     <h2>Panel Administratora</h2>
-                    <p class="subtitle">Zarządzanie kadrami i uprawnieniami LSPD</p>
+                    <p class="subtitle">Zارządzanie kadrami i uprawnieniami LSPD</p>
                     
                     <div class="panel-box max-w-500">
                         <h3>Dodaj nowego funkcjonariusza</h3>
                         <form id="dodajFunkcjonariuszaForm" onsubmit="dodajFunkcjonariusza(event)">
                             <div class="form-group">
                                 <label>Numer Odznaki</label>
-                                <input type="text" id="activeBadge" required placeholder="np. 101">
+                                <input type="text" id="activeBadge" required placeholder="np. LP-101">
                             </div>
                             <div class="form-group">
                                 <label>Stopień i Nazwisko</label>
