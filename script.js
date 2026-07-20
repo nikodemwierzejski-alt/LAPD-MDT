@@ -1,6 +1,35 @@
+// Zegarek w górnym pasku
+setInterval(() => {
+    const now = new Date();
+    const timeString = now.toTimeString().split(' ')[0];
+    const timeEl = document.getElementById('current-time');
+    if (timeEl) timeEl.innerText = timeString;
+}, 1000);
+
+// Przełączanie zakładek w nowoczesnym menu bocznym
+function zmienZakladke(nazwaZakladki, event) {
+    if (event) event.preventDefault();
+    
+    // Ukryj wszystkie zakładki
+    document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+    // Pokaż wybraną
+    const wybrana = document.getElementById(`tab-${nazwaZakladki}`);
+    if (wybrana) wybrana.style.display = 'block';
+
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+
+    if (nazwaZakladki === 'citizens') {
+        szukajObywatela();
+    }
+}
+
 // System Logowania
 async function zaloguj() {
-    const badge = document.getElementById('badgeInput').value;
+    const badge = document.getElementById('badgeInput').value.trim();
     const password = document.getElementById('passwordInput').value;
     const errorDiv = document.getElementById('login-error');
 
@@ -14,23 +43,24 @@ async function zaloguj() {
 
         if (data.success) {
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-system').style.display = 'block';
-            document.getElementById('officer-name').innerText = `Zalogowano: ${data.officer}`;
+            document.getElementById('main-system').style.display = 'flex';
             
-            // --- TUTAJ JEST NAPRAWA ---
-            // Jeśli logujesz się jako admin (lub odznaka to admin), wymusimy rolę 'admin'
+            // Ustawienia danych funkcjonariusza w nagłówku
+            document.getElementById('officer-session-name').innerText = data.officer;
+            
+            // Określenie roli i zapamiętanie w localStorage
             const rolaUzytkownika = (badge === 'admin' || data.rola === 'admin') ? 'admin' : (data.rola || 'user');
             localStorage.setItem('userRola', rolaUzytkownika);
 
-            const adminPanel = document.getElementById('admin-panel');
+            // Pokazywanie lub ukrywanie przycisku/zakładki Admin w menu bocznym
+            const navAdmin = document.getElementById('nav-admin');
             if (rolaUzytkownika === 'admin') {
-                adminPanel.style.display = 'block';
+                navAdmin.style.display = 'block';
             } else {
-                adminPanel.style.display = 'none';
+                navAdmin.style.display = 'none';
             }
             
             sprawdzStatus();
-            szukajObywatela();
         } else {
             errorDiv.innerText = data.message;
         }
@@ -39,15 +69,22 @@ async function zaloguj() {
     }
 }
 
+function wyloguj() {
+    localStorage.removeItem('userRola');
+    location.reload();
+}
+
 async function sprawdzStatus() {
     try {
         const res = await fetch('/api/status');
         const data = await res.json();
-        document.getElementById('system-status').innerText = `System: ${data.status} | ${data.system}`;
-        document.getElementById('system-status').style.color = '#00ff00';
+        const statusEl = document.getElementById('system-status');
+        statusEl.innerText = `System: ${data.status} | ${data.system}`;
+        statusEl.style.color = '#4ade80';
     } catch (err) {
-        document.getElementById('system-status').innerText = 'System: OFFLINE';
-        document.getElementById('system-status').style.color = '#ff0000';
+        const statusEl = document.getElementById('system-status');
+        statusEl.innerText = 'System: OFFLINE';
+        statusEl.style.color = '#f87171';
     }
 }
 
@@ -60,12 +97,12 @@ async function szukajObywatela() {
         const res = await fetch(`/api/obywatele?search=${encodeURIComponent(query)}&t=${Date.now()}`);
         const obywatele = await res.json();
 
-        if (obywatele.length === 0) {
-            wynikiDiv.innerHTML = '<p>Brak wyników.</p>';
+        if (!Array.isArray(obywatele) || obywatele.length === 0) {
+            wynikiDiv.innerHTML = '<p style="color:#64748b; font-size:13px;">Brak wyników.</p>';
             return;
         }
 
-        wynikiDiv.innerHTML = Array.isArray(obywatele) ? obywatele.map(o => `
+        wynikiDiv.innerHTML = obywatele.map(o => `
             <div class="citizen-card ${o.poszukiwany ? 'wanted-border' : ''}">
                 <h3>${o.imie} ${o.nazwisko}</h3>
                 <p><strong>Urodzony:</strong> ${o.data_urodzenia || 'Brak'}</p>
@@ -91,14 +128,14 @@ async function szukajObywatela() {
                 </div>
 
                 <div class="add-mandate-box">
-                    <input type="text" id="powod-${o.id}" placeholder="Powód mandatu" style="font-size:12px; padding:5px; width:60%;">
-                    <input type="number" id="kwota-${o.id}" placeholder="Kwota $" style="font-size:12px; padding:5px; width:25%;">
-                    <button class="btn-small" onclick="wystawMandat(${o.id})">+</button>
+                    <input type="text" id="powod-${o.id}" placeholder="Powód mandatu" style="font-size:12px; padding:5px; width:60%; background:#1f2937; border:1px solid #374151; color:white; border-radius:4px;">
+                    <input type="number" id="kwota-${o.id}" placeholder="Kwota $" style="font-size:12px; padding:5px; width:25%; background:#1f2937; border:1px solid #374151; color:white; border-radius:4px;">
+                    <button class="btn-small btn-primary" onclick="wystawMandat(${o.id})">+</button>
                 </div>
             </div>
-        `).join('') : '<p>Brak wyników.</p>';
+        `).join('');
     } catch (err) {
-        wynikiDiv.innerHTML = '<p style="color:red;">Błąd bazy danych.</p>';
+        wynikiDiv.innerHTML = '<p style="color:#f87171;">Błąd bazy danych.</p>';
     }
 }
 
@@ -117,7 +154,6 @@ async function wystawMandat(obywatel_id) {
 
     const powod = powodInput.value;
     const kwota = kwotaInput.value;
-    
     const data = new Date().toLocaleDateString('pl-PL');
 
     if (!powod || !kwota) {
@@ -166,7 +202,6 @@ async function dodajObywatela(event) {
     }
 }
 
-// Funkcja obsługująca dodawanie funkcjonariusza w panelu administratora
 async function dodajFunkcjonariusza(event) {
     event.preventDefault();
     
@@ -185,20 +220,19 @@ async function dodajFunkcjonariusza(event) {
         const data = await res.json();
         
         if (data.success) {
-            messageDiv.style.color = '#00ff00';
+            messageDiv.style.color = '#4ade80';
             messageDiv.innerText = data.message;
             document.getElementById('dodajFunkcjonariuszaForm').reset();
         } else {
-            messageDiv.style.color = '#ff0000';
+            messageDiv.style.color = '#f87171';
             messageDiv.innerText = data.message;
         }
     } catch (e) {
-        messageDiv.style.color = '#ff0000';
+        messageDiv.style.color = '#f87171';
         messageDiv.innerText = "Błąd połączenia z serwerem.";
     }
 }
 
-// Nowa funkcja usuwania obywatela (tylko dla admina)
 async function usunObywatela(id) {
     if (!confirm("Czy na pewno chcesz trwale usunąć tego obywatela z bazy?")) return;
 
