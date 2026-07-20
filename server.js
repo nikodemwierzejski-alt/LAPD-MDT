@@ -1,47 +1,44 @@
 const express = require("express");
 const path = require("path");
-const sqlite3 = require("sqlite3").verbose();
+const { Client } = require("pg");
 const cors = require("cors");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Użycie pliku zamiast pamięci RAM, aby dane nie znikały
-const db = new sqlite3.Database('./baza.db');
+const db = new Client({
+    connectionString: "postgresql://neondb_owner:npg_T94GvMwZcjyA@ep-old-bread-auu10o6b.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require"
+});
 
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS obywatele (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+db.connect();
+
+async function initDb() {
+    await db.query(`CREATE TABLE IF NOT EXISTS obywatele (
+        id SERIAL PRIMARY KEY,
         imie TEXT,
         nazwisko TEXT,
         data_urodzenia TEXT,
         poszukiwany INTEGER DEFAULT 0,
         uwagi TEXT
     )`);
-
-    db.run(`CREATE TABLE IF NOT EXISTS mandaty (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        obywatel_id INTEGER,
+    await db.query(`CREATE TABLE IF NOT EXISTS mandaty (
+        id SERIAL PRIMARY KEY,
+        obywatel_id INTEGER REFERENCES obywatele(id) ON DELETE CASCADE,
         powod TEXT,
         kwota INTEGER,
-        data TEXT,
-        FOREIGN KEY(obywatel_id) REFERENCES obywatele(id)
+        data TEXT
     )`);
-});
+}
+initDb();
 
 const funkcjonariusze = {
     "99": { haslo: "lspd", imie: "Officer Smith", rola: "user" },
     "admin": { haslo: "admin123", imie: "Komendant Główny", rola: "admin" }
 };
-
-// Endpoint statusu
-app.get("/api/status", (req, res) => {
-    res.json({ status: "Online", system: "LSPD MDT v2.0" });
-});
 
 // Logowanie
 app.post("/api/login", (req, res) => {
@@ -53,53 +50,40 @@ app.post("/api/login", (req, res) => {
     }
 });
 
-// Dodawanie funkcjonariusza
-app.post("/api/officers", (req, res) => {
-    const { badge, name, password } = req.body;
-    if (!badge || !password || !name) return res.status(400).json({ success: false, message: "Wypełnij wszystkie pola!" });
-    
-    funkcjonariusze[badge] = { haslo: password, imie: name, rola: "user" };
-    res.json({ success: true, message: "Dodano funkcjonariusza!" });
-});
-
-// Pobieranie obywateli z mandatami
-app.get("/api/obywatele", (req, res) => {
+// Pobieranie obywateli z ich mandatami
+app.get("/api/obywatele", async (req, res) => {
     const search = req.query.search || "";
-    db.all(`SELECT * FROM obywatele WHERE imie LIKE ? OR nazwisko LIKE ?`, [`%${search}%`, `%${search}%`], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (rows.length === 0) return res.json([]);
-
-        let count = 0;
-        rows.forEach((o) => {
-            db.all(`SELECT * FROM mandaty WHERE obywatel_id = ?`, [o.id], (err, mandaty) => {
-                o.mandaty = mandaty || [];
-                count++;
-                if (count === rows.length) res.json(rows);
-            });
-        });
-    });
+    try {
+        const result = await db.query(
+            "SELECT o.*, json_agg(m.*) FILTER (WHERE m.id IS NOT NULL) as mandaty FROM obywatele o LEFT JOIN mandaty m ON o.id = m.obywatel_id WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1 GROUP BY o.id",
+            [`%${search}%`]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Dodawanie obywatela
-app.post("/api/obywatele", (req, res) => {
+app.post("/api/obywatele", async (req, res) => {
     const { imie, nazwisko, data_urodzenia, uwagi } = req.body;
-    db.run(`INSERT INTO obywatele (imie, nazwisko, data_urodzenia, uwagi) VALUES (?, ?, ?, ?)`, 
-        [imie, nazwisko, data_urodzenia, uwagi], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        await db.query("INSERT INTO obywatele (imie, nazwisko, data_urodzenia, uwagi) VALUES ($1, $2, $3, $4)", [imie, nazwisko, data_urodzenia, uwagi]);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Wystawianie mandatu
-app.post("/api/mandaty", (req, res) => {
+app.post("/api/mandaty", async (req, res) => {
     const { obywatel_id, powod, kwota, data } = req.body;
-    db.run(`INSERT INTO mandaty (obywatel_id, powod, kwota, data) VALUES (?, ?, ?, ?)`, 
-        [obywatel_id, powod, kwota, data], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        await db.query("INSERT INTO mandaty (obywatel_id, powod, kwota, data) VALUES ($1, $2, $3, $4)", [obywatel_id, powod, kwota, data]);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.listen(PORT, () => {
-    console.log(`Serwer działa na http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Serwer działa na http://localhost:${PORT}`));
