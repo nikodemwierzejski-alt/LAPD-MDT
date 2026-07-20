@@ -139,13 +139,54 @@
                     </div>
                 </section>
 
-                <!-- ZAKŁADKA: VEHICLES -->
+                <!-- ZAKŁADKA: VEHICLES (NOWY WYPASIONY MODUŁ DMV) -->
                 <section id="tab-vehicles" class="tab-pane" style="display: none;">
-                    <h2>Rejestr Pojazdów</h2>
-                    <p class="subtitle">Wyszukiwanie i kontrola pojazdów w bazie DMV</p>
-                    <div class="panel-box">
-                        <input type="text" placeholder="Wpisz numer rejestracyjny lub model..." style="width:100%; padding:10px; background:#1f2937; border:1px solid #374151; color:white; border-radius:6px; margin-bottom:15px;">
-                        <p style="color: #64748b; font-size:13px;">Brak wyszukanych pojazdów.</p>
+                    <h2>Rejestr Pojazdów DMV (Department of Motor Vehicles)</h2>
+                    <p class="subtitle">System szybkiego sprawdzania tablic, kolorów, właścicieli oraz statusu operacyjnego pojazdów</p>
+                    
+                    <div class="citizens-grid">
+                        <!-- Panel rejestracji pojazdu -->
+                        <div class="panel-box" style="border-left: 4px solid #38bdf8;">
+                            <h3>🚗 Rejestracja Nowego Pojazdu</h3>
+                            <form id="dodajPojazdForm" onsubmit="utworzPojazd(event)">
+                                <div class="form-group">
+                                    <label>Model Pojazdu / Marka</label>
+                                    <input type="text" id="vehModel" required placeholder="np. Vapid Dominator / Benefactor Schafter">
+                                </div>
+                                <div class="form-group">
+                                    <label>Numer Rejestracyjny (Plate)</label>
+                                    <input type="text" id="vehPlate" required placeholder="np. 34XYZ89 (Wielkimi literami)" style="text-transform: uppercase;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Kolor Nadwozia</label>
+                                    <input type="text" id="vehColor" required placeholder="np. Czarny mat / Midnight Blue">
+                                </div>
+                                <div class="form-group">
+                                    <label>Właściciel (Imię i Nazwisko)</label>
+                                    <input type="text" id="vehOwner" required placeholder="np. John Doe">
+                                </div>
+                                <div class="form-group">
+                                    <label>Status Operacyjny Pojazdu</label>
+                                    <select id="vehStatus" class="form-control-select">
+                                        <option value="clean">🟢 Czysty / Zarejestrowany (Clean)</option>
+                                        <option value="wanted">🔴 POSZUKIWANY / HOT-LIST (Stolen / Felony Vehicle)</option>
+                                        <option value="impounded">🟠 Skonfiskowany / Na parkingu policyjnym (Impounded)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn-primary full-width">Wprowadź Pojazd do Bazy DMV</button>
+                            </form>
+                        </div>
+
+                        <!-- Panel wyszukiwania i floty -->
+                        <div class="panel-box">
+                            <h3>🔍 Terminal Wyszukiwania Pojazdów</h3>
+                            <div class="search-box-row" style="margin-bottom: 15px;">
+                                <input type="text" id="searchVehicleInput" placeholder="Szukaj po tablicach, modelu, właścicielu..." oninput="pobierzPojazdy()">
+                            </div>
+                            <div id="listaPojazdow" class="results-container">
+                                <!-- Dynamiczna lista pojazdów -->
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -158,13 +199,12 @@
                     </div>
                 </section>
 
-                <!-- ZAKŁADKA: REPORTS (ZAAWANSOWANA WERSJA US CAD/MDT) -->
+                <!-- ZAKŁADKA: REPORTS -->
                 <section id="tab-reports" class="tab-pane" style="display: none;">
                     <h2>Zaawansowane Raporty Policyjne (CAD/MDT)</h2>
                     <p class="subtitle">Pełna dokumentacja incydentów z obsługą podejrzanych, pojazdów, dowodów i statusów</p>
                     
                     <div class="citizens-grid">
-                        <!-- Formularz tworzenia rozbudowanego raportu -->
                         <div class="panel-box">
                             <h3>📝 Nowy Raport Operacyjny</h3>
                             <form id="dodajRaportForm" onsubmit="utworzRaport(event)">
@@ -238,15 +278,12 @@
                             </form>
                         </div>
 
-                        <!-- Lista i wyszukiwanie raportów -->
                         <div class="panel-box">
                             <h3>📂 Archiwum Raportów Centrali</h3>
                             <div class="search-box-row" style="margin-bottom: 15px;">
                                 <input type="text" id="searchRaportInput" placeholder="Szukaj po tytule, podejrzanym, pojeździe..." oninput="pobierzRaporty()">
                             </div>
-                            <div id="listaRaportow" class="results-container">
-                                <!-- Tutaj ładowane są raporty dynamicznie -->
-                            </div>
+                            <div id="listaRaportow" class="results-container"></div>
                         </div>
                     </div>
                 </section>
