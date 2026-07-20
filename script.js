@@ -12,11 +12,14 @@ async function zaloguj() {
         });
         const data = await res.json();
 
-        if (data.success) {
+     if (data.success) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-system').style.display = 'block';
             document.getElementById('officer-name').innerText = `Zalogowano: ${data.officer}`;
             
+            // ZAPISUJEMY ROLĘ UŻYTKOWNIKA W PAMIĘCI PRZEGLĄDARKI
+            localStorage.setItem('userRola', data.rola);
+
             // Pokazywanie złotego panelu tylko dla konta z rolą admin
             const adminPanel = document.getElementById('admin-panel');
             if (data.rola === 'admin') {
@@ -26,14 +29,8 @@ async function zaloguj() {
             }
             
             sprawdzStatus();
-        } else {
-            errorDiv.innerText = data.message;
+            szukajObywatela(); // Automatyczne załadowanie listy po zalogowaniu
         }
-    } catch (e) {
-        errorDiv.innerText = "Błąd połączenia z serwerem.";
-    }
-}
-
 async function sprawdzStatus() {
     try {
         const res = await fetch('/api/status');
