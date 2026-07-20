@@ -22,6 +22,8 @@ function zmienZakladke(nazwaZakladki, event) {
 
     if (nazwaZakladki === 'citizens') {
         szukajObywatela();
+    } else if (nazwaZakladki === 'vehicles') {
+        pobierzPojazdy();
     } else if (nazwaZakladki === 'reports') {
         pobierzRaporty();
     }
@@ -231,7 +233,154 @@ async function dodajObywatela(event) {
     }
 }
 
-// --- MODUŁ RAPORTÓW (ROZBUDOWANY CAD/MDT) ---
+// --- MODUŁ POJAZDÓW (VEHICLES / DMV HOT-LIST) ---
+async function utworzPojazd(event) {
+    event.preventDefault();
+    
+    const model = document.getElementById('vehModel').value.trim();
+    const plate = document.getElementById('vehPlate').value.trim().toUpperCase();
+    const color = document.getElementById('vehColor').value.trim();
+    const owner = document.getElementById('vehOwner').value.trim();
+    const status = document.getElementById('vehStatus').value;
+    const dataDodania = new Date().toLocaleString('pl-PL');
+
+    const nowyPojazd = { model, plate, color, owner, status, dataDodania };
+
+    try {
+        const res = await fetch('/api/pojazdy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nowyPojazd)
+        });
+
+        if (res.ok) {
+            document.getElementById('dodajPojazdForm').reset();
+            alert('Pojazd został pomyślnie zarejestrowany w systemie DMV!');
+            pobierzPojazdy();
+        } else {
+            zapiszPojazdLokalnie(nowyPojazd);
+        }
+    } catch (e) {
+        zapiszPojazdLokalnie(nowyPojazd);
+    }
+}
+
+function zapiszPojazdLokalnie(pojazd) {
+    let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
+    pojazd.id = Date.now();
+    pojazdy.unshift(pojazd);
+    localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
+    document.getElementById('dodajPojazdForm').reset();
+    alert('Pojazd zapisany w lokalnej bazie terminala!');
+    pobierzPojazdy();
+}
+
+async function pobierzPojazdy() {
+    const listaDiv = document.getElementById('listaPojazdow');
+    const szukajVal = (document.getElementById('searchVehicleInput')?.value || '').toLowerCase();
+    
+    listaDiv.innerHTML = 'Przeszukiwanie bazy rejestracyjnej DMV...';
+
+    try {
+        const res = await fetch('/api/pojazdy');
+        if (res.ok) {
+            const pojazdy = await res.json();
+            wyswietlListePojazdow(pojazdy, szukajVal);
+            return;
+        }
+    } catch (e) {}
+
+    let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
+    if (pojazdy.length === 0) {
+        pojazdy = [
+            { 
+                id: 1, 
+                model: "Vapid Dominator", 
+                plate: "34XYZ89", 
+                color: "Czarny Mat", 
+                owner: "John Doe", 
+                status: "wanted", 
+                dataDodania: "19.04.2026, 21:00:00" 
+            },
+            { 
+                id: 2, 
+                model: "Benefactor Schafter", 
+                plate: "77ABC12", 
+                color: "Srebrny", 
+                owner: "Jane Smith", 
+                status: "clean", 
+                dataDodania: "19.04.2026, 21:30:00" 
+            }
+        ];
+        localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
+    }
+    wyswietlListePojazdow(pojazdy, szukajVal);
+}
+
+function wyswietlListePojazdow(pojazdy, filtr) {
+    const listaDiv = document.getElementById('listaPojazdow');
+    
+    const przefiltrowane = pojazdy.filter(p => 
+        p.model.toLowerCase().includes(filtr) || 
+        p.plate.toLowerCase().includes(filtr) || 
+        p.owner.toLowerCase().includes(filtr)
+    );
+
+    if (przefiltrowane.length === 0) {
+        listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px;">Brak pojazdów w rejestrze spełniających kryteria.</p>';
+        return;
+    }
+
+    listaDiv.innerHTML = przefiltrowane.map(p => {
+        let statusKolor = '#065f46';
+        let statusTekst = '🟢 Czysty / Clean';
+        if (p.status === 'wanted') {
+            statusKolor = '#dc2626';
+            statusTekst = '🔴 POSZUKIWANY / HOT-LIST (Stolen)';
+        } else if (p.status === 'impounded') {
+            statusKolor = '#b45309';
+            statusTekst = '🟠 Skonfiskowany (Impounded)';
+        }
+
+        return `
+            <div class="citizen-card ${p.status === 'wanted' ? 'wanted-border' : ''}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-family: monospace; font-size: 16px; font-weight: bold; background: #111827; padding: 4px 10px; border-radius: 6px; border: 1px solid #374151; color: #38bdf8;">
+                        [ ${p.plate} ]
+                    </span>
+                    <span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: ${statusKolor}; color: white; font-weight: bold;">
+                        ${statusTekst}
+                    </span>
+                </div>
+                <h3>${p.model}</h3>
+                <p><strong>👤 Właściciel:</strong> ${p.owner}</p>
+                <p><strong>🎨 Kolor:</strong> ${p.color}</p>
+                <p><strong>🕒 Rejestracja:</strong> ${p.dataDodania}</p>
+
+                <div style="margin-top: 12px; pt: 8px; border-top: 1px solid #1f2937; display: flex; gap: 8px; align-items: center;">
+                    <label style="font-size: 11px; color: #9ca3af;">Zmień status:</label>
+                    <select onchange="zmienStatusPojazdu(${p.id}, this.value)" style="font-size: 11px; padding: 4px; background: #1f2937; border: 1px solid #374151; color: white; border-radius: 4px;">
+                        <option value="clean" ${p.status === 'clean' ? 'selected' : ''}>Czysty (Clean)</option>
+                        <option value="wanted" ${p.status === 'wanted' ? 'selected' : ''}>Poszukiwany (Wanted)</option>
+                        <option value="impounded" ${p.status === 'impounded' ? 'selected' : ''}>Skonfiskowany (Impounded)</option>
+                    </select>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function zmienStatusPojazdu(id, nowyStatus) {
+    let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
+    let pojazd = pojazdy.find(p => p.id === id);
+    if (pojazd) {
+        pojazd.status = nowyStatus;
+        localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
+        pobierzPojazdy();
+    }
+}
+
+// --- MODUŁ RAPORTÓW ---
 async function utworzRaport(event) {
     event.preventDefault();
     
@@ -358,7 +507,6 @@ function wyswietlListeRaportow(raporty, filtr) {
     `).join('');
 }
 
-// Funkcja generująca oficjalny widok wydruku raportu policyjnego
 function drukujRaport(r) {
     const oknoDruku = window.open('', '_blank', 'width=800,height=600');
     oknoDruku.document.write(`
@@ -439,7 +587,7 @@ async function dodajFunkcjonariusza(event) {
     } catch (e) {
         messageDiv.style.color = '#4ade80';
         messageDiv.innerText = "Funkcjonariusz zapisany pomyślnie!";
-        document.getElementById('dodajFunkcjonariuszaForm').reset();
+        document.getElementById('dodajFunkcjonariuszaForm'].reset();
     }
 }
 
