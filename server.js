@@ -63,7 +63,7 @@ app.get("/api/obywatele", async (req, res) => {
             WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1 
             GROUP BY o.id`;
         
-        const result = await db.query(query, [`%${search}%`]);
+        const result = await db.query(query, [%${search}%]);
         console.log("Znaleziono rekordów:", result.rows.length); // Log na serwerze
         res.json(result.rows);
     } catch (err) {
