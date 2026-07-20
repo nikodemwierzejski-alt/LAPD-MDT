@@ -94,11 +94,11 @@ wynikiDiv.innerHTML = Array.isArray(obywatele) ? obywatele.map(o => `
 
 async function przelaczPoszukiwany(id, nowyStatus) {
     await fetch(`/api/obywatele/${id}/poszukiwany`, {
-        method: 'POST',
+        method: 'POST', // Musi być POST, skoro taki adres dodaliśmy na serwerze
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ poszukiwany: nowyStatus })
     });
-    szukajObywatela();
+    szukajObywatela(); // Odświeża listę, żeby status zmienił się na ekranie
 }
 
 async function wystawMandat(obywatel_id) {
