@@ -23,7 +23,7 @@
     <!-- GŁÓWNY INTERFEJS SYSTEMU -->
     <div id="main-system" class="app-layout" style="display: none;">
         
-        <!-- PANEL BOCZNY (SIDEBAR) -->
+        <!-- PANEL BOCZNY (ZGODNY ZE ZDJĘCIEM) -->
         <aside class="sidebar">
             <div class="sidebar-brand">
                 <h2>LA MDT</h2>
@@ -31,7 +31,18 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" onclick="zmienZakladke('dashboard', event)">📊 Dashboard</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('livemap', event)">🗺️ Live Map</a>
                 <a href="#" class="nav-item" onclick="zmienZakladke('citizens', event)">👥 Citizens</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('vehicles', event)">🚗 Vehicles</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('calls', event)">📞 Calls</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('reports', event)">📄 Reports</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('bolo', event)">⚠️ BOLO</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('warrants', event)">⚖️ Warrants</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('dispatch', event)">📻 Dispatch</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('badgeid', event)">🛡️ Badge / ID</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('widgets', event)">🔲 Widgets</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('erlclive', event)">🚨 ERLC Live</a>
+                <a href="#" class="nav-item" onclick="zmienZakladke('logs', event)">📋 Logs</a>
                 <a href="#" class="nav-item" onclick="zmienZakladke('admin', event)" id="nav-admin" style="display: none;">⚙️ Admin</a>
             </nav>
         </aside>
@@ -81,24 +92,28 @@
                     </div>
                 </section>
 
-                <!-- ZAKŁADKA: CITIZENS (Obywatele, wyszukiwarka, dodawanie, mandaty) -->
+                <!-- ZAKŁADKA: LIVE MAP -->
+                <section id="tab-livemap" class="tab-pane" style="display: none;">
+                    <h2>Mapa Operacyjna Na Żywo</h2>
+                    <p class="subtitle">Podgląd lokalizacji jednostek w terenie</p>
+                    <div class="panel-box" style="height: 60vh; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                        [ Moduł mapy GPS zintegrowany z siecią patrolową ]
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: CITIZENS (Obywatele) -->
                 <section id="tab-citizens" class="tab-pane" style="display: none;">
                     <h2>Baza Obywateli</h2>
-                    
                     <div class="citizens-grid">
-                        <!-- WYSZUKIWARKA I WYNIKI -->
                         <div class="panel-box">
                             <h3>Wyszukiwarka Obywateli</h3>
                             <div class="search-box-row">
                                 <input type="text" id="searchInput" placeholder="Imię i nazwisko..." oninput="szukajObywatela()">
                                 <button onclick="szukajObywatela()" class="btn-primary">Szukaj</button>
                             </div>
-                            <div id="wynikiWyszukiwania" class="results-container">
-                                <!-- Tutaj dynamicznie ładują się karty obywateli -->
-                            </div>
+                            <div id="wynikiWyszukiwania" class="results-container"></div>
                         </div>
 
-                        <!-- DODAWANIE OBYWATELA -->
                         <div class="panel-box">
                             <h3>Dodaj do Kartoteki</h3>
                             <form id="dodajObywatelaForm" onsubmit="dodajObywatela(event)">
@@ -124,7 +139,106 @@
                     </div>
                 </section>
 
-                <!-- ZAKŁADKA: ADMIN (Tylko dla administratora) -->
+                <!-- ZAKŁADKA: VEHICLES -->
+                <section id="tab-vehicles" class="tab-pane" style="display: none;">
+                    <h2>Rejestr Pojazdów</h2>
+                    <p class="subtitle">Wyszukiwanie i kontrola pojazdów w bazie DMV</p>
+                    <div class="panel-box">
+                        <input type="text" placeholder="Wpisz numer rejestracyjny lub model..." style="width:100%; padding:10px; background:#1f2937; border:1px solid #374151; color:white; border-radius:6px; margin-bottom:15px;">
+                        <p style="color: #64748b; font-size:13px;">Brak wyszukanych pojazdów.</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: CALLS -->
+                <section id="tab-calls" class="tab-pane" style="display: none;">
+                    <h2>Aktywne Zgłoszenia (Calls)</h2>
+                    <p class="subtitle">Wezwania interwencyjne spływające z centrali 911</p>
+                    <div class="panel-box">
+                        <p style="color: #64748b; font-size:13px;">Brak aktywnych zgłoszeń w kolejce.</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: REPORTS -->
+                <section id="tab-reports" class="tab-pane" style="display: none;">
+                    <h2>Raporty Policyjne</h2>
+                    <p class="subtitle">Archiwum raportów z przeprowadzonych interwencji</p>
+                    <div class="panel-box">
+                        <button class="btn-primary" style="margin-bottom: 15px;">+ Utwórz nowy raport</button>
+                        <p style="color: #64748b; font-size:13px;">Brak zapisanych raportów w systemie.</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: BOLO -->
+                <section id="tab-bolo" class="tab-pane" style="display: none;">
+                    <h2>Alerty BOLO (Be On the Lookout)</h2>
+                    <p class="subtitle">Ogólnokrajowe ostrzeżenia o poszukiwanych osobach i autach</p>
+                    <div class="panel-box">
+                        <p style="color: #64748b; font-size:13px;">Brak aktywnych alertów BOLO.</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: WARRANTS -->
+                <section id="tab-warrants" class="tab-pane" style="display: none;">
+                    <h2>Nakazy Aresztowania (Warrants)</h2>
+                    <p class="subtitle">Aktywne nakazy wydane przez departament sprawiedliwości</p>
+                    <div class="panel-box">
+                        <p style="color: #64748b; font-size:13px;">Brak aktywnych nakazów.</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: DISPATCH -->
+                    <section id="tab-dispatch" class="tab-pane" style="display: none;">
+                    <h2>Dyspozytornia (Dispatch)</h2>
+                    <p class="subtitle">Panel koordynacji radiowej i przydzielania patroli</p>
+                    <div class="panel-box">
+                        <p style="color: #64748b; font-size:13px;">Kanał radiowy aktywny. Brak oczekujących zgłoszeń.</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: BADGE / ID -->
+                <section id="tab-badgeid" class="tab-pane" style="display: none;">
+                    <h2>Identyfikacja Funkcjonariusza (Badge / ID)</h2>
+                    <p class="subtitle">Twoja licencja i odznaka służbowa</p>
+                    <div class="panel-box max-w-500">
+                        <h3 style="color:#38bdf8;">LAPD Department ID Card</h3>
+                        <p><strong>Odznaka:</strong> LP-1150</p>
+                        <p><strong>Funkcjonariusz:</strong> Lukas Weber</p>
+                        <p><strong>Ranga:</strong> Sierżant</p>
+                        <p><strong>Status służbowy:</strong> Aktywny w terenie</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: WIDGETS -->
+                <section id="tab-widgets" class="tab-pane" style="display: none;">
+                    <h2>Narzędzia i Widżety</h2>
+                    <p class="subtitle">Szybki dostęp do dodatkowych kalkulatorów i narzędzi MDT</p>
+                    <div class="panel-box">
+                        <p style="color: #64748b; font-size:13px;">Brak włączonych widżetów użytkownika.</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: ERLC LIVE -->
+                <section id="tab-erlclive" class="tab-pane" style="display: none;">
+                    <h2>ERLC Live Integracja</h2>
+                    <p class="subtitle">Stan serwera gry i synchronizacja graczy online</p>
+                    <div class="panel-box">
+                        <p style="color: #4ade80; font-size:14px;">🟢 Połączono z serwerem Emergency River City (ERLC)</p>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: LOGS -->
+                <section id="tab-logs" class="tab-pane" style="display: none;">
+                    <h2>Logi Systemowe</h2>
+                    <p class="subtitle">Historia logowań i aktywności w systemie MDT</p>
+                    <div class="panel-box">
+                        <div class="mandates-section">
+                            <div class="mandate-item">🟢 Lukas Weber — Login (Auth 20:22:21)</div>
+                            <div class="mandate-item">🔴 Lukas Weber — Logout (Auth 20:22:11)</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ZAKŁADKA: ADMIN -->
                 <section id="tab-admin" class="tab-pane" style="display: none;">
                     <h2>Panel Administratora</h2>
                     <p class="subtitle">Zarządzanie kadrami i uprawnieniami LSPD</p>
