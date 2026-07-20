@@ -85,6 +85,10 @@ app.post("/api/mandaty", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// Endpoint sprawdzający status
+app.get("/api/status", (req, res) => {
+    res.json({ status: "ONLINE", system: "LAPD-MDT" });
+});
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serwer działa na http://localhost:${PORT}`);
 });
