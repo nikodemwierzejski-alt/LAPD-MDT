@@ -52,13 +52,20 @@ app.post("/api/login", (req, res) => {
 
 // Pobieranie obywateli z ich mandatami
 app.get("/api/obywatele", async (req, res) => {
+    // Pobieramy szukaną frazę
     const search = req.query.search || "";
+    
     try {
-// Zmień zapytanie wewnątrz app.get("/api/obywatele", ...) na:
-const query = "SELECT * FROM obywatele WHERE LOWER(imie) LIKE LOWER($1) OR LOWER(nazwisko) LIKE LOWER($1)";
-const result = await db.query(query, ['%' + search + '%']);
+        // Tworzymy wzorzec dla SQL (np. "%Jan%")
+        const searchPattern = `%${search}%`;
+        
+        // Wykonujemy zapytanie używając jednego parametru dla obu kolumn
+        const query = "SELECT * FROM obywatele WHERE imie ILIKE $1 OR nazwisko ILIKE $1";
+        const result = await db.query(query, [searchPattern]);
+        
         res.json(result.rows);
     } catch (err) {
+        console.error("Błąd SQL:", err); // To pokaże błąd w logach Render
         res.status(500).send(err.message);
     }
 });
