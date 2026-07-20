@@ -52,7 +52,7 @@ async function szukajObywatela() {
     wynikiDiv.innerHTML = 'Szukanie...';
 
     try {
-       const res = await fetch(`/api/obywatele?search=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/obywatele?search=${encodeURIComponent(query)}&t=${Date.now()}`);
         const obywatele = await res.json();
 
         if (obywatele.length === 0) {
