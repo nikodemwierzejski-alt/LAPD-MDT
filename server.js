@@ -41,17 +41,20 @@ const funkcjonariusze = {
 };
 
 // Logowanie
-app.post("/api/officers", async (req, res) => {
-    // Dopasuj poniższe nazwy zmiennych do tego, co wysyłasz ze skryptu JS
-    const { odznaka, stopien_nazwisko, haslo } = req.body;
+app.post("/api/login", async (req, res) => {
+    const { odznaka, haslo } = req.body;
 
     try {
-        const query = "INSERT INTO kadry (odznaka, stopien_nazwisko, haslo) VALUES ($1, $2, $3)";
-        await db.query(query, [odznaka, stopien_nazwisko, haslo]);
-        
-        res.json({ success: true });
+        const query = "SELECT * FROM kadry WHERE odznaka = $1 AND haslo = $2";
+        const result = await db.query(query, [odznaka, haslo]);
+
+        if (result.rows.length > 0) {
+            res.json({ success: true, kadr: result.rows[0] });
+        } else {
+            res.status(401).json({ success: false, message: "Błędne dane logowania" });
+        }
     } catch (err) {
-        console.error("Błąd dodawania kadra:", err);
+        console.error("Błąd logowania:", err);
         res.status(500).send(err.message);
     }
 });
