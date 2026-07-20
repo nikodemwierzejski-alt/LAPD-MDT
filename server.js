@@ -54,8 +54,9 @@ app.post("/api/login", (req, res) => {
 app.get("/api/obywatele", async (req, res) => {
     const search = req.query.search || "";
     try {
-        const query = "SELECT * FROM obywatele WHERE imie ILIKE $1 OR nazwisko ILIKE $1";
-        const result = await db.query(query, ['%' + search + '%']);
+// Zmień zapytanie wewnątrz app.get("/api/obywatele", ...) na:
+const query = "SELECT * FROM obywatele WHERE LOWER(imie) LIKE LOWER($1) OR LOWER(nazwisko) LIKE LOWER($1)";
+const result = await db.query(query, ['%' + search + '%']);
         res.json(result.rows);
     } catch (err) {
         res.status(500).send(err.message);
