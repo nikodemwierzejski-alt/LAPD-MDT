@@ -164,6 +164,17 @@ app.post("/api/obywatele", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// Usuwanie obywatela (tylko dla administratora)
+app.delete("/api/obywatele/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.query("DELETE FROM obywatele WHERE id = $1", [id]);
+        res.json({ success: true, message: "Pomyślnie usunięto obywatela." });
+    } catch (err) {
+        console.error("Błąd usuwania obywatela:", err);
+        res.status(500).json({ success: false, message: "Błąd serwera podczas usuwania." });
+    }
+});
 
 // Wystawianie mandatu
 app.post("/api/mandaty", async (req, res) => {
