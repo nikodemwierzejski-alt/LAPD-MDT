@@ -59,33 +59,34 @@ async function szukajObywatela() {
             wynikiDiv.innerHTML = '<p>Brak wyników.</p>';
             return;
         }
-
-        wynikiDiv.innerHTML = obywatele.map(o => `
-            <div class="citizen-card ${o.poszukiwany ? 'wanted-border' : ''}">
-                <h3>${o.imie} ${o.nazwisko}</h3>
-                <p><strong>Urodzony:</strong> ${o.data_urodzenia || 'Brak'}</p>
-                <p><strong>Status:</strong> ${o.poszukiwany ? '<span class="pulse-wanted">🔴 POSZUKIWANY</span>' : '🟢 Czysty'}</p>
-                <p><strong>Uwagi:</strong> ${o.uwagi || 'Brak wpisów'}</p>
-                
-                <div class="action-buttons">
-                    <button class="btn-small btn-warn" onclick="przelaczPoszukiwany(${o.id}, ${o.poszukiwany ? 0 : 1})">
-                        ${o.poszukiwany ? 'Odwołaj poszukiwania' : 'Oznacz jako Poszukiwany'}
-                    </button>
-                </div>
-
-                <div class="mandates-section">
-${(o.mandaty && o.mandaty.length > 0) ? 
-                      o.mandaty.map(m => `<div class="mandate-item">⚠️ ${m.data} - ${m.powod} [${m.kwota}$]</div>`).join('') 
-                      : '<p style="font-size:12px; color:#64748b;">Czyste konto</p>'}
-                    
-                    <div class="add-mandate-box">
-                        <input type="text" id="powod-${o.id}" placeholder="Powód mandatu" style="font-size:12px; padding:5px; width:60%;">
-                        <input type="number" id="kwota-${o.id}" placeholder="Kwota $" style="font-size:12px; padding:5px; width:25%;">
-                        <button class="btn-small" onclick="wystawMandat(${o.id})">+</button>
-                    </div>
-                </div>
+// Zmieniamy z: wynikiDiv.innerHTML = obywatele.map(...)
+// Na zabezpieczone:
+wynikiDiv.innerHTML = Array.isArray(obywatele) ? obywatele.map(o => `
+        <div class="citizen-card ${o.poszukiwany ? 'wanted-border' : ''}">
+            <h3>${o.imie} ${o.nazwisko}</h3>
+            <p><strong>Urodzony:</strong> ${o.data_urodzenia || 'Brak'}</p>
+            <p><strong>Status:</strong> ${o.poszukiwany ? '<span class="pulse-wanted">🔴 POSZUKIWANY</span>' : '🟢 Czysty'}</p>
+            <p><strong>Uwagi:</strong> ${o.uwagi || 'Brak wpisów'}</p>
+            
+            <div class="action-buttons">
+                <button class="btn-small btn-warn" onclick="przelaczPoszukiwany(${o.id}, ${o.poszukiwany ? 0 : 1})">
+                    ${o.poszukiwany ? 'Odwołaj poszukiwania' : 'Oznacz jako Poszukiwany'}
+                </button>
             </div>
-        `).join('');
+
+            <div class="mandates-section">
+                ${(o.mandaty && o.mandaty.length > 0) 
+                    ? o.mandaty.map(m => `<div class="mandate-item">⚠️ ${m.data} - ${m.powod} [${m.kwota}$]</div>`).join('') 
+                    : '<p style="font-size:12px; color:#64748b;">Czyste konto</p>'}
+            </div>
+
+            <div class="add-mandate-box">
+                <input type="text" id="powod-${o.id}" placeholder="Powód mandatu" style="font-size:12px; padding:5px; width:60%;">
+                <input type="number" id="kwota-${o.id}" placeholder="Kwota $" style="font-size:12px; padding:5px; width:25%;">
+                <button class="btn-small" onclick="wystawMandat(${o.id})">+</button>
+            </div>
+        </div>
+    `).join('') : '<p>Brak wyników.</p>';
     } catch (err) {
         wynikiDiv.innerHTML = '<p style="color:red;">Błąd bazy danych.</p>';
     }
