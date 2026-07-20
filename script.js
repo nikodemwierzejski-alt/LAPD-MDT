@@ -6,7 +6,7 @@ setInterval(() => {
     if (timeEl) timeEl.innerText = timeString;
 }, 1000);
 
-// Przełączanie zakładek w nowoczesnym menu bocznym
+// Przełączanie wszystkich zakładek panelu bocznego
 function zmienZakladke(nazwaZakladki, event) {
     if (event) event.preventDefault();
     
