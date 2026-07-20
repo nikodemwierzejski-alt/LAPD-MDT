@@ -74,9 +74,9 @@ async function szukajObywatela() {
                 </div>
 
                 <div class="mandates-section">
-                    <h4>Mandaty:</h4>
-                    ${o.mandaty.length === 0 ? '<p style="font-size:12px; color:#64748b;">Czyste konto</p>' : 
-                      o.mandaty.map(m => `<div class="mandate-item">⚠️ ${m.data} - ${m.powod} [${m.kwota}$]</div>`).join('')}
+${(o.mandaty && o.mandaty.length > 0) ? 
+                      o.mandaty.map(m => `<div class="mandate-item">⚠️ ${m.data} - ${m.powod} [${m.kwota}$]</div>`).join('') 
+                      : '<p style="font-size:12px; color:#64748b;">Czyste konto</p>'}
                     
                     <div class="add-mandate-box">
                         <input type="text" id="powod-${o.id}" placeholder="Powód mandatu" style="font-size:12px; padding:5px; width:60%;">
