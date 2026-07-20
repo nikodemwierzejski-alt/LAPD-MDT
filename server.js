@@ -4,7 +4,7 @@ const { Client } = require("pg");
 const cors = require("cors");
 
 const app = express();
-app.use(express.static('public'));S
+app.use(express.static('public'));
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
