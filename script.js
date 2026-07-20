@@ -1,3 +1,36 @@
+// Oficjalna baza zdjęć pojazdów z Roblox ERLC (Emergency Response: Liberty County)
+const erlcVehicleImages = {
+    "Aston Martin Vantage": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/a/a2/Vantage.png",
+    "Audi R8": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/3b/R8.png",
+    "BMW M3 E46": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/8/85/M3_E46.png",
+    "BMW M4": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/b/b1/M4.png",
+    "Bugatti Chiron": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/93/Chiron.png",
+    "Chevrolet Camaro ZL1": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/8/8b/Camaro_ZL1.png",
+    "Chevrolet Corvette C8": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/e/e1/Corvette_C8.png",
+    "Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/30/Tahoe.png",
+    "Dodge Charger SRT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/2/22/Charger_SRT.png",
+    "Dodge Challenger SRT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/e/e4/Challenger_SRT.png",
+    "Ford Mustang GT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png",
+    "Ford F-150 Raptor": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/d/d3/F-150_Raptor.png",
+    "Lamborghini Urus": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/a/a9/Urus.png",
+    "McLaren 720S": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/e/ef/720S.png",
+    "Mercedes-Benz G63 AMG": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4b/G63_AMG.png",
+    "Nissan GT-R R35": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4d/GT-R.png",
+    "Tesla Model S": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/6/66/Model_S.png",
+    "Toyota Supra MK5": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/2/23/Supra.png",
+    "Police Crown Victoria": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5a/Crown_Victoria.png",
+    "Police Ford Explorer": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/e/ea/Explorer_Police.png",
+    "Police Dodge Charger": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/6/60/Charger_Police.png",
+    "Police Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/53/Tahoe_Police.png",
+    "Police Mustang GT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/1/1c/Mustang_Police.png",
+    "Sheriff Ford F-150": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/8/87/F-150_Sheriff.png",
+    "Fire Engine Pumper": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/b/b2/Fire_Engine.png",
+    "Ambulance ERLC": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/36/Ambulance.png",
+    "Chief SUV": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/91/Chief_SUV.png",
+    "DOT Utility Truck": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/0/05/DOT_Truck.png",
+    "Tow Truck": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9f/Tow_Truck.png"
+};
+
 // Zegarek w górnym pasku
 setInterval(() => {
     const now = new Date();
@@ -107,46 +140,17 @@ async function sprawdzStatus() {
     }
 }
 
-// --- DYNAMICZNY PODGLĄD AUTA I KOLORU ---
-function wybierzKolorZPalety(hexKolor) {
-    document.getElementById('vehColor').value = hexKolor;
-    aktualizujPodgladAuta();
-}
-
+// --- DYNAMICZNY PODGLĄD FOTOGRAFICZNY ERLC ---
 function aktualizujPodgladAuta() {
-    const inputKolor = document.getElementById('vehColor').value.trim();
-    const carBody = document.getElementById('carBodyColor');
-    const label = document.getElementById('carPreviewLabel');
+    const selectModel = document.getElementById('vehModel');
+    const imgEl = document.getElementById('erlcVehicleImg');
     
-    if (!carBody) return;
+    if (!selectModel || !imgEl) return;
 
-    let cssKolor = '#3b82f6'; // domyślny niebieski ERLC
-
-    if (inputKolor.startsWith('#') && (inputKolor.length === 4 || inputKolor.length === 7)) {
-        cssKolor = inputKolor;
-    } else {
-        // Słownik podstawowych nazw kolorów w języku polskim i angielskim
-        const koloryMap = {
-            'czarny': '#111827', 'black': '#111827', 'mat': '#1f2937',
-            'czerwony': '#dc2626', 'red': '#dc2626', 'bordowy': '#991b1b',
-            'niebieski': '#2563eb', 'blue': '#2563eb', 'granatowy': '#1e3a8a', 'navy': '#1e3a8a',
-            'biały': '#f8fafc', 'white': '#f8fafc', 'srebrny': '#94a3b8', 'silver': '#94a3b8', 'szary': '#4b5563', 'grey': '#4b5563',
-            'zielony': '#16a34a', 'green': '#16a34a', 'żółty': '#ca8a04', 'yellow': '#ca8a04',
-            'pomarańczowy': '#ea580c', 'orange': '#ea580c', 'fioletowy': '#7e22ce', 'purple': '#7e22ce',
-            'różowy': '#db2777', 'pink': '#db2777', 'złoty': '#d97706', 'gold': '#d97706'
-        };
-
-        const klucz = inputKolor.toLowerCase();
-        for (let k in koloryMap) {
-            if (klucz.includes(k)) {
-                cssKolor = koloryMap[k];
-                break;
-            }
-        }
-    }
-
-    carBody.setAttribute('fill', cssKolor);
-    if(label) label.innerText = `Lakier pojazdu: ${inputKolor || 'Standardowy'} (${cssKolor})`;
+    const wybranyModel = selectModel.value;
+    const urlZdjecia = erlcVehicleImages[wybranyModel] || "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png";
+    
+    imgEl.src = urlZdjecia;
 }
 
 // --- MODUŁ OBYWATELI ---
@@ -288,7 +292,7 @@ function zapiszPojazdLokalnie(pojazd) {
     let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
     pojazd.id = Date.now();
     pojazdy.unshift(pojazd);
-    localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdvy = pojazdy));
+    localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
     document.getElementById('dodajPojazdForm').reset();
     alert('Pojazd zapisany w lokalnej bazie terminala!');
     pobierzPojazdy();
@@ -344,6 +348,8 @@ function wyswietlListePojazdow(pojazdy, filtr) {
             statusTekst = '🟠 Skonfiskowany (Impounded)';
         }
 
+        const zdjecieAuto = erlcVehicleImages[p.model] || "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png";
+
         return `
             <div class="citizen-card ${p.status === 'wanted' ? 'wanted-border' : ''}">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -354,8 +360,13 @@ function wyswietlListePojazdow(pojazdy, filtr) {
                         ${statusTekst}
                     </span>
                 </div>
-                <h3>🚗 ${p.model}</h3>
-                <p><strong>👤 Właściciel:</strong> ${p.owner}</p>
+                <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
+                    <img src="${zdjecieAuto}" alt="${p.model}" style="width: 70px; height: 45px; object-fit: contain; background: #0f172a; border-radius: 4px; padding: 2px;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 15px;">🚗 ${p.model}</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 12px; color: #94a3b8;"><strong>Właściciel:</strong> ${p.owner}</p>
+                    </div>
+                </div>
                 <p><strong>🎨 Kolor:</strong> ${p.color}</p>
                 <p><strong>🕒 Rejestracja:</strong> ${p.dataDodania}</p>
 
