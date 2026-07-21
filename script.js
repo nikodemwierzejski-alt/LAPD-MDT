@@ -63,6 +63,8 @@ function zmienZakladke(nazwaZakladki, event) {
         aktualizujPodgladAuta();
     } else if (nazwaZakladki === 'reports') {
         pobierzRaporty();
+    } else if (nazwaZakladki === 'admin') {
+        pobierzFunkcjonariuszy(); // Automatyczne ładowanie listy kadr po wejściu w panel admina
     }
 }
 
@@ -469,6 +471,7 @@ function drukujRaport(r) {
     oknoDruku.document.close();
 }
 
+// --- MODUŁ ZARZĄDZANIA KADRAMI (ADMIN) ---
 async function dodajFunkcjonariusza(event) {
     event.preventDefault();
     const badge = document.getElementById('activeBadge').value.trim();
@@ -485,10 +488,60 @@ async function dodajFunkcjonariusza(event) {
         const data = await res.json();
         messageDiv.style.color = data.success ? '#4ade80' : '#f87171';
         messageDiv.innerText = data.message;
-        if (data.success) document.getElementById('dodajFunkcjonariuszaForm').reset();
+        if (data.success) {
+            document.getElementById('dodajFunkcjonariuszaForm').reset();
+            pobierzFunkcjonariuszy(); // Odśwież listę po dodaniu nowego konta
+        }
     } catch (e) {
         messageDiv.style.color = '#f87171';
         messageDiv.innerText = "Błąd połączenia z serwerem.";
+    }
+}
+
+async function pobierzFunkcjonariuszy() {
+    // Sprawdzamy czy kontener na listę istnieje w HTML (zależnie od tego, jak nazwałeś div na liście w adminie)
+    // Jeśli kontener nazywa się inaczej, dopasuj ID lub dodaj go w sekcji admina.
+    const listaDiv = document.getElementById('listaFunkcjonariuszy');
+    if (!listaDiv) return;
+
+    listaDiv.innerHTML = 'Ładowanie listy kadr...';
+
+    try {
+        const res = await fetch(`${API_URL}/api/officers`);
+        if (res.ok) {
+            const officers = await res.json();
+            if (officers.length === 0) {
+                listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px;">Brak zarejestrowanych funkcjonariuszy w bazie.</p>';
+                return;
+            }
+            listaDiv.innerHTML = officers.map(o => `
+                <div class="citizen-card" style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-family: monospace; font-size: 14px; font-weight: bold; background: #111827; padding: 3px 8px; border-radius: 4px; color: #38bdf8;">
+                            [ ${o.badge} ]
+                        </span>
+                        <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #065f46; color: white;">Officer</span>
+                    </div>
+                    <h3 style="margin: 8px 0 4px 0; font-size: 14px;">👤 ${o.name}</h3>
+                    <p style="margin: 0; font-size: 12px; color: #94a3b8;">Hasło: ${o.password || '******'}</p>
+                    <div style="margin-top: 8px; text-align: right;">
+                        <button class="btn-small" style="background-color: #dc2626; color: white;" onclick="usunFunkcjonariusza('${o.badge}')">🗑️ Usuń konto</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        listaDiv.innerHTML = '<p style="color:#f87171; font-size:13px;">Błąd pobierania kadr z serwera.</p>';
+    }
+}
+
+async function usunFunkcjonariusza(badge) {
+    if (!confirm(`Czy na pewno chcesz usunąć konto funkcjonariusza z odznaką ${badge}?`)) return;
+    try {
+        await fetch(`${API_URL}/api/officers/${badge}`, { method: 'DELETE' });
+        pobierzFunkcjonariuszy();
+    } catch (e) {
+        alert('Błąd usuwania konta.');
     }
 }
 
