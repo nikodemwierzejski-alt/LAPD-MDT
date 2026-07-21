@@ -89,22 +89,79 @@ async function inicjalizacjaBazy() {
 }
 
         // Automatyczne dodanie kont testowych z odpowiednimi rolami
+       async function inicjalizacjaBazy() {
+    try {
         await db.query(`
+            CREATE TABLE IF NOT EXISTS obywatele (
+                id SERIAL PRIMARY KEY,
+                imie TEXT,
+                nazwisko TEXT,
+                data_urodzenia TEXT,
+                poszukiwany INTEGER DEFAULT 0,
+                uwagi TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS mandaty (
+                id SERIAL PRIMARY KEY,
+                obywatel_id INTEGER REFERENCES obywatele(id) ON DELETE CASCADE,
+                powod TEXT,
+                kwota INTEGER,
+                data TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS kadry (
+                id SERIAL PRIMARY KEY,
+                odznaka VARCHAR(50) UNIQUE NOT NULL,
+                stopien_nazwisko VARCHAR(100) NOT NULL,
+                haslo VARCHAR(100) NOT NULL,
+                rola VARCHAR(50) DEFAULT 'user'
+            );
+
+            CREATE TABLE IF NOT EXISTS pojazdy (
+                id SERIAL PRIMARY KEY,
+                model TEXT,
+                plate TEXT,
+                color TEXT,
+                owner TEXT,
+                status TEXT,
+                data_dodania TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS raporty (
+                id SERIAL PRIMARY KEY,
+                tytul TEXT,
+                kategoria TEXT,
+                status TEXT,
+                obywatel TEXT,
+                pojazdy TEXT,
+                wspoloficerowie TEXT,
+                dowody TEXT,
+                opis TEXT,
+                autor TEXT,
+                odznaka_autora TEXT,
+                data TEXT
+            );
+        `);
+
+        // Tutaj zapytania INSERT z await MUSZĄ być w środku funkcji!
+        await db.query(`
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
+            VALUES ('Nikodem', 'Nikodem', '02122004', 'admin')
+            ON CONFLICT (odznaka) DO NOTHING;
+
             INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
             VALUES ('99', 'Officer Smith', 'lspd', 'user')
             ON CONFLICT (odznaka) DO NOTHING;
-
-            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
-            VALUES ('admin', 'Komendant Główny', 'admin123', 'admin')
-            ON CONFLICT (odznaka) DO NOTHING;
         `);
 
-        console.log("Tabele w bazie danych (Chmura PostgreSQL) zostały sprawdzone/utworzone pomyślnie.");
+        console.log("Tabele w bazie danych zostały sprawdzone/utworzone pomyślnie.");
     } catch (err) {
         console.error("Błąd podczas inicjalizacji bazy danych:", err);
     }
 }
 
+// Wywołanie funkcji na samym dole
+inicjalizacjaBazy();
 inicjalizacjaBazy();
 
 // --- LOGOWANIE WYŁĄCZNIE NA NUMER ODZNAKI I HASŁO ---
