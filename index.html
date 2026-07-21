@@ -5,25 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT LSPD / SOG - Terminal Operacyjny</title>
     <style>
-        /* Główne style systemowe MDT */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b0f19; color: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar nawigacyjny */
         sidebar { width: 260px; background: #0f172a; border-right: 1px solid #1e293b; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-brand { padding: 20px; font-size: 18px; font-weight: bold; color: #38bdf8; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 10px; }
         .sidebar-menu { list-style: none; padding: 15px 10px; flex-grow: 1; overflow-y: auto; }
         .sidebar-menu li { padding: 12px 15px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; color: #94a3b8; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
         .sidebar-menu li:hover, .sidebar-menu li.active { background: #1e293b; color: #ffffff; }
 
-        /* Główny obszar roboczy */
         main { flex-grow: 1; padding: 30px; overflow-y: auto; background: #0b0f19; }
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
         h2 { font-size: 24px; color: #f8fafc; margin-bottom: 5px; }
         .subtitle { font-size: 13px; color: #64748b; margin-bottom: 25px; }
 
-        /* Formularze i Panele */
         .citizens-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .panel-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .panel-box h3 { font-size: 16px; margin-bottom: 15px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
@@ -35,7 +31,6 @@
         .btn-primary:hover { background: #0369a1; }
         .results-container { margin-top: 15px; max-height: 520px; overflow-y: auto; padding-right: 5px; }
         
-        /* Karty i style dodatkowe */
         .citizen-card { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
         .btn-small { border: none; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
@@ -47,7 +42,6 @@
 </head>
 <body>
 
-    <!-- SIDEBAR -->
     <sidebar>
         <div class="sidebar-brand">
             🛡️ MDT LSPD / SOG
@@ -61,9 +55,8 @@
         </ul>
     </sidebar>
 
-    <!-- CONTENT -->
     <main>
-        <!-- ZAKŁADKA: DASHBOARD -->
+        <!-- DASHBOARD -->
         <section id="tab-dashboard" class="tab-pane active">
             <h2>Panel Główny Dashboard</h2>
             <p class="subtitle">Podsumowanie operacyjne stanu departamentu oraz statystyki sieciowe.</p>
@@ -95,7 +88,7 @@
             </div>
         </section>
 
-        <!-- ZAKŁADKA: OBYWATELE -->
+        <!-- OBYWATELE -->
         <section id="tab-citizens" class="tab-pane">
             <h2>Baza Obywateli</h2>
             <p class="subtitle">Ewidencja ludności, kartoteki kryminalne oraz statusy poszukiwanych.</p>
@@ -103,7 +96,7 @@
             <div class="citizens-grid">
                 <div class="panel-box">
                     <h3>➕ Dodaj / Aktualizuj Obywatela</h3>
-                    <form id=" obywatelForm" onsubmit="zapiszObywatela(event)">
+                    <form id="obywatelForm" onsubmit="zapiszObywatela(event)">
                         <div class="form-group">
                             <label>Imię i Nazwisko</label>
                             <input type="text" id="obywatelImie" required placeholder="np. John Smith">
@@ -114,7 +107,7 @@
                         </div>
                         <div class="form-group">
                             <label>Status Prawny / Kartoteka</label>
-                            <select id="obywatelStatus" class="form-control-select">
+                            <select id="obywatelStatus">
                                 <option value="Czysty (Clean)">Czysty (Clean)</option>
                                 <option value="Poszukiwany (Warrant)">Poszukiwany (Warrant)</option>
                                 <option value="Warunkowe Zwolnienie">Warunkowe Zwolnienie</option>
@@ -138,7 +131,7 @@
             </div>
         </section>
 
-        <!-- ZAKŁADKA: POJAZDY -->
+        <!-- POJAZDY -->
         <section id="tab-vehicles" class="tab-pane">
             <h2>Baza Pojazdów</h2>
             <p class="subtitle">Rejestr pojazdów stanowych, tablice rejestracyjne oraz właściciele.</p>
@@ -161,7 +154,7 @@
                         </div>
                         <div class="form-group">
                             <label>Status Rejestracji</label>
-                            <select id="pojazdStatus" class="form-control-select">
+                            <select id="pojazdStatus">
                                 <option value="Zarejestrowany / Legalny">Zarejestrowany / Legalny</option>
                                 <option value="Skradziony / Poszukiwany">Skradziony / Poszukiwany</option>
                                 <option value="Brak ubezpieczenia">Brak ubezpieczenia</option>
@@ -181,7 +174,7 @@
             </div>
         </section>
 
-        <!-- ZAKŁADKA: BOLO (PROFESJONALNIE ROZBUDOWANA) -->
+        <!-- BOLO -->
         <section id="tab-bolo" class="tab-pane">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
@@ -195,13 +188,12 @@
             </div>
             
             <div class="citizens-grid">
-                <!-- Panel Tworzenia Nowego Alertu BOLO -->
                 <div class="panel-box" style="border-left: 4px solid #ef4444;">
                     <h3>🚨 Generowanie Nowego Alertu BOLO</h3>
                     <form id="dodajBoloForm" onsubmit="utworzBolo(event)">
                         <div class="form-group">
                             <label>Typ Alerty BOLO</label>
-                            <select id="boloTyp" class="form-control-select" required>
+                            <select id="boloTyp" required>
                                 <optgroup label="--- KATEGORIE OPERACYJNE ---">
                                     <option value="Felony Vehicle / Stolen">🚗 Pojazd Poszukiwany / Skradziony (Felony Vehicle)</option>
                                     <option value="Armed & Dangerous Suspect">👤 Uzbrojony i Niebezpieczny Poszukiwany (Armed Suspect)</option>
@@ -214,7 +206,7 @@
 
                         <div class="form-group">
                             <label>Priorytet Zagrożenia (Threat Level)</label>
-                            <select id="boloPriorytet" class="form-control-select" required>
+                            <select id="boloPriorytet" required>
                                 <option value="Code 4 - CRITICAL / SHOOT ON SIGHT">🔴 KOD 4: KRYTYCZNY / Strzelać w ostateczności (Shoot on Sight)</option>
                                 <option value="Code 3 - HIGH / Armed & Dangerous">🟠 KOD 3: WYSOKI / Uzbrojony i Niebezpieczny</option>
                                 <option value="Code 2 - MODERATE / Felony Warrant">🟡 KOD 2: ŚREDNI / Nakaz aresztowania</option>
@@ -229,7 +221,7 @@
 
                         <div class="form-group">
                             <label>Pojazd z gry ERLC (Model / Marka)</label>
-                            <select id="boloModelAuta" class="form-control-select">
+                            <select id="boloModelAuta">
                                 <option value="Brak pojazdu">Brak pojazdu (Tylko pieszy / inna kategoria)</option>
                                 <optgroup label="--- ERLC VEHICLES ---">
                                     <option value="Aston Martin Vantage">Aston Martin Vantage</option>
@@ -277,10 +269,9 @@
                     </form>
                 </div>
 
-                <!-- Panel Przeglądania i Zarządzania BOLO -->
                 <div class="panel-box">
                     <h3>📋 Aktywne Alerty BOLO w Sieci</h3>
-                    <div class="search-box-row" style="margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom: 15px;">
                         <input type="text" id="searchBoloInput" placeholder="Szukaj w alertach (nazwisko, model, tablica)..." oninput="pobierzBolo()">
                     </div>
                     <div id="listaBolo" class="results-container"></div>
@@ -288,7 +279,7 @@
             </div>
         </section>
 
-        <!-- ZAKŁADKA: RAPORTOWANIE -->
+        <!-- RAPORTOWANIE -->
         <section id="tab-reports" class="tab-pane">
             <h2>Raporty Operacyjne</h2>
             <p class="subtitle">Ewidencja incydentów, protokołów z zatrzymań oraz notatek służbowych.</p>
@@ -325,7 +316,6 @@
     </main>
 
     <script>
-        // Słownik grafik pojazdów ERLC dla BOLO
         const erlcVehicleImages = {
             "Aston Martin Vantage": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/1/18/Aston_Martin_Vantage.png",
             "Audi R8": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5a/Audi_R8.png",
@@ -351,7 +341,6 @@
             "Police Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4e/Chevrolet_Tahoe.png"
         };
 
-        // Przełączanie zakładek
         function zmienZakladke(nazwaZakladki) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
@@ -369,7 +358,6 @@
             if (nazwaZakladki === 'reports') pobierzRaporty();
         }
 
-        // --- DASHBOARD STATYSTYKI ---
         function aktualizujStatystyki() {
             const obywatele = JSON.parse(localStorage.getItem('mdt_obywatele') || '[]');
             const pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
@@ -382,7 +370,6 @@
             document.getElementById('statRaporty').innerText = raporty.length;
         }
 
-        // --- OBYWATELE ---
         function zapiszObywatela(e) {
             e.preventDefault();
             const imie = document.getElementById('obywatelImie').value;
@@ -394,7 +381,6 @@
             obywatele.unshift({ id: Date.now(), imie, wiek, status, notatki });
             localStorage.setItem('mdt_obywatele', JSON.stringify(obywatele));
             document.getElementById('obywatelForm').reset();
-            alert('Dodano obywatela do bazy!');
             pobierzObywateli();
         }
 
@@ -427,7 +413,6 @@
             pobierzObywateli();
         }
 
-        // --- POJAZDY ---
         function zapiszPojazd(e) {
             e.preventDefault();
             const model = document.getElementById('pojazdModel').value;
@@ -439,7 +424,6 @@
             pojazdy.unshift({ id: Date.now(), model, tablica, wlasciciel, status });
             localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
             document.getElementById('pojazdForm').reset();
-            alert('Zarejestrowano pojazd!');
             pobierzPojazdy();
         }
 
@@ -471,7 +455,6 @@
             pobierzPojazdy();
         }
 
-        // --- RAPORTY ---
         function zapiszRaport(e) {
             e.preventDefault();
             const tytul = document.getElementById('raportTytul').value;
@@ -483,7 +466,6 @@
             raporty.unshift({ id: Date.now(), tytul, autor, tresc, data });
             localStorage.setItem('mdt_raporty', JSON.stringify(raporty));
             document.getElementById('raportForm').reset();
-            alert('Raport został zapisany w archiwum!');
             pobierzRaporty();
         }
 
@@ -519,10 +501,8 @@
             pobierzRaporty();
         }
 
-        // --- BOLO ---
-        async function utworzBolo(event) {
+        function utworzBolo(event) {
             event.preventDefault();
-
             const typ = document.getElementById('boloTyp').value;
             const priorytet = document.getElementById('boloPriorytet').value;
             const osoba = document.getElementById('boloOsoba').value.trim();
@@ -531,8 +511,8 @@
             const lokalizacja = document.getElementById('boloLokalizacja').value.trim();
             const opis = document.getElementById('boloOpis').value.trim();
             
-            const autor = localStorage.getItem('officerName') || 'Lukas Weber';
-            const odznakaAutora = localStorage.getItem('officerBadge') || 'LP-1150';
+            const autor = 'Lukas Weber';
+            const odznakaAutora = 'LP-1150';
             const dataUtworzenia = new Date().toLocaleString('pl-PL');
 
             const noweBolo = {
@@ -546,60 +526,50 @@
                 opis,
                 autor,
                 odznakaAutora,
-                dataUtworzenia,
-                status: 'Aktywny'
+                dataUtworzenia
             };
 
             let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
             bolos.unshift(noweBolo);
             localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
             document.getElementById('dodajBoloForm').reset();
-            alert('Alert BOLO został opublikowany!');
             pobierzBolo();
         }
 
         function pobierzBolo() {
-            const listaDiv = document.getElementById('listaBolo');
             const szukajVal = (document.getElementById('searchBoloInput')?.value || '').toLowerCase();
-            
-            if (!listaDiv) return;
-
             let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
+            
             if (bolos.length === 0) {
-                bolos = [
-                    {
-                        id: 1,
-                        typ: "Armed & Dangerous Suspect",
-                        priorytet: "Code 3 - HIGH / Armed & Dangerous",
-                        osoba: "Marcus Vance",
-                        modelAuta: "Ford Mustang GT",
-                        tablica: "34XYZ89",
-                        lokalizacja: "Autostrada Międzyleska (Route 1)",
-                        opis: "Podejrzany o napad z bronią. Ucieka w kierunku północnym. Unikać konfrontacji bez wsparcia K-9.",
-                        autor: "Lukas Weber",
-                        odznakaAutora: "LP-1150",
-                        dataUtworzenia: "19.04.2026, 22:30:00",
-                        status: 'Aktywny'
-                    }
-                ];
+                bolos = [{
+                    id: 1,
+                    typ: "Armed & Dangerous Suspect",
+                    priorytet: "Code 3 - HIGH / Armed & Dangerous",
+                    osoba: "Marcus Vance",
+                    modelAuta: "Ford Mustang GT",
+                    tablica: "34XYZ89",
+                    lokalizacja: "Autostrada Międzyleska (Route 1)",
+                    opis: "Podejrzany o napad z bronią. Ucieka w kierunku północnym. Unikać konfrontacji bez wsparcia K-9.",
+                    autor: "Lukas Weber",
+                    odznakaAutora: "LP-1150",
+                    dataUtworzenia: "19.04.2026, 22:30:00"
+                }];
                 localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
             }
-            wyswietlListeBolo(bolos, szukajVal);
-        }
-
-        function wyswietlListeBolo(bolos, filtr) {
-            const listaDiv = document.getElementById('listaBolo');
             
+            const listaDiv = document.getElementById('listaBolo');
+            if (!listaDiv) return;
+
             const przefiltrowane = bolos.filter(b => 
-                b.osoba.toLowerCase().includes(filtr) || 
-                b.modelAuta.toLowerCase().includes(filtr) || 
-                b.tablica.toLowerCase().includes(filtr) ||
-                b.lokalizacja.toLowerCase().includes(filtr) ||
-                b.typ.toLowerCase().includes(filtr)
+                b.osoba.toLowerCase().includes(szukajVal) || 
+                b.modelAuta.toLowerCase().includes(szukajVal) || 
+                b.tablica.toLowerCase().includes(szukajVal) ||
+                b.lokalizacja.toLowerCase().includes(szukajVal) ||
+                b.typ.toLowerCase().includes(szukajVal)
             );
 
             if (przefiltrowane.length === 0) {
-                listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding: 20px;">Brak aktywnych alertów BOLO spełniających kryteria wyszukiwania.</p>';
+                listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding: 20px;">Brak aktywnych alertów BOLO spełniających kryteria.</p>';
                 return;
             }
 
@@ -619,9 +589,7 @@
                             </span>
                             <span style="font-size: 11px; color: #94a3b8;">${b.dataUtworzenia}</span>
                         </div>
-
                         <h3 style="margin: 4px 0; color: #f8fafc; font-size: 15px;">${b.typ}</h3>
-                        
                         <div style="display: flex; gap: 12px; align-items: center; margin: 10px 0; background: #1e293b; padding: 8px; border-radius: 6px;">
                             ${b.modelAuta !== 'Brak pojazdu' ? `<img src="${zdjecieAutoBolo}" alt="${b.modelAuta}" style="width: 75px; height: 45px; object-fit: contain;">` : ''}
                             <div>
@@ -629,10 +597,8 @@
                                 <p style="margin: 2px 0 0 0; font-size: 12px; color: #cbd5e1;"><strong>🚗 Pojazd:</strong> ${b.modelAuta} ${b.tablica !== 'BRAK' ? `[ Tablica: <span style="font-family:monospace; color:#38bdf8; font-weight:bold;">${b.tablica}</span> ]` : ''}</p>
                             </div>
                         </div>
-
                         <p style="font-size: 13px; margin: 6px 0; color: #cbd5e1;"><strong>📍 Ostatnia lokalizacja:</strong> ${b.lokalizacja}</p>
                         <p style="font-size: 13px; margin: 6px 0; background: #0f172a; padding: 8px; border-radius: 4px; border: 1px solid #1f2937; color: #e2e8f0;"><strong>📝 Instrukcje:</strong> ${b.opis}</p>
-
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1f2937; padding-top: 8px;">
                             <span style="font-size: 11px; color: #64748b;">Autor: ${b.autor} [${b.odznakaAutora}]</span>
                             <button class="btn-small" style="background: #059669; color: white;" onclick="zamknijBolo(${b.id})">✅ Ujęto / Odwołaj BOLO</button>
@@ -649,7 +615,6 @@
             pobierzBolo();
         }
 
-        // Start aplikacji
         window.onload = function() {
             aktualizujStatystyki();
             pobierzBolo();
