@@ -63,7 +63,7 @@ function zmienZakladke(nazwaZakladki, event) {
     }
 }
 
-// System Logowania
+// System Logowania (Poprawiony pod kątem obsługi sieci zewnętrznych)
 async function zaloguj() {
     const badge = document.getElementById('badgeInput').value.trim();
     const password = document.getElementById('passwordInput').value;
@@ -74,10 +74,15 @@ async function zaloguj() {
         return;
     }
 
+    errorDiv.innerText = "Logowanie w toku...";
+
     try {
         const res = await fetch('/api/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({ badge, password })
         });
         
@@ -89,6 +94,7 @@ async function zaloguj() {
             errorDiv.innerText = data.message || "Błędne dane logowania.";
         }
     } catch (e) {
+        console.error("Błąd logowania sieciowego:", e);
         errorDiv.innerText = "Błąd połączenia z serwerem bazy danych.";
     }
 }
