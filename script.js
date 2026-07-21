@@ -31,6 +31,9 @@ const erlcVehicleImages = {
     "Tow Truck": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9f/Tow_Truck.png"
 };
 
+// Automatyczne wykrywanie hosta (zapobiega problemom w sieciach zewnętrznych)
+const API_URL = window.location.origin;
+
 // Zegarek w górnym pasku
 setInterval(() => {
     const now = new Date();
@@ -63,21 +66,21 @@ function zmienZakladke(nazwaZakladki, event) {
     }
 }
 
-// System Logowania (Poprawiony pod kątem obsługi sieci zewnętrznych)
+// System Logowania
 async function zaloguj() {
     const badge = document.getElementById('badgeInput').value.trim();
     const password = document.getElementById('passwordInput').value;
     const errorDiv = document.getElementById('login-error');
 
     if (!badge) {
-        errorDiv.innerText = "Wpisz numer odznaki!";
+        errorDiv.innerText = "Wpisz numer odznaki lub imię!";
         return;
     }
 
     errorDiv.innerText = "Logowanie w toku...";
 
     try {
-        const res = await fetch('/api/login', {
+        const res = await fetch(`${API_URL}/api/login`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -129,7 +132,7 @@ function wyloguj() {
 
 async function sprawdzStatus() {
     try {
-        const res = await fetch('/api/status');
+        const res = await fetch(`${API_URL}/api/status`);
         const data = await res.json();
         const statusEl = document.getElementById('system-status');
         statusEl.innerText = `System: ${data.status} | ${data.system}`;
@@ -161,7 +164,7 @@ async function szukajObywatela() {
     wynikiDiv.innerHTML = 'Szukanie...';
 
     try {
-        const res = await fetch(`/api/obywatele?search=${encodeURIComponent(query)}&t=${Date.now()}`);
+        const res = await fetch(`${API_URL}/api/obywatele?search=${encodeURIComponent(query)}&t=${Date.now()}`);
         const obywatele = await res.json();
         if (!Array.isArray(obywatele) || obywatele.length === 0) {
             wynikiDiv.innerHTML = '<p style="color:#64748b; font-size:13px;">Brak wyników w bazie SQL.</p>';
@@ -206,7 +209,7 @@ function renderujObywateli(obywatele) {
 
 async function przelaczPoszukiwany(id, nowyStatus) {
     try {
-        await fetch(`/api/obywatele/${id}/poszukiwany`, {
+        await fetch(`${API_URL}/api/obywatele/${id}/poszukiwany`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ poszukiwany: nowyStatus })
@@ -221,7 +224,7 @@ async function wystawMandat(obywatel_id) {
     const data = new Date().toLocaleDateString('pl-PL');
     if (!powod || !kwota) { alert('Uzupełnij powód i kwotę mandatu!'); return; }
     try {
-        await fetch('/api/mandaty', {
+        await fetch(`${API_URL}/api/mandaty`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ obywatel_id, powod, kwota: parseInt(kwota), data })
@@ -239,7 +242,7 @@ async function dodajObywatela(event) {
         uwagi: document.getElementById('formUwagi').value
     };
     try {
-        const res = await fetch('/api/obywatele', {
+        const res = await fetch(`${API_URL}/api/obywatele`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dane)
@@ -268,7 +271,7 @@ async function utworzPojazd(event) {
     const nowyPojazd = { model, plate, color, owner, status, dataDodania };
 
     try {
-        const res = await fetch('/api/pojazdy', {
+        const res = await fetch(`${API_URL}/api/pojazdy`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nowyPojazd)
@@ -292,7 +295,7 @@ async function pobierzPojazdy() {
     listaDiv.innerHTML = 'Przeszukiwanie bazy rejestracyjnej DMV...';
 
     try {
-        const res = await fetch('/api/pojazdy');
+        const res = await fetch(`${API_URL}/api/pojazdy`);
         if (res.ok) {
             const pojazdy = await res.json();
             wyswietlListePojazdow(pojazdy, szukajVal);
@@ -364,7 +367,7 @@ function wyswietlListePojazdow(pojazdy, filtr) {
 
 async function zmienStatusPojazdu(id, nowyStatus) {
     try {
-        await fetch(`/api/pojazdy/${id}/status`, {
+        await fetch(`${API_URL}/api/pojazdy/${id}/status`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: nowyStatus })
@@ -392,7 +395,7 @@ async function utworzRaport(event) {
     const nowyRaport = { tytul, kategoria, status, obywatel, pojazdy, wspoloficerowie, dowody, opis, autor, odznakaAutora, data };
 
     try {
-        const res = await fetch('/api/raporty', {
+        const res = await fetch(`${API_URL}/api/raporty`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nowyRaport)
@@ -414,7 +417,7 @@ async function pobierzRaporty() {
     listaDiv.innerHTML = 'Ładowanie archiwum raportów...';
 
     try {
-        const res = await fetch('/api/raporty');
+        const res = await fetch(`${API_URL}/api/raporty`);
         if (res.ok) {
             const raporty = await res.json();
             wyswietlListeRaportow(raporty, szukajVal);
@@ -474,7 +477,7 @@ async function dodajFunkcjonariusza(event) {
     const messageDiv = document.getElementById('admin-message');
     
     try {
-        const res = await fetch('/api/officers', {
+        const res = await fetch(`${API_URL}/api/officers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ badge, name, password })
@@ -491,6 +494,6 @@ async function dodajFunkcjonariusza(event) {
 
 async function usunObywatela(id) {
     if (!confirm("Czy na pewno chcesz usunąć obywatela?")) return;
-    try { await fetch(`/api/obywatele/${id}`, { method: 'DELETE' }); } catch (e) {}
+    try { await fetch(`${API_URL}/api/obywatele/${id}`, { method: 'DELETE' }); } catch (e) {}
     szukajObywatela();
 }
