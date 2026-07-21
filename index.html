@@ -200,7 +200,7 @@
                         </div>
                     </section>
 
-                    <!-- OBYWATELE (Z MODUŁEM EDYCJI ORAZ AUTOREM) -->
+                    <!-- OBYWATELE -->
                     <section id="tab-citizens" class="tab-pane">
                         <h2>Centralna Baza Obywateli ERLC / State ID</h2>
                         <p class="subtitle">Zaawansowany rejestr ludności, ewidencja numerów PESEL/ID, statusów prawa jazdy, broni oraz kartotek kryminalnych.</p>
@@ -686,6 +686,33 @@
             isAdmin: false
         };
 
+        // Funkcje synchronizacji z localStorage (między różnymi oknami/kartami/siecią lokalną)
+        function wczytajZStorage() {
+            const dane = localStorage.getItem('la_mdt_bazy');
+            if (dane) {
+                try {
+                    bazyDanych = JSON.parse(dane);
+                } catch(e) {
+                    console.error("Błąd parsowania danych z magazynu", e);
+                }
+            }
+        }
+
+        function zapiszDoStorage() {
+            localStorage.setItem('la_mdt_bazy', JSON.stringify(bazyDanych));
+        }
+
+        // Nasłuchiwanie zmian z innych kart/okien w czasie rzeczywistym
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'la_mdt_bazy') {
+                wczytajZStorage();
+                pobierzObywateli();
+                pobierzPojazdy();
+                pobierzRaporty();
+                pobierzBolo();
+            }
+        });
+
         function zalogujSie(event) {
             event.preventDefault();
             const imieInput = document.getElementById('loginImie').value.trim();
@@ -720,6 +747,7 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             
+            wczytajZStorage();
             pobierzObywateli();
             pobierzPojazdy();
             pobierzRaporty();
@@ -753,17 +781,16 @@
             document.getElementById('obywatelPesel').value = pesel;
         }
 
-        // --- OBYWATELE (Z DODANYM AUTOREM ORAZ EDYCJĄ) ---
+        // --- OBYWATELE ---
         function zapiszObywatela(e) {
             e.preventDefault();
+            wczytajZStorage(); // Odśwież stan przed zapisem
             const peselWartosc = document.getElementById('obywatelPesel').value;
             
-            // Sprawdzenie czy dany PESEL już istnieje w bazie (tryb edycji lub aktualizacji)
             const istniejacyIndex = bazyDanych.obywatele.findIndex(o => o.pesel === peselWartosc);
             
             let autorWpisu = `${currentUser.imie} [${currentUser.odznaka}]`;
             if (istniejacyIndex !== -1) {
-                // Zachowaj pierwotnego autora lub zaktualizuj w zależności od preferencji, tutaj zostawiamy lub podmieniamy na edytującego
                 autorWpisu = bazyDanych.obywatele[istniejacyIndex].autor || autorWpisu;
             }
 
@@ -789,7 +816,8 @@
                 alert("Nowy obywatel został pomyślnie zarejestrowany w bazie.");
             }
 
-            // Reset formularza i przywrócenie domyślnego nagłówka
+            zapiszDoStorage();
+
             document.getElementById('obywatelForm').reset();
             document.getElementById('obywatelFormTitle').innerText = "👤 Rejestracja / Aktualizacja Kartoteki Mieszkańca";
             document.getElementById('obywatelBtnSubmit').innerText = "💾 Zapisz Pełną Kartotekę Obywatela";
@@ -799,12 +827,13 @@
         }
 
         function edytujObywatela(pesel) {
+            wczytajZStorage();
             const obywatel = bazyDanych.obywatele.find(o => o.pesel === pesel);
             if (!obywatel) return;
 
             document.getElementById('obywatelImie').value = obywatel.imie;
             document.getElementById('obywatelPesel').value = obywatel.pesel;
-            document.getElementById('obywatelPesel').readOnly = true; // Zablokowanie zmiany PESEL podczas edycji
+            document.getElementById('obywatelPesel').readOnly = true;
             document.getElementById('obywatelWiek').value = obywatel.wiek;
             document.getElementById('obywatelAdres').value = obywatel.adres;
             document.getElementById('obywatelPrawoJazdy').value = obywatel.prawoJazdy;
@@ -816,11 +845,11 @@
             document.getElementById('obywatelFormTitle').innerText = "✏️ Edycja Kartoteki: " + obywatel.imie;
             document.getElementById('obywatelBtnSubmit').innerText = "💾 Zapisz Zmiany w Kartotece";
 
-            // Przewiń formularz na górę zakładki
             document.querySelector('#tab-citizens').scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function pobierzObywateli() {
+            wczytajZStorage();
             const query = (document.getElementById('searchObywatelInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaObywateli');
             const wyniki = bazyDanych.obywatele.filter(o => 
@@ -868,6 +897,7 @@
         // --- POJAZDY (ERLC) ---
         function zapiszPojazd(e) {
             e.preventDefault();
+            wczytajZStorage();
             const pojazd = {
                 model: document.getElementById('pojazdModel').value,
                 tablica: document.getElementById('pojazdTablica').value.toUpperCase(),
@@ -878,6 +908,7 @@
                 czas: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
             };
             bazyDanych.pojazdy.unshift(pojazd);
+            zapiszDoStorage();
             
             document.getElementById('pojazdForm').reset();
             pobierzPojazdy();
@@ -885,6 +916,7 @@
         }
 
         function pobierzPojazdy() {
+            wczytajZStorage();
             const query = (document.getElementById('searchPojazdInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaPojazdow');
             const wyniki = bazyDanych.pojazdy.filter(p => 
@@ -923,6 +955,7 @@
         // --- RAPORTY ---
         function zapiszRaport(e) {
             e.preventDefault();
+            wczytajZStorage();
             const raport = {
                 tytul: document.getElementById('raportTytul').value,
                 kategoria: document.getElementById('raportKategoria').value,
@@ -936,6 +969,7 @@
                 czas: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
             };
             bazyDanych.raporty.unshift(raport);
+            zapiszDoStorage();
             
             document.getElementById('raportTytul').value = '';
             document.getElementById('raportPodejrzany').value = '';
@@ -948,6 +982,7 @@
         }
 
         function pobierzRaporty() {
+            wczytajZStorage();
             const query = (document.getElementById('searchRaportInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaRaportow');
             const wyniki = bazyDanych.raporty.filter(r => 
@@ -991,6 +1026,7 @@
         // --- BOLO ---
         function utworzBolo(e) {
             e.preventDefault();
+            wczytajZStorage();
             const bolo = {
                 typ: document.getElementById('boloTyp').value,
                 priorytet: document.getElementById('boloPriorytet').value,
@@ -1002,6 +1038,8 @@
                 czas: new Date().toLocaleTimeString()
             };
             bazyDanych.bolo.unshift(bolo);
+            zapiszDoStorage();
+
             document.getElementById('dodajBoloForm').reset();
             pobierzBolo();
             
@@ -1010,6 +1048,7 @@
         }
 
         function pobierzBolo() {
+            wczytajZStorage();
             const query = (document.getElementById('searchBoloInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaBolo');
             const dashKontener = document.getElementById('dashboardBoloList');
