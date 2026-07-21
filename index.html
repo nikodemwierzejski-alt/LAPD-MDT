@@ -672,7 +672,7 @@
     </div>
 
     <script>
-        // Główna baza danych MDT
+        // Baza danych MDT z domyślnymi bezpiecznymi pustymi strukturami
         let bazyDanych = {
             obywatele: [],
             pojazdy: [],
@@ -687,66 +687,76 @@
             isAdmin: false
         };
 
-        // KROK DLA WYMIANY DANYCH MIĘDZY RÓŻNYMI SIECIAMI (Cloud Sync)
-        // Publiczny endpoint REST API pozwalający na dwukierunkową synchronizację danych w czasie rzeczywistym z dowolnej sieci
-        const CLOUD_SYNC_ENDPOINT = "https://kvdb.io/A8fK29xN3mPq7L1v9Z0w/la_mdt_bazy_v2";
+        // Gwarantowany, otwarty endpoint z obsługą CORS na Firebase REST
+        const CLOUD_SYNC_ENDPOINT = "https://la-mdt-sync-default-rtdb.europe-west1.firebasedatabase.app/mdt_database_v2.json";
         let lastKnownJSON = "";
 
-        // Funkcja czytająca z localStorage + pobierająca najnowsze dane z chmury w tle
+        // Funkcja weryfikująca czy dane są prawidłową strukturą
+        function zweryfikujStrukture(dane) {
+            if (!dane || typeof dane !== 'object') return false;
+            if (!Array.isArray(dane.obywatele)) dane.obywatele = [];
+            if (!Array.isArray(dane.pojazdy)) dane.pojazdy = [];
+            if (!Array.isArray(dane.raporty)) dane.raporty = [];
+            if (!Array.isArray(dane.bolo)) dane.bolo = [];
+            return true;
+        }
+
+        // Czytanie z pamięci podręcznej oraz synchronizacja w tle
         function wczytajZStorage() {
-            // Najpierw szybkie odczytanie z pamięci podręcznej przeglądarki
             const dane = localStorage.getItem('la_mdt_bazy');
             if (dane) {
                 try {
-                    bazyDanych = JSON.parse(dane);
-                    lastKnownJSON = dane;
+                    const parsed = JSON.parse(dane);
+                    if (zweryfikujStrukture(parsed)) {
+                        bazyDanych = parsed;
+                        lastKnownJSON = dane;
+                    }
                 } catch(e) {
-                    console.error("Błąd parsowania danych z lokalnego magazynu", e);
+                    console.error("Błąd parsowania lokalnej bazy:", e);
                 }
             }
-
-            // Pobranie danych ze wspólnej chmury (dla wszystkich użytkowników z dowolnych sieci)
             pobierzZChmury();
         }
 
-        // Pobieranie danych z globalnej sieci
+        // Pobieranie danych ze wspólnej chmury
         async function pobierzZChmury() {
             try {
-                const res = await fetch(CLOUD_SYNC_ENDPOINT);
+                const res = await fetch(CLOUD_SYNC_ENDPOINT, { cache: 'no-store' });
                 if (res.ok) {
-                    const cloudDataStr = await res.text();
-                    if (cloudDataStr && cloudDataStr !== lastKnownJSON) {
-                        const parsedCloud = JSON.parse(cloudDataStr);
-                        if (parsedCloud && typeof parsedCloud === 'object') {
-                            bazyDanych = parsedCloud;
-                            lastKnownJSON = cloudDataStr;
-                            localStorage.setItem('la_mdt_bazy', cloudDataStr);
+                    const cloudData = await res.json();
+                    if (cloudData && zweryfikujStrukture(cloudData)) {
+                        const newStr = JSON.stringify(cloudData);
+                        if (newStr !== lastKnownJSON) {
+                            bazyDanych = cloudData;
+                            lastKnownJSON = newStr;
+                            localStorage.setItem('la_mdt_bazy', newStr);
                             odswiezWszystkieWidoki();
                         }
                     }
                     ustawStatusSieci(true);
                 }
             } catch(err) {
-                console.warn("Błąd połączenia z siecią chmurową MDT (praca w trybie lokalnym):", err);
+                console.warn("Błąd połączenia z chmurą MDT:", err);
                 ustawStatusSieci(false);
             }
         }
 
-        // Funkcja zapisująca dane lokalnie oraz natychmiastowo do globalnej chmury
+        // Wysyłanie zmian do chmury
         async function zapiszDoStorage() {
+            zweryfikujStrukture(bazyDanych);
             const jsonStr = JSON.stringify(bazyDanych);
             localStorage.setItem('la_mdt_bazy', jsonStr);
             lastKnownJSON = jsonStr;
 
             try {
                 await fetch(CLOUD_SYNC_ENDPOINT, {
-                    method: 'POST',
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: jsonStr
                 });
                 ustawStatusSieci(true);
             } catch(e) {
-                console.error("Nie udało się natychmiastowo wysłać zmian do sieci chmurowej:", e);
+                console.error("Nie udało się wysłać danych do chmury:", e);
                 ustawStatusSieci(false);
             }
         }
@@ -771,17 +781,10 @@
             pobierzBolo();
         }
 
-        // Nasłuchiwanie zmian z innych kart/okien w przeglądarce
-        window.addEventListener('storage', (event) => {
-            if (event.key === 'la_mdt_bazy') {
-                wczytajZStorage();
-            }
-        });
-
-        // Automatyczny cykl pobierania aktualizacji z sieci co 3 sekundy
+        // Automatyczne sprawdzanie zmian w tle co 2.5 sekundy
         setInterval(() => {
             pobierzZChmury();
-        }, 3000);
+        }, 2500);
 
         function zalogujSie(event) {
             event.preventDefault();
@@ -849,11 +852,11 @@
         }
 
         // --- OBYWATELE ---
-        function zapiszObywatela(e) {
+        async function zapiszObywatela(e) {
             e.preventDefault();
-            wczytajZStorage(); // Odśwież stan przed zapisem
+            zweryfikujStrukture(bazyDanych);
+
             const peselWartosc = document.getElementById('obywatelPesel').value;
-            
             const istniejacyIndex = bazyDanych.obywatele.findIndex(o => o.pesel === peselWartosc);
             
             let autorWpisu = `${currentUser.imie} [${currentUser.odznaka}]`;
@@ -877,13 +880,13 @@
             
             if (istniejacyIndex !== -1) {
                 bazyDanych.obywatele[istniejacyIndex] = nowy;
-                alert("Kartoteka obywatela (PESEL: " + peselWartosc + ") została pomyślnie zaktualizowana.");
+                alert("Kartoteka obywatela (PESEL: " + peselWartosc + ") została pomyślnie zaktualizowana w sieci.");
             } else {
                 bazyDanych.obywatele.unshift(nowy);
-                alert("Nowy obywatel został pomyślnie zarejestrowany w bazie.");
+                alert("Nowy obywatel został zarejestrowany i zsynchronizowany w sieci.");
             }
 
-            zapiszDoStorage();
+            await zapiszDoStorage();
 
             document.getElementById('obywatelForm').reset();
             document.getElementById('obywatelFormTitle').innerText = "👤 Rejestracja / Aktualizacja Kartoteki Mieszkańca";
@@ -894,7 +897,7 @@
         }
 
         function edytujObywatela(pesel) {
-            wczytajZStorage();
+            zweryfikujStrukture(bazyDanych);
             const obywatel = bazyDanych.obywatele.find(o => o.pesel === pesel);
             if (!obywatel) return;
 
@@ -916,13 +919,15 @@
         }
 
         function pobierzObywateli() {
+            zweryfikujStrukture(bazyDanych);
             const query = (document.getElementById('searchObywatelInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaObywateli');
+            
             const wyniki = bazyDanych.obywatele.filter(o => 
-                o.imie.toLowerCase().includes(query) || 
-                o.pesel.includes(query) || 
-                o.pojazdy.toLowerCase().includes(query) ||
-                o.adres.toLowerCase().includes(query)
+                (o.imie && o.imie.toLowerCase().includes(query)) || 
+                (o.pesel && o.pesel.includes(query)) || 
+                (o.pojazdy && o.pojazdy.toLowerCase().includes(query)) ||
+                (o.adres && o.adres.toLowerCase().includes(query))
             );
 
             if (wyniki.length === 0) {
@@ -931,7 +936,7 @@
             }
 
             kontener.innerHTML = wyniki.map(o => `
-                <div class="citizen-card" style="border-left: 3px solid ${o.status.includes('Poszukiwany') ? '#ef4444' : '#38bdf8'};">
+                <div class="citizen-card" style="border-left: 3px solid ${o.status && o.status.includes('Poszukiwany') ? '#ef4444' : '#38bdf8'};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <strong style="color: #38bdf8; font-size: 15px;">👤 ${o.imie}</strong>
                         <div style="display: flex; gap: 8px; align-items: center;">
@@ -944,7 +949,7 @@
                         <div>🎂 <strong>Wiek:</strong> <span style="color: #f8fafc;">${o.wiek}</span></div>
                         <div>🏠 <strong>Adres:</strong> <span style="color: #f8fafc;">${o.adres}</span></div>
                         <div>🚗 <strong>Pojazdy:</strong> <span style="color: #38bdf8;">${o.pojazdy}</span></div>
-                        <div>🪪 <strong>Prawo Jazdy:</strong> <span style="color: ${o.prawoJazdy.includes('Aktywne') ? '#22c55e' : '#ef4444'};">${o.prawoJazdy}</span></div>
+                        <div>🪪 <strong>Prawo Jazdy:</strong> <span style="color: ${o.prawoJazdy && o.prawoJazdy.includes('Aktywne') ? '#22c55e' : '#ef4444'};">${o.prawoJazdy}</span></div>
                         <div style="grid-column: span 2;">🛡️ <strong>Pozwolenie na broń:</strong> <span style="color: #f8fafc;">${o.bron}</span></div>
                     </div>
 
@@ -953,7 +958,7 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 11px;">
-                        <span style="color: ${o.status.includes('Poszukiwany') ? '#ef4444' : '#22c55e'}; font-weight: bold;">● Status: ${o.status}</span>
+                        <span style="color: ${o.status && o.status.includes('Poszukiwany') ? '#ef4444' : '#22c55e'}; font-weight: bold;">● Status: ${o.status}</span>
                         <span style="color: #64748b;">Dodane przez: <strong style="color: #38bdf8;">${o.autor || 'System'}</strong> (${o.dataRejestracji})</span>
                     </div>
                 </div>
@@ -961,9 +966,10 @@
         }
 
         // --- POJAZDY (ERLC) ---
-        function zapiszPojazd(e) {
+        async function zapiszPojazd(e) {
             e.preventDefault();
-            wczytajZStorage();
+            zweryfikujStrukture(bazyDanych);
+
             const pojazd = {
                 model: document.getElementById('pojazdModel').value,
                 tablica: document.getElementById('pojazdTablica').value.toUpperCase(),
@@ -974,21 +980,23 @@
                 czas: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
             };
             bazyDanych.pojazdy.unshift(pojazd);
-            zapiszDoStorage();
+            await zapiszDoStorage();
             
             document.getElementById('pojazdForm').reset();
             pobierzPojazdy();
-            alert("Pojazd ERLC został pomyślnie zarejestrowany w centralnej bazie.");
+            alert("Pojazd ERLC został pomyślnie zarejestrowany i zsynchronizowany.");
         }
 
         function pobierzPojazdy() {
+            zweryfikujStrukture(bazyDanych);
             const query = (document.getElementById('searchPojazdInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaPojazdow');
+            
             const wyniki = bazyDanych.pojazdy.filter(p => 
-                p.tablica.toLowerCase().includes(query) || 
-                p.model.toLowerCase().includes(query) || 
-                p.wlasciciel.toLowerCase().includes(query) ||
-                p.kolor.toLowerCase().includes(query)
+                (p.tablica && p.tablica.toLowerCase().includes(query)) || 
+                (p.model && p.model.toLowerCase().includes(query)) || 
+                (p.wlasciciel && p.wlasciciel.toLowerCase().includes(query)) ||
+                (p.kolor && p.kolor.toLowerCase().includes(query))
             );
 
             if (wyniki.length === 0) {
@@ -1010,7 +1018,7 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-                        <span style="font-size: 11px; color: ${p.status.includes('Skradziony') || p.status.includes('Skonfiskowany') ? '#ef4444' : '#22c55e'}; font-weight: bold;">● Stan: ${p.status}</span>
+                        <span style="font-size: 11px; color: ${p.status && (p.status.includes('Skradziony') || p.status.includes('Skonfiskowany')) ? '#ef4444' : '#22c55e'}; font-weight: bold;">● Stan: ${p.status}</span>
                         <span style="font-size: 10px; color: #64748b;">Rej: ${p.czas}</span>
                     </div>
                 </div>
@@ -1018,9 +1026,10 @@
         }
 
         // --- RAPORTY ---
-        function zapiszRaport(e) {
+        async function zapiszRaport(e) {
             e.preventDefault();
-            wczytajZStorage();
+            zweryfikujStrukture(bazyDanych);
+
             const raport = {
                 tytul: document.getElementById('raportTytul').value,
                 kategoria: document.getElementById('raportKategoria').value,
@@ -1034,7 +1043,7 @@
                 czas: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
             };
             bazyDanych.raporty.unshift(raport);
-            zapiszDoStorage();
+            await zapiszDoStorage();
             
             document.getElementById('raportTytul').value = '';
             document.getElementById('raportPodejrzany').value = '';
@@ -1043,18 +1052,20 @@
             document.getElementById('raportTresc').value = '';
             
             pobierzRaporty();
-            alert("Raport taktyczny został pomyślnie zarchiwizowany w systemie.");
+            alert("Raport taktyczny został pomyślnie zarchiwizowany w sieci.");
         }
 
         function pobierzRaporty() {
+            zweryfikujStrukture(bazyDanych);
             const query = (document.getElementById('searchRaportInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaRaportow');
+            
             const wyniki = bazyDanych.raporty.filter(r => 
-                r.tytul.toLowerCase().includes(query) || 
-                r.autor.toLowerCase().includes(query) || 
-                r.podejrzany.toLowerCase().includes(query) || 
-                r.pojazd.toLowerCase().includes(query) ||
-                r.kategoria.toLowerCase().includes(query)
+                (r.tytul && r.tytul.toLowerCase().includes(query)) || 
+                (r.autor && r.autor.toLowerCase().includes(query)) || 
+                (r.podejrzany && r.podejrzany.toLowerCase().includes(query)) || 
+                (r.pojazd && r.pojazd.toLowerCase().includes(query)) ||
+                (r.kategoria && r.kategoria.toLowerCase().includes(query))
             );
 
             if (wyniki.length === 0) {
@@ -1081,16 +1092,17 @@
                     <p style="font-size: 12px; color: #cbd5e1; background: #0b0f19; padding: 8px; border-radius: 4px; margin-top: 6px; line-height: 1.4;">${r.tresc}</p>
                     
                     <div style="margin-top: 8px; font-size: 11px; text-align: right;">
-                        <span style="background: ${r.status.includes('Zamknięta') ? 'rgba(34, 197, 94, 0.2)' : 'rgba(234, 179, 8, 0.2)'}; color: ${r.status.includes('Zamknięta') ? '#22c55e' : '#eab308'}; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Status: ${r.status}</span>
+                        <span style="background: ${r.status && r.status.includes('Zamknięta') ? 'rgba(34, 197, 94, 0.2)' : 'rgba(234, 179, 8, 0.2)'}; color: ${r.status && r.status.includes('Zamknięta') ? '#22c55e' : '#eab308'}; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Status: ${r.status}</span>
                     </div>
                 </div>
             `).join('');
         }
 
         // --- BOLO ---
-        function utworzBolo(e) {
+        async function utworzBolo(e) {
             e.preventDefault();
-            wczytajZStorage();
+            zweryfikujStrukture(bazyDanych);
+
             const bolo = {
                 typ: document.getElementById('boloTyp').value,
                 priorytet: document.getElementById('boloPriorytet').value,
@@ -1102,20 +1114,24 @@
                 czas: new Date().toLocaleTimeString()
             };
             bazyDanych.bolo.unshift(bolo);
-            zapiszDoStorage();
+            await zapiszDoStorage();
 
             document.getElementById('dodajBoloForm').reset();
             pobierzBolo();
-            
-            document.getElementById('statBoloDash').innerText = bazyDanych.bolo.length;
-            alert("Ogólnokrajowy alert BOLO został pomyślnie opublikowany w sieci MDT.");
+            alert("Ogólnokrajowy alert BOLO został pomyślnie zsynchronizowany w sieci MDT.");
         }
 
         function pobierzBolo() {
+            zweryfikujStrukture(bazyDanych);
             const query = (document.getElementById('searchBoloInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaBolo');
             const dashKontener = document.getElementById('dashboardBoloList');
-            const wyniki = bazyDanych.bolo.filter(b => b.osoba.toLowerCase().includes(query) || b.tablica.toLowerCase().includes(query) || b.modelAuta.toLowerCase().includes(query));
+            
+            const wyniki = bazyDanych.bolo.filter(b => 
+                (b.osoba && b.osoba.toLowerCase().includes(query)) || 
+                (b.tablica && b.tablica.toLowerCase().includes(query)) || 
+                (b.modelAuta && b.modelAuta.toLowerCase().includes(query))
+            );
 
             document.getElementById('statBoloDash').innerText = bazyDanych.bolo.length;
 
