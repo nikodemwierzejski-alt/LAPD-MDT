@@ -98,7 +98,7 @@ async function inicjalizacjaBazy() {
 
 inicjalizacjaBazy();
 
-// NAPRAWIONE, W 100% STABILNE LOGOWANIE (Dopasowanie elastyczne i dokładne sprawdzenie hasła)
+// OSTATECZNY MECHANIZM LOGOWANIA OBSŁUGUJĄCY IMIONA I ODZNAKI
 app.post("/api/login", async (req, res) => {
     let { badge, password } = req.body;
     
@@ -109,33 +109,31 @@ app.post("/api/login", async (req, res) => {
     badge = badge.trim();
     password = password.trim();
 
-    console.log(`[LOGIN] Próba logowania dla identyfikatora: "${badge}"`);
+    console.log(`[LOGIN] Próba logowania dla: "${badge}"`);
 
     try {
-        // Używamy % w zapytaniu, dzięki czemu wystarczy wpisać fragment imienia lub odznaki
+        // Sprawdza, czy wpisany tekst pasuje do odznaki LUB do stopnia/nazwiska, ignorując wielkość liter
         const query = `
             SELECT * FROM kadry 
             WHERE (TRIM(odznaka) ILIKE $1 OR TRIM(stopien_nazwisko) ILIKE $1) 
               AND TRIM(haslo) = $2
         `;
-        // Przesyłamy z wildcardem, aby obsłużyć dopasowanie częściowe i pełne
-        const searchParam = `%${badge}%`;
-        const result = await db.query(query, [searchParam, password]);
+        const result = await db.query(query, [badge, password]);
 
         if (result.rows.length > 0) {
             const user = result.rows[0];
-            console.log(`[LOGIN] Sukces! Zalogowano: ${user.stopien_nazwisko} (Odznaka: ${user.odznaka}, Rola: ${user.rola})`);
+            console.log(`[LOGIN] Sukces! Zalogowano użytkownika: ${user.stopien_nazwisko} (${user.odznaka})`);
             res.json({ 
                 success: true, 
                 officer: user.stopien_nazwisko, 
                 rola: user.rola || 'user'
             });
         } else {
-            console.log(`[LOGIN] Odrzucono logowanie dla identyfikatora: "${badge}" (błędne dane lub hasło)`);
+            console.log(`[LOGIN] Odrzucono logowanie dla: "${badge}"`);
             res.status(401).json({ success: false, message: "Błędne dane logowania" });
         }
     } catch (err) {
-        console.error("[LOGIN] Błąd krytyczny serwera:", err);
+        console.error("[LOGIN] Błąd serwera:", err);
         res.status(500).json({ success: false, message: err.message });
     }
 });
