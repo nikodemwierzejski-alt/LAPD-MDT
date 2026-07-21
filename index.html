@@ -76,16 +76,12 @@
             <p>Terminal Operacyjny Służb Mundurowych</p>
             <form onsubmit="zalogujSie(event)">
                 <div class="form-group" style="text-align: left;">
-                    <label>Imię i Nazwisko Oficera</label>
-                    <input type="text" id="loginImie" required value="Lukas Weber" placeholder="np. Lukas Weber">
+                    <label>Imię i Nazwisko / Login</label>
+                    <input type="text" id="loginImie" required placeholder="np. Lukas Weber lub Nikodem(Administrator)">
                 </div>
                 <div class="form-group" style="text-align: left;">
-                    <label>Numer Odznaki (Badge ID)</label>
-                    <input type="text" id="loginOdznaka" required value="LP-1150" placeholder="np. LP-1150">
-                </div>
-                <div class="form-group" style="text-align: left;">
-                    <label>Stopień Służbowy</label>
-                    <input type="text" id="loginStopień" required value="Sergeant" placeholder="np. Sergeant">
+                    <label>Hasło lub Numer Odznaki</label>
+                    <input type="password" id="loginHasloOdznaka" required placeholder="Hasło lub Badge ID">
                 </div>
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Zaloguj do Terminala</button>
             </form>
@@ -114,6 +110,8 @@
                     <li onclick="zmienZakladke('widgets')" id="nav-widgets">🧩 Widgets</li>
                     <li onclick="zmienZakladke('erlclive')" id="nav-erlclive">🎮 ERLC Live</li>
                     <li onclick="zmienZakladke('logs')" id="nav-logs">📜 Logs</li>
+                    <!-- Zakładka dostępna tylko dla admina -->
+                    <li onclick="zmienZakladke('kadra')" id="nav-kadra" style="display: none; border-left: 3px solid #38bdf8;">👮 Zarządzanie Kadrą</li>
                     <li onclick="zmienZakladke('admin')" id="nav-admin">⚙️ Admin</li>
                 </ul>
                 <div class="sidebar-footer">
@@ -507,6 +505,42 @@
                         </div>
                     </section>
 
+                    <!-- ZARZĄDZANIE KADRĄ (TYLKO DLA ADMINA) -->
+                    <section id="tab-kadra" class="tab-pane">
+                        <h2>Zarządzanie Kadrą Funkcjonariuszy</h2>
+                        <p class="subtitle">Tworzenie nowych kont użytkowników systemu z przydziałem odznak i haseł.</p>
+                        
+                        <div class="citizens-grid">
+                            <div class="panel-box">
+                                <h3>➕ Dodaj Nowego Funkcjonariusza</h3>
+                                <form id="kadraForm" onsubmit="zarejestrujFunkcjonariusza(event)">
+                                    <div class="form-group">
+                                        <label>Imię i Nazwisko</label>
+                                        <input type="text" id="nowyUserImie" required placeholder="np. Alex Murphy">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Numer Odznaki (Badge ID)</label>
+                                        <input type="text" id="nowyUserOdznaka" required placeholder="np. LP-2026">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Stopień Służbowy</label>
+                                        <input type="text" id="nowyUserStopien" required value="Officer" placeholder="np. Officer">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Hasło do logowania</label>
+                                        <input type="password" id="nowyUserHaslo" required placeholder="Wpisz hasło dla użytkownika">
+                                    </div>
+                                    <button type="submit" class="btn-primary">Utwórz Konto Funkcjonariusza</button>
+                                </form>
+                            </div>
+
+                            <div class="panel-box">
+                                <h3>📋 Lista Zarejestrowanych Funkcjonariuszy</h3>
+                                <div id="listaFunkcjonariuszy" class="results-container"></div>
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- ADMIN -->
                     <section id="tab-admin" class="tab-pane">
                         <h2>Panel Administratora</h2>
@@ -549,11 +583,55 @@
 
         function zalogujSie(e) {
             e.preventDefault();
-            const imie = document.getElementById('loginImie').value;
-            const odznaka = document.getElementById('loginOdznaka').value;
-            const stopien = document.getElementById('loginStopień').value;
+            const inputImie = document.getElementById('loginImie').value.trim();
+            const inputHasloOdznaka = document.getElementById('loginHasloOdznaka').value.trim();
 
-            const sesja = { imie, odznaka, stopien };
+            let sesja = null;
+
+            // Sprawdzenie konta administratora
+            if (inputImie === "Nikodem(Administrator)" && inputHasloOdznaka === "02122004") {
+                sesja = {
+                    imie: "Nikodem",
+                    odznaka: "ADMIN-01",
+                    stopien: "Chief of Police / Admin",
+                    isAdmin: true
+                };
+            } else {
+                // Sprawdzenie bazowych domyślnych danych lub nowo dodanych funkcjonariuszy
+                let customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
+                
+                // Sprawdź domyślne konto Lukas Weber jeśli ktoś chce się nim zalogować
+                if ((inputImie.toLowerCase() === "lukas weber" && inputHasloOdznaka === "LP-1150") ||
+                    (inputImie.toLowerCase() === "lukas weber" && inputHasloOdznaka === "sergeant")) {
+                    sesja = {
+                        imie: "Lukas Weber",
+                        odznaka: "LP-1150",
+                        stopien: "Sergeant",
+                        isAdmin: false
+                    };
+                } else {
+                    // Szukaj w dodanych użytkownikach (po imieniu lub odznaki, oraz haśle)
+                    const znaleziony = customUsers.find(u => 
+                        (u.imie.toLowerCase() === inputImie.toLowerCase() || u.odznaka.toLowerCase() === inputImie.toLowerCase()) && 
+                        u.haslo === inputHasloOdznaka
+                    );
+
+                    if (znaleziony) {
+                        sesja = {
+                            imie: znaleziony.imie,
+                            odznaka: znaleziony.odznaka,
+                            stopien: znaleziony.stopien,
+                            isAdmin: false
+                        };
+                    }
+                }
+            }
+
+            if (!sesja) {
+                alert("Błędne dane logowania! Sprawdź imię, odznakę lub hasło.");
+                return;
+            }
+
             localStorage.setItem('mdt_sesja', JSON.stringify(sesja));
 
             naklejDaneUzytkownika(sesja);
@@ -562,6 +640,7 @@
 
             aktualizujStatystyki();
             pobierzBolo();
+            pobierzFunkcjonariuszy();
         }
 
         function wylogujSie() {
@@ -581,6 +660,14 @@
             
             const raportAutorInput = document.getElementById('raportAutor');
             if (raportAutorInput) raportAutorInput.value = `${sesja.imie} [${sesja.odznaka}]`;
+
+            // Obsługa widoczności zakładki kadry dla administratora
+            const navKadra = document.getElementById('nav-kadra');
+            if (sesja.isAdmin) {
+                if (navKadra) navKadra.style.display = 'flex';
+            } else {
+                if (navKadra) navKadra.style.display = 'none';
+            }
         }
 
         function zmienZakladke(nazwaZakladki) {
@@ -598,12 +685,69 @@
             if (nazwaZakladki === 'vehicles') pobierzPojazdy();
             if (nazwaZakladki === 'bolo') pobierzBolo();
             if (nazwaZakladki === 'reports') pobierzRaporty();
+            if (nazwaZakladki === 'kadra') pobierzFunkcjonariuszy();
         }
 
         function aktualizujStatystyki() {
             const bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
             const statBoloDash = document.getElementById('statBoloDash');
             if (statBoloDash) statBoloDash.innerText = bolos.length;
+            
+            const customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
+            const statOficerowie = document.getElementById('statOficerowie');
+            if (statOficerowie) statOficerowie.innerText = 2 + customUsers.length;
+        }
+
+        // Zarządzanie nowymi funkcjonariuszami (Dla Administratora)
+        function zarejestrujFunkcjonariusza(e) {
+            e.preventDefault();
+            const imie = document.getElementById('nowyUserImie').value.trim();
+            const odznaka = document.getElementById('nowyUserOdznaka').value.trim().toUpperCase();
+            const stopien = document.getElementById('nowyUserStopien').value.trim();
+            const haslo = document.getElementById('nowyUserHaslo').value.trim();
+
+            let customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
+            
+            // Sprawdź czy odznaka już istnieje
+            if (customUsers.some(u => u.odznaka === odznaka) || odznaka === "LP-1150" || odznaka === "ADMIN-01") {
+                alert("Funkcjonariusz z takim numerem odznaki już istnieje w systemie!");
+                return;
+            }
+
+            customUsers.unshift({ id: Date.now(), imie, odznaka, stopien, haslo });
+            localStorage.setItem('mdt_funkcjonariusze', JSON.stringify(customUsers));
+            
+            document.getElementById('kadraForm').reset();
+            pobierzFunkcjonariuszy();
+            aktualizujStatystyki();
+            alert("Pomyślnie dodano nowe konto funkcjonariusza!");
+        }
+
+        function pobierzFunkcjonariuszy() {
+            const lista = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
+            const div = document.getElementById('listaFunkcjonariuszy');
+            if (!div) return;
+
+            if (lista.length === 0) {
+                div.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding:15px;">Brak dodatkowych funkcjonariuszy w bazie.</p>';
+                return;
+            }
+
+            div.innerHTML = lista.map(u => `
+                <div class="citizen-card">
+                    <h4 style="color:#38bdf8; font-size:15px;">${u.imie} <span class="user-badge">${u.odznaka}</span></h4>
+                    <p style="font-size:12px; color:#94a3b8; margin-top:4px;">Stopień: <strong>${u.stopien}</strong> | Hasło: <span style="font-family:monospace; color:#facc15;">${u.haslo}</span></p>
+                    <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunFunkcjonariusza(${u.id})">Usuń konto</button>
+                </div>
+            `).join('');
+        }
+
+        function usunFunkcjonariusza(id) {
+            let lista = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
+            lista = lista.filter(u => u.id !== id);
+            localStorage.setItem('mdt_funkcjonariusze', JSON.stringify(lista));
+            pobierzFunkcjonariuszy();
+            aktualizujStatystyki();
         }
 
         function zapiszObywatela(e) {
@@ -857,6 +1001,7 @@
             }
             aktualizujStatystyki();
             pobierzBolo();
+            pobierzFunkcjonariuszy();
         };
     </script>
 </body>
