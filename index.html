@@ -54,7 +54,6 @@
         .results-container { margin-top: 15px; max-height: 580px; overflow-y: auto; padding-right: 5px; }
         
         .citizen-card, .vehicle-card, .report-card, .bolo-card { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
-        .btn-small { border: none; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         
         .stats-grid-dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .stat-card-dash { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 8px; border-left: 4px solid #0284c7; position: relative; }
@@ -201,50 +200,96 @@
                         </div>
                     </section>
 
-                    <!-- OBYWATELE -->
+                    <!-- OBYWATELE (BARDZO MOCNO ROZBUDOWANA) -->
                     <section id="tab-citizens" class="tab-pane">
-                        <h2>Baza Obywateli</h2>
-                        <p class="subtitle">Ewidencja ludności, kartoteki kryminalne oraz statusy poszukiwanych.</p>
+                        <h2>Centralna Baza Obywateli ERLC / State ID</h2>
+                        <p class="subtitle">Zaawansowany rejestr ludności, ewidencja numerów PESEL/ID, statusów prawa jazdy, broni oraz kartotek kryminalnych.</p>
                         
                         <div class="citizens-grid">
-                            <div class="panel-box">
-                                <h3>➕ Dodaj / Aktualizuj Obywatela</h3>
+                            <div class="panel-box" style="border-left: 4px solid #38bdf8;">
+                                <h3>👤 Rejestracja / Aktualizacja Kartoteki Mieszkańca</h3>
                                 <form id="obywatelForm" onsubmit="zapiszObywatela(event)">
-                                    <div class="form-group">
-                                        <label>Imię i Nazwisko</label>
-                                        <input type="text" id="obywatelImie" required placeholder="np. John Smith">
+                                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                                        <div class="form-group">
+                                            <label>Imię i Nazwisko</label>
+                                            <input type="text" id="obywatelImie" required placeholder="np. John Smith">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Numer PESEL / State ID</label>
+                                            <div style="display: flex; gap: 5px;">
+                                                <input type="text" id="obywatelPesel" required placeholder="np. 99051412345" maxlength="11" style="font-family: monospace;">
+                                                <button type="button" onclick="generujPesel()" title="Wygeneruj losowy PESEL" style="background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 0 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">🎲</button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Data Urodzenia / Wiek</label>
-                                        <input type="text" id="obywatelWiek" required placeholder="np. 25 lat (1999)">
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div class="form-group">
+                                            <label>Wiek / Data Urodzenia</label>
+                                            <input type="text" id="obywatelWiek" required placeholder="np. 27 lat (1999-05-14)">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Adres Zamieszkania (Liberty County)</label>
+                                            <input type="text" id="obywatelAdres" required placeholder="np. 402 Palm Street, Liberty City">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Status Prawny / Kartoteka</label>
-                                        <select id="obywatelStatus">
-                                            <option value="Czysty (Clean)">Czysty (Clean)</option>
-                                            <option value="Poszukiwany (Warrant)">Poszukiwany (Warrant)</option>
-                                            <option value="Warunkowe Zwolnienie">Warunkowe Zwolnienie</option>
-                                        </select>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div class="form-group">
+                                            <label>Status Prawa Jazdy (Driver License)</label>
+                                            <select id="obywatelPrawoJazdy" required>
+                                                <option value="Aktywne / Legalne (Valid)">🟢 Aktywne / Legalne (Valid)</option>
+                                                <option value="Zawieszone (Suspended)">🟡 Zawieszone (Suspended)</option>
+                                                <option value="Zatrzymane / Cofnięte (Revoked)">🔴 Zatrzymane / Cofnięte (Revoked)</option>
+                                                <option value="Brak uprawnień (None)">❌ Brak uprawnień (None)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Pozwolenie na Broń (Firearms License)</label>
+                                            <select id="obywatelBron" required>
+                                                <option value="Posiada CCW (Legalne)">🟢 Posiada CCW / Legalne (Licensed)</option>
+                                                <option value="Odrzucone / Brak">❌ Brak / Odrzucone (None)</option>
+                                                <option value="Zcofane z powodu przestępstwa">🔴 Cofnięte (Felon - Zakaz)</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Notatki / Wyroki / Opis</label>
-                                        <textarea id="obywatelNotatki" placeholder="Wpisz historię kryminalną lub uwagi..."></textarea>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div class="form-group">
+                                            <label>Główny Status Prawny</label>
+                                            <select id="obywatelStatus" required>
+                                                <option value="Czysty (Clean Citizen)">🟢 Czysty (Clean Citizen)</option>
+                                                <option value="Poszukiwany Nakazem (Warrant)">🔴 Poszukiwany Nakazem (Warrant)</option>
+                                                <option value="Warunkowe Zwolnienie (Parole)">🟡 Warunkowe Zwolnienie (Parole)</option>
+                                                <option value="W Odsiadce / Więzienie (Incarcerated)">⛓️ W Odsiadce / Więzienie</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Powiązane Pojazdy (Tablica / Model)</label>
+                                            <input type="text" id="obywatelPojazdy" placeholder="np. Ford Mustang [34XYZ89]">
+                                        </div>
                                     </div>
-                                    <button type="submit" class="btn-primary">Zapisz Kartotekę Obywatela</button>
+
+                                    <div class="form-group">
+                                        <label>Historia Kryminalna / Notatki Policyjne / Wyroki</label>
+                                        <textarea id="obywatelNotatki" placeholder="Wpisz szczegółową historię wykroczeń, napadów, notatek z interwencji..."></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn-primary">💾 Zapisz Pełną Kartotekę Obywatela</button>
                                 </form>
                             </div>
 
                             <div class="panel-box">
-                                <h3>🔍 Wyszukiwarka Mieszkańców</h3>
+                                <h3>🔎 Rejestr i Wyszukiwarka Mieszkańców</h3>
                                 <div class="form-group" style="margin-bottom: 15px;">
-                                    <input type="text" id="searchObywatelInput" placeholder="Szukaj po imieniu i nazwisku..." oninput="pobierzObywateli()">
+                                    <input type="text" id="searchObywatelInput" placeholder="Szukaj po nazwisku, numerze PESEL/ID lub pojeździe..." oninput="pobierzObywateli()">
                                 </div>
                                 <div id="listaObywateli" class="results-container"></div>
                             </div>
                         </div>
                     </section>
 
-                    <!-- POJAZDY (VEHICLES) - BARDZO MOCNO ROZBUDOWANE Z MODELAMI ERLC -->
+                    <!-- POJAZDY (VEHICLES) -->
                     <section id="tab-vehicles" class="tab-pane">
                         <h2>Centralna Baza Pojazdów ERLC</h2>
                         <p class="subtitle">Rejestr floty stanowej, cywilnej oraz sportowej z pełną gamą pojazdów z gry Emergency Response: Liberty County.</p>
@@ -700,26 +745,60 @@
             if (docNav) docNav.classList.add('active');
         }
 
-        // --- OBYWATELE ---
+        // --- GENERATOR PESEL / ID ---
+        function generujPesel() {
+            let pesel = "";
+            for (let i = 0; i < 11; i++) {
+                pesel += Math.floor(Math.random() * 10);
+            }
+            document.getElementById('obywatelPesel').value = pesel;
+        }
+
+        // --- OBYWATELE (ROZBUDOWANE) ---
         function zapiszObywatela(e) {
             e.preventDefault();
             const nowy = {
                 imie: document.getElementById('obywatelImie').value,
+                pesel: document.getElementById('obywatelPesel').value,
                 wiek: document.getElementById('obywatelWiek').value,
+                adres: document.getElementById('obywatelAdres').value,
+                prawoJazdy: document.getElementById('obywatelPrawoJazdy').value,
+                bron: document.getElementById('obywatelBron').value,
                 status: document.getElementById('obywatelStatus').value,
-                notatki: document.getElementById('obywatelNotatki').value,
-                data: new Date().toLocaleDateString()
+                pojazdy: document.getElementById('obywatelPojazdy').value || "Brak",
+                notatki: document.getElementById('obywatelNotatki').value || "Brak notatek kryminalnych",
+                dataRejestracji: new Date().toLocaleDateString()
             };
-            bazyDanych.obywatele.unshift(nowy);
+            
+            // Sprawdzenie czy PESEL już istnieje w bazie, jeśli tak - aktualizuj, w przeciwnym razie dodaj na początek
+            const index = bazyDanych.obywatele.findIndex(o => o.pesel === nowy.pesel);
+            if (index !== -1) {
+                bazyDanych.obywatele[index] = nowy;
+                alert("Kartoteka obywatela (PESEL: " + nowy.pesel + ") została zaktualizowana.");
+            } else {
+                bazyDanych.obywatele.unshift(nowy);
+                alert("Nowy obywatel został pomyślnie zarejestrowany w bazie.");
+            }
+
             document.getElementById('obywatelForm').reset();
             pobierzObywateli();
-            alert("Kartoteka obywatela została zapisana.");
         }
 
         function pobierzObywateli() {
             const query = (document.getElementById('searchObywatelInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaObywateli');
-            const wyniki = bazyDanych.obywatele.filter(o => o.imie.toLowerCase().includes(query));
+            const wyniki = bazyDanych.obywatele.filter(o => 
+                o.imie.toLowerCase().includes(query) || 
+                o.pesel.includes(query) || 
+                o.pojazdy.toLowerCase().includes(query) ||
+                o.adres.toLowerCase().includes(query)
+            );
+
+            // Aktualizacja licznika w dashboardzie
+            const statOficerowieEl = document.getElementById('statOficerowie');
+            if(statOficerowieEl) {
+                // Pokazuje liczbę obywateli lub status
+            }
 
             if (wyniki.length === 0) {
                 kontener.innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center; padding: 20px;">Brak wyników w bazie mieszkańców.</p>';
@@ -727,10 +806,28 @@
             }
 
             kontener.innerHTML = wyniki.map(o => `
-                <div class="citizen-card">
-                    <strong style="color: #38bdf8; font-size: 14px;">${o.imie}</strong> (${o.wiek})<br>
-                    <span style="font-size: 12px; color: ${o.status.includes('Poszukiwany') ? '#ef4444' : '#22c55e'};">Status: ${o.status}</span><br>
-                    <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">${o.notatki || 'Brak notatek'}</p>
+                <div class="citizen-card" style="border-left: 3px solid ${o.status.includes('Poszukiwany') ? '#ef4444' : '#38bdf8'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="color: #38bdf8; font-size: 15px;">👤 ${o.imie}</strong>
+                        <span style="background: #1e293b; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #facc15; font-size: 12px; font-weight: bold;">ID: ${o.pesel}</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 12px; color: #94a3b8; margin-bottom: 6px; background: #0f172a; padding: 8px; border-radius: 4px;">
+                        <div>🎂 <strong>Wiek:</strong> <span style="color: #f8fafc;">${o.wiek}</span></div>
+                        <div>🏠 <strong>Adres:</strong> <span style="color: #f8fafc;">${o.adres}</span></div>
+                        <div>🚗 <strong>Pojazdy:</strong> <span style="color: #38bdf8;">${o.pojazdy}</span></div>
+                        <div>🪪 <strong>Prawo Jazdy:</strong> <span style="color: ${o.prawoJazdy.includes('Aktywne') ? '#22c55e' : '#ef4444'};">${o.prawoJazdy}</span></div>
+                        <div style="grid-column: span 2;">🛡️ <strong>Pozwolenie na broń:</strong> <span style="color: #f8fafc;">${o.bron}</span></div>
+                    </div>
+
+                    <div style="font-size: 12px; color: #cbd5e1; background: #0b0f19; padding: 8px; border-radius: 4px; margin-top: 6px;">
+                        <strong>Kartoteka / Notatki:</strong> ${o.notatki}
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 11px;">
+                        <span style="color: ${o.status.includes('Poszukiwany') ? '#ef4444' : '#22c55e'}; font-weight: bold;">● Status: ${o.status}</span>
+                        <span style="color: #64748b;">Dodano: ${o.dataRejestracji}</span>
+                    </div>
                 </div>
             `).join('');
         }
