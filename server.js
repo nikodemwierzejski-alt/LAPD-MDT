@@ -5,7 +5,6 @@ const cors = require("cors");
 
 const app = express();
 
-// Konfiguracja CORS dla zewnętrznych sieci
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -23,7 +22,6 @@ const db = new Client({
 
 db.connect();
 
-// Inicjalizacja bazy danych i struktury
 async function inicjalizacjaBazy() {
     try {
         await db.query(`
@@ -78,12 +76,10 @@ async function inicjalizacjaBazy() {
             );
         `);
 
-        // Zabezpieczenie dodania kolumny rola
         await db.query(`
             ALTER TABLE kadry ADD COLUMN IF NOT EXISTS rola VARCHAR(50) DEFAULT 'user';
         `);
 
-        // Konta domyślne
         await db.query(`
             INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
             VALUES ('99', 'Officer Smith', 'lspd', 'user')
@@ -102,30 +98,38 @@ async function inicjalizacjaBazy() {
 
 inicjalizacjaBazy();
 
-// POPRAWIONE LOGOWANIE: Obsługuje logowanie zarówno po odznake, jak i po imieniu/nazwisku (stopien_nazwisko)
+// OSTATECZNE, SUPER-ELASTYCZNE LOGOWANIE
 app.post("/api/login", async (req, res) => {
-    const { badge, password } = req.body;
+    let { badge, password } = req.body;
     
-    console.log("Próba logowania dla identyfikatora:", badge);
+    if (!badge || !password) {
+        return res.status(401).json({ success: false, message: "Uzupełnij wszystkie pola." });
+    }
+
+    badge = badge.trim();
+    password = password.trim();
+
+    console.log(`Próba logowania -> Login/Odznaka: "${badge}"`);
 
     try {
+        // Zapytanie sprawdza dopasowanie odznaki LUB stopień/nazwisko (case-insensitive)
         const query = `
             SELECT * FROM kadry 
-            WHERE (odznaka = $1 OR stopien_nazwisko ILIKE $1) 
-              AND haslo = $2
+            WHERE (TRIM(odznaka) ILIKE $1 OR TRIM(stopien_nazwisko) ILIKE $1) 
+              AND TRIM(haslo) = $2
         `;
         const result = await db.query(query, [badge, password]);
 
-        console.log("Znaleziono w bazie pasujących użytkowników:", result.rows.length);
-
         if (result.rows.length > 0) {
             const user = result.rows[0];
+            console.log(`Sukces logowania dla: ${user.stopien_nazwisko} (${user.odznaka})`);
             res.json({ 
                 success: true, 
                 officer: user.stopien_nazwisko, 
                 rola: user.rola || 'user'
             });
         } else {
+            console.log(`Odrzucono logowanie dla: "${badge}"`);
             res.status(401).json({ success: false, message: "Błędne dane logowania" });
         }
     } catch (err) {
@@ -134,12 +138,12 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// Dodawanie nowego funkcjonariusza (Kadr)
+// Dodawanie nowego funkcjonariusza
 app.post("/api/officers", async (req, res) => {
-    const { badge, name, password } = req.body;
+    let { badge, name, password } = req.body;
     try {
         const query = "INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) VALUES ($1, $2, $3, 'user')";
-        await db.query(query, [badge, name, password]);
+        await db.query(query, [badge.trim(), name.trim(), password.trim()]);
         res.json({ success: true, message: "Pomyślnie dodano funkcjonariusza!" });
     } catch (err) {
         console.error("Błąd dodawania kadra:", err);
@@ -147,12 +151,11 @@ app.post("/api/officers", async (req, res) => {
     }
 });
 
-// Pobieranie obywateli z ich mandatami
+// Obywatele
 app.get("/api/obywatele", async (req, res) => {
     const search = req.query.search || "";
     try {
         let query, params;
-
         if (search.trim() === "") {
             query = `
                 SELECT o.*, 
@@ -186,16 +189,13 @@ app.get("/api/obywatele", async (req, res) => {
                 params = [`%${search}%`];
             }
         }
-
         const result = await db.query(query, params);
         res.json(result.rows);
     } catch (err) {
-        console.error("Błąd SQL:", err);
         res.status(500).send(err.message);
     }
 });
 
-// Dodawanie obywatela
 app.post("/api/obywatele", async (req, res) => {
     const { imie, nazwisko, data_urodzenia, uwagi } = req.body;
     try {
@@ -206,19 +206,16 @@ app.post("/api/obywatele", async (req, res) => {
     }
 });
 
-// Usuwanie obywatela
 app.delete("/api/obywatele/:id", async (req, res) => {
     const { id } = req.params;
     try {
         await db.query("DELETE FROM obywatele WHERE id = $1", [id]);
         res.json({ success: true, message: "Pomyślnie usunięto obywatela." });
     } catch (err) {
-        console.error("Błąd usuwania obywatela:", err);
         res.status(500).json({ success: false, message: "Błąd serwera podczas usuwania." });
     }
 });
 
-// Wystawianie mandatu
 app.post("/api/mandaty", async (req, res) => {
     const { obywatel_id, powod, kwota, data } = req.body;
     try {
@@ -229,7 +226,6 @@ app.post("/api/mandaty", async (req, res) => {
     }
 });
 
-// Endpoint statusu
 app.get("/api/status", (req, res) => {
     res.json({ status: "ONLINE", system: "LAPD-MDT" });
 });
@@ -237,13 +233,10 @@ app.get("/api/status", (req, res) => {
 app.post("/api/obywatele/:id/poszukiwany", async (req, res) => {
     const { id } = req.params;
     const { poszukiwany } = req.body;
-
     try {
-        const query = "UPDATE obywatele SET poszukiwany = $1 WHERE id = $2";
-        await db.query(query, [poszukiwany, id]);
+        await db.query("UPDATE obywatele SET poszukiwany = $1 WHERE id = $2", [poszukiwany, id]);
         res.json({ success: true });
     } catch (err) {
-        console.error("Błąd aktualizacji statusu:", err);
         res.status(500).send("Błąd serwera");
     }
 });
