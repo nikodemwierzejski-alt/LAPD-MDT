@@ -450,102 +450,73 @@
 
                     <!-- DISPATCH -->
                     <section id="tab-dispatch" class="tab-pane">
-                        <h2>Centrum Dyspozytorskie / Dispatch</h2>
-                        <p class="subtitle">Zarządzanie jednostkami w terenie i zgłoszeniami radiowymi.</p>
+                        <h2>Dyspozytornia / Dispatch</h2>
+                        <p class="subtitle">Zarządzanie jednostkami w terenie i statusami operacyjnymi.</p>
                         <div class="panel-box">
-                            <h3>📡 Status Jednostek w Terenie</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Brak aktywnych jednostek na patrolu.</p>
+                            <h3>📡 Statusy Jednostek</h3>
+                            <p style="color: #94a3b8; font-size: 13px;">Brak aktywnych jednostek w systemie dyspozytorskim.</p>
                         </div>
                     </section>
 
-                    <!-- BADGE / ID -->
+                    <!-- BADGE -->
                     <section id="tab-badge" class="tab-pane">
-                        <h2>Identyfikator / Badge & ID</h2>
-                        <p class="subtitle">Oficjalna legitymacja służbowa funkcjonariusza.</p>
-                        <div class="panel-box" style="max-width: 400px; text-align: center; background: #111827; border: 2px solid #0284c7;">
-                            <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
-                            <h3 style="justify-content: center; color: #38bdf8;">LOS ANGELES POLICE DEPARTMENT</h3>
-                            <p style="font-size: 16px; font-weight: bold; color: white; margin: 10px 0;" id="badgeUserImie">Lukas Weber</p>
-                            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 15px;" id="badgeUserDetails">Stopień: Sergeant | Odznaka: LP-1150</p>
-                            <span class="user-badge" style="display:inline-block; padding: 4px 12px;">STATUS: AKTYWNY</span>
+                        <h2>Identyfikator Funkcjonariusza</h2>
+                        <p class="subtitle">Cyfrowa odznaka służbowa.</p>
+                        <div class="panel-box" style="max-width: 400px; text-align: center;">
+                            <h3>🪪 LAPD BADGE</h3>
+                            <p style="font-size: 18px; color: #38bdf8; margin: 15px 0;" id="badgeImieText">Lukas Weber</p>
+                            <p style="font-size: 14px; color: #94a3b8;" id="badgeOdznakaText">Odznaka: LP-1150</p>
+                            <p style="font-size: 13px; color: #64748b; margin-top: 10px;" id="badgeStopienText">Stopień: LAPD Sergeant</p>
                         </div>
                     </section>
 
                     <!-- WIDGETS -->
                     <section id="tab-widgets" class="tab-pane">
                         <h2>Widżety Operacyjne</h2>
-                        <p class="subtitle">Dodatkowe narzędzia wsparcia taktycznego.</p>
+                        <p class="subtitle">Dodatkowe narzędzia wspomagające.</p>
                         <div class="panel-box">
-                            <h3>🧩 Dostępne Widżety</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Wszystkie widżety systemowe działają prawidłowo.</p>
+                            <h3>🧩 Szybkie Kalkulatory i Narzędzia</h3>
+                            <p style="color: #94a3b8; font-size: 13px;">Brak aktywnych widżetów do konfiguracji.</p>
                         </div>
                     </section>
 
                     <!-- ERLC LIVE -->
                     <section id="tab-erlclive" class="tab-pane">
-                        <h2>ERLC Live Integracja</h2>
-                        <p class="subtitle">Połączenie z serwerem gry Emergency Response: Liberty County.</p>
+                        <h2>ERLC Live Feed</h2>
+                        <p class="subtitle">Połączenie z serwerem Emergency Response: Liberty County.</p>
                         <div class="panel-box">
-                            <h3>🎮 Stan Serwera ERLC</h3>
-                            <p style="color: #22c55e; font-size: 13px; font-weight: bold;">● Połączono z API gry (Status: OK)</p>
+                            <h3>🎮 Status Serwera Gry</h3>
+                            <p style="color: #22c55e; font-size: 14px; font-weight: bold;">● Serwer Online / Synchronizacja aktywna</p>
                         </div>
                     </section>
 
                     <!-- LOGS -->
                     <section id="tab-logs" class="tab-pane">
-                        <h2>Logi Systemowe / Logs</h2>
-                        <p class="subtitle">Rejestr zdarzeń i aktywności użytkowników terminala.</p>
+                        <h2>Dziennik Zdarzeń (Logs)</h2>
+                        <p class="subtitle">Historia operacji w systemie MDT.</p>
                         <div class="panel-box">
-                            <h3>📜 Historia Zdarzeń</h3>
-                            <div style="font-family: monospace; font-size: 12px; color: #94a3b8; display: flex; flex-direction: column; gap: 6px;">
-                                <div>[System] Zainicjalizowano dziennik zdarzeń MDT.</div>
-                            </div>
+                            <h3>📜 Historia Aktywności</h3>
+                            <p style="color: #94a3b8; font-size: 13px;">Brak starszych wpisów w dzienniku.</p>
                         </div>
                     </section>
 
-                    <!-- ZARZĄDZANIE KADRĄ (TYLKO DLA ADMINA) -->
+                    <!-- KADRA -->
                     <section id="tab-kadra" class="tab-pane">
-                        <h2>Zarządzanie Kadrą Funkcjonariuszy</h2>
-                        <p class="subtitle">Tworzenie nowych kont użytkowników systemu z przydziałem odznak i haseł.</p>
-                        
-                        <div class="citizens-grid">
-                            <div class="panel-box">
-                                <h3>➕ Dodaj Nowego Funkcjonariusza</h3>
-                                <form id="kadraForm" onsubmit="zarejestrujFunkcjonariusza(event)">
-                                    <div class="form-group">
-                                        <label>Imię i Nazwisko</label>
-                                        <input type="text" id="nowyUserImie" required placeholder="np. Alex Murphy">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Numer Odznaki (Badge ID)</label>
-                                        <input type="text" id="nowyUserOdznaka" required placeholder="np. LP-2026">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Stopień Służbowy</label>
-                                        <input type="text" id="nowyUserStopien" required value="Officer" placeholder="np. Officer">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Hasło do logowania</label>
-                                        <input type="text" id="nowyUserHaslo" required placeholder="Wpisz hasło dla użytkownika">
-                                    </div>
-                                    <button type="submit" class="btn-primary">Utwórz Konto Funkcjonariusza</button>
-                                </form>
-                            </div>
-
-                            <div class="panel-box">
-                                <h3>📋 Lista Zarejestrowanych Funkcjonariuszy</h3>
-                                <div id="listaFunkcjonariuszy" class="results-container"></div>
-                            </div>
+                        <h2>Zarządzanie Kadrą</h2>
+                        <p class="subtitle">Panel przeznaczony dla kadry kierowniczej.</p>
+                        <div class="panel-box">
+                            <h3>👮 Lista Funkcjonariuszy</h3>
+                            <p style="color: #94a3b8; font-size: 13px;">Brak uprawnień lub brak danych kadrowych.</p>
                         </div>
                     </section>
 
                     <!-- ADMIN -->
                     <section id="tab-admin" class="tab-pane">
-                        <h2>Panel Administratora</h2>
-                        <p class="subtitle">Zarządzanie uprawnieniami, użytkownikami i ustawieniami MDT.</p>
+                        <h2>Panel Administracyjny</h2>
+                        <p class="subtitle">Konfiguracja systemu i uprawnień.</p>
                         <div class="panel-box">
-                            <h3>⚙️ Ustawienia Globalne Systemu</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Dostęp tylko dla administratorów stopnia Command Staff.</p>
+                            <h3>⚙️ Ustawienia Systemu</h3>
+                            <p style="color: #94a3b8; font-size: 13px;">System MDT v2.0 działa poprawnie.</p>
                         </div>
                     </section>
                 </main>
@@ -554,469 +525,58 @@
     </div>
 
     <script>
-        const erlcVehicleImages = {
-            "Aston Martin Vantage": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/1/18/Aston_Martin_Vantage.png",
-            "Audi R8": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5a/Audi_R8.png",
-            "BMW M3 E46": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/33/BMW_M3_E46.png",
-            "BMW M4": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/38/BMW_M4.png",
-            "Bugatti Chiron": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/a/a2/Bugatti_Chiron.png",
-            "Chevrolet Camaro ZL1": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/6/6f/Camaro_ZL1.png",
-            "Chevrolet Corvette C8": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5e/Corvette_C8.png",
-            "Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4e/Chevrolet_Tahoe.png",
-            "Dodge Charger SRT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/d/d4/Dodge_Charger_SRT.png",
-            "Dodge Challenger SRT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/f/f3/Dodge_Challenger_SRT.png",
-            "Ford Mustang GT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png",
-            "Ford F-150 Raptor": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/8/87/Ford_F-150_Raptor.png",
-            "Lamborghini Urus": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/e/ea/Lamborghini_Urus.png",
-            "McLaren 720S": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/3b/McLaren_720S.png",
-            "Mercedes-Benz G63 AMG": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5a/Mercedes-Benz_G63_AMG.png",
-            "Nissan GT-R R35": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/33/Nissan_GT-R_R35.png",
-            "Tesla Model S": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/1/1a/Tesla_Model_S.png",
-            "Toyota Supra MK5": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/2/22/Toyota_Sup_MK5.png",
-            "Police Crown Victoria": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/f/f0/Crown_Victoria.png",
-            "Police Ford Explorer": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/7/7b/Ford_Explorer.png",
-            "Police Dodge Charger": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/d/d4/Dodge_Charger_SRT.png",
-            "Police Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4e/Chevrolet_Tahoe.png"
-        };
-
-        function inicjalizujBazyDanych() {
-            if (!localStorage.getItem('mdt_funkcjonariusze')) {
-                const domyslniFunkcjonariusze = [
-                    { id: 1, imie: "Alex Murphy", odznaka: "LP-2026", stopien: "Officer", haslo: "12345" }
-                ];
-                localStorage.setItem('mdt_funkcjonariusze', JSON.stringify(domyslniFunkcjonariusze));
-            }
-        }
-
-        function zalogujSie(e) {
-            e.preventDefault();
-            inicjalizujBazyDanych();
-
-            const inputImie = document.getElementById('loginImie').value.trim().toLowerCase();
-            const inputHasloOdznaka = document.getElementById('loginHasloOdznaka').value.trim();
-
-            let sesja = null;
-
-            // 1. Sprawdzenie konta administratora (głównego)
-            if (inputImie === "nikodem" && inputHasloOdznaka === "02122004") {
-                sesja = {
-                    imie: "Nikodem",
-                    odznaka: "ADMIN-01",
-                    stopien: "Chief of Police / Admin",
-                    isAdmin: true
-                };
-            } 
-            // 2. Sprawdzenie domyślnego konta Lukas Weber
-            else if (inputImie === "lukas weber" && (inputHasloOdznaka === "LP-1150" || inputHasloOdznaka.toLowerCase() === "sergeant")) {
-                sesja = {
-                    imie: "Lukas Weber",
-                    odznaka: "LP-1150",
-                    stopien: "Sergeant",
-                    isAdmin: false
-                };
-            } 
-            // 3. Sprawdzanie kont dodanych przez administratora (pobierane na świeżo z localStorage)
-            else {
-                let customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
-                
-                const znaleziony = customUsers.find(u => {
-                    const dbImie = u.imie ? u.imie.toLowerCase() : "";
-                    const dbOdznaka = u.odznaka ? u.odznaka.toLowerCase() : "";
-                    const dbHaslo = u.haslo ? u.haslo.trim() : "";
-
-                    const pasujeLogin = (dbImie === inputImie || dbOdznaka === inputImie);
-                    const pasujeHaslo = (dbHaslo === inputHasloOdznaka);
-
-                    return pasujeLogin && pasujeHaslo;
-                });
-
-                if (znaleziony) {
-                    sesja = {
-                        imie: znaleziony.imie,
-                        odznaka: znaleziony.odznaka,
-                        stopien: znaleziony.stopien,
-                        isAdmin: false
-                    };
-                }
-            }
-
-            if (!sesja) {
-                alert("Błędne dane logowania! Sprawdź poprawność wpisanego imienia/odznaki oraz hasła.");
-                return;
-            }
-
-            localStorage.setItem('mdt_sesja', JSON.stringify(sesja));
-
-            naklejDaneUzytkownika(sesja);
+        // Podstawowa logika skryptów zapewniająca działanie interfejsu
+        function zalogujSie(event) {
+            event.preventDefault();
+            const imie = document.getElementById('loginImie').value;
+            document.getElementById('headerUserImie').innerText = imie;
+            document.getElementById('dashboardWelcome').innerText = `Witaj, ${imie} – LAPD Sergeant`;
+            document.getElementById('headerUserOdznaka').innerText = "LP-1150";
+            document.getElementById('headerUserStopien').innerText = "LAPD Sergeant";
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-
-            aktualizujStatystyki();
-            pobierzBolo();
-            pobierzFunkcjonariuszy();
+            
+            if(imie.toLowerCase().includes('admin') || imie.toLowerCase().includes('lukas')) {
+                document.getElementById('nav-kadra').style.display = 'flex';
+            }
         }
 
         function wylogujSie() {
-            localStorage.removeItem('mdt_sesja');
             document.getElementById('app-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('loginImie').value = '';
-            document.getElementById('loginHasloOdznaka').value = '';
         }
 
-        function naklejDaneUzytkownika(sesja) {
-            document.getElementById('headerUserImie').innerText = sesja.imie;
-            document.getElementById('headerUserOdznaka').innerText = sesja.odznaka;
-            document.getElementById('headerUserStopien').innerText = `LAPD ${sesja.stopien}`;
-            document.getElementById('dashboardWelcome').innerText = `Witaj, ${sesja.imie} – LAPD ${sesja.stopien}`;
-            document.getElementById('logUserText').innerText = sesja.imie;
-            document.getElementById('badgeUserImie').innerText = sesja.imie;
-            document.getElementById('badgeUserDetails').innerText = `Stopień: ${sesja.stopien} | Odznaka: ${sesja.odznaka}`;
+        function zmienZakladke(idZakladki) {
+            const panes = document.querySelectorAll('.tab-pane');
+            panes.forEach(p => p.classList.remove('active'));
             
-            const raportAutorInput = document.getElementById('raportAutor');
-            if (raportAutorInput) raportAutorInput.value = `${sesja.imie} [${sesja.odznaka}]`;
+            const menuItems = document.querySelectorAll('.sidebar-menu li');
+            menuItems.forEach(m => m.classList.remove('active'));
 
-            const navKadra = document.getElementById('nav-kadra');
-            if (navKadra) {
-                navKadra.style.display = sesja.isAdmin ? 'flex' : 'none';
-            }
+            const doc = document.getElementById('tab-' + idZakladki);
+            if(doc) doc.classList.add('active');
+
+            const nav = document.getElementById('nav-' + idZakladki);
+            if(nav) nav.classList.add('active');
         }
 
-        function zmienZakladke(nazwaZakladki) {
-            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
-            
-            const docTab = document.getElementById('tab-' + nazwaZakladki);
-            const docNav = document.getElementById('nav-' + nazwaZakladki);
-
-            if (docTab) docTab.classList.add('active');
-            if (docNav) docNav.classList.add('active');
-
-            if (nazwaZakladki === 'dashboard') aktualizujStatystyki();
-            if (nazwaZakladki === 'citizens') pobierzObywateli();
-            if (nazwaZakladki === 'vehicles') pobierzPojazdy();
-            if (nazwaZakladki === 'bolo') pobierzBolo();
-            if (nazwaZakladki === 'reports') pobierzRaporty();
-            if (nazwaZakladki === 'kadra') pobierzFunkcjonariuszy();
-        }
-
-        function aktualizujStatystyki() {
-            inicjalizujBazyDanych();
-            const bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
-            const statBoloDash = document.getElementById('statBoloDash');
-            if (statBoloDash) statBoloDash.innerText = bolos.length;
-            
-            const customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
-            const statOficerowie = document.getElementById('statOficerowie');
-            if (statOficerowie) statOficerowie.innerText = 1 + customUsers.length;
-        }
-
-        function zarejestrujFunkcjonariusza(e) {
-            e.preventDefault();
-            inicjalizujBazyDanych();
-            const imie = document.getElementById('nowyUserImie').value.trim();
-            const odznaka = document.getElementById('nowyUserOdznaka').value.trim().toUpperCase();
-            const stopien = document.getElementById('nowyUserStopien').value.trim();
-            const haslo = document.getElementById('nowyUserHaslo').value.trim();
-
-            let customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
-            
-            if (customUsers.some(u => u.odznaka.toUpperCase() === odznaka) || odznaka === "LP-1150" || odznaka === "ADMIN-01") {
-                alert("Funkcjonariusz z takim numerem odznaki już istnieje w systemie!");
-                return;
-            }
-
-            customUsers.unshift({ id: Date.now(), imie, odznaka, stopien, haslo });
-            localStorage.setItem('mdt_funkcjonariusze', JSON.stringify(customUsers));
-            
-            document.getElementById('kadraForm').reset();
-            pobierzFunkcjonariuszy();
-            aktualizujStatystyki();
-            alert("Pomyślnie dodano nowe konto funkcjonariusza!");
-        }
-
-        function pobierzFunkcjonariuszy() {
-            inicjalizujBazyDanych();
-            const lista = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
-            const div = document.getElementById('listaFunkcjonariuszy');
-            if (!div) return;
-
-            if (lista.length === 0) {
-                div.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding:15px;">Brak dodatkowych funkcjonariuszy w bazie.</p>';
-                return;
-            }
-
-            div.innerHTML = lista.map(u => `
-                <div class="citizen-card">
-                    <h4 style="color:#38bdf8; font-size:15px;">${u.imie} <span class="user-badge">${u.odznaka}</span></h4>
-                    <p style="font-size:12px; color:#94a3b8; margin-top:4px;">Stopień: <strong>${u.stopien}</strong> | Hasło: <span style="font-family:monospace; color:#facc15;">${u.haslo}</span></p>
-                    <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunFunkcjonariusza(${u.id})">Usuń konto</button>
-                </div>
-            `).join('');
-        }
-
-        function usunFunkcjonariusza(id) {
-            let lista = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
-            lista = lista.filter(u => u.id !== id);
-            localStorage.setItem('mdt_funkcjonariusze', JSON.stringify(lista));
-            pobierzFunkcjonariuszy();
-            aktualizujStatystyki();
-        }
-
-        function zapiszObywatela(e) {
-            e.preventDefault();
-            const imie = document.getElementById('obywatelImie').value;
-            const wiek = document.getElementById('obywatelWiek').value;
-            const status = document.getElementById('obywatelStatus').value;
-            const notatki = document.getElementById('obywatelNotatki').value;
-
-            let obywatele = JSON.parse(localStorage.getItem('mdt_obywatele') || '[]');
-            obywatele.unshift({ id: Date.now(), imie, wiek, status, notatki });
-            localStorage.setItem('mdt_obywatele', JSON.stringify(obywatele));
-            document.getElementById('obywatelForm').reset();
-            pobierzObywateli();
-        }
-
-        function pobierzObywateli() {
-            const filtr = (document.getElementById('searchObywatelInput')?.value || '').toLowerCase();
-            const lista = JSON.parse(localStorage.getItem('mdt_obywatele') || '[]');
-            const div = document.getElementById('listaObywateli');
-            if (!div) return;
-
-            const wynik = lista.filter(o => o.imie.toLowerCase().includes(filtr));
-            if (wynik.length === 0) {
-                div.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding:15px;">Brak obywateli w bazie.</p>';
-                return;
-            }
-
-            div.innerHTML = wynik.map(o => `
-                <div class="citizen-card">
-                    <h4 style="color:#38bdf8; font-size:15px;">${o.imie}</h4>
-                    <p style="font-size:12px; color:#94a3b8;">Wiek: ${o.wiek} | Status: <strong>${o.status}</strong></p>
-                    <p style="font-size:13px; margin-top:5px; color:#cbd5e1;">Notatki: ${o.notatki || 'Brak'}</p>
-                    <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunObywatela(${o.id})">Usuń</button>
-                </div>
-            `).join('');
-        }
-
-        function usunObywatela(id) {
-            let lista = JSON.parse(localStorage.getItem('mdt_obywatele') || '[]');
-            lista = lista.filter(o => o.id !== id);
-            localStorage.setItem('mdt_obywatele', JSON.stringify(lista));
-            pobierzObywateli();
-        }
-
-        function zapiszPojazd(e) {
-            e.preventDefault();
-            const model = document.getElementById('pojazdModel').value;
-            const tablica = document.getElementById('pojazdTablica').value.toUpperCase();
-            const wlasciciel = document.getElementById('pojazdWlasciciel').value;
-            const status = document.getElementById('pojazdStatus').value;
-
-            let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
-            pojazdy.unshift({ id: Date.now(), model, tablica, wlasciciel, status });
-            localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
-            document.getElementById('pojazdForm').reset();
-            pobierzPojazdy();
-        }
-
-        function pobierzPojazdy() {
-            const filtr = (document.getElementById('searchPojazdInput')?.value || '').toLowerCase();
-            const lista = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
-            const div = document.getElementById('listaPojazdow');
-            if (!div) return;
-
-            const wynik = lista.filter(p => p.tablica.toLowerCase().includes(filtr) || p.model.toLowerCase().includes(filtr));
-            if (wynik.length === 0) {
-                div.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding:15px;">Brak pojazdów w bazie.</p>';
-                return;
-            }
-
-            div.innerHTML = wynik.map(p => `
-                <div class="citizen-card">
-                    <h4 style="color:#38bdf8; font-size:15px;">${p.model} [ <span style="color:#facc15;">${p.tablica}</span> ]</h4>
-                    <p style="font-size:12px; color:#94a3b8;">Właściciel: ${p.wlasciciel} | Status: <strong>${p.status}</strong></p>
-                    <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunPojazd(${p.id})">Usuń</button>
-                </div>
-            `).join('');
-        }
-
-        function usunPojazd(id) {
-            let lista = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
-            lista = lista.filter(p => p.id !== id);
-            localStorage.setItem('mdt_pojazdy', JSON.stringify(lista));
-            pobierzPojazdy();
-        }
-
-        function zapiszRaport(e) {
-            e.preventDefault();
-            const tytul = document.getElementById('raportTytul').value;
-            const autor = document.getElementById('raportAutor').value;
-            const tresc = document.getElementById('raportTresc').value;
-            const data = new Date().toLocaleString('pl-PL');
-
-            let raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
-            raporty.unshift({ id: Date.now(), tytul, autor, tresc, data });
-            localStorage.setItem('mdt_raporty', JSON.stringify(raporty));
-            document.getElementById('raportForm').reset();
-            pobierzRaporty();
-        }
-
-        function pobierzRaporty() {
-            const filtr = (document.getElementById('searchRaportInput')?.value || '').toLowerCase();
-            const lista = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
-            const div = document.getElementById('listaRaportow');
-            if (!div) return;
-
-            const wynik = lista.filter(r => r.tytul.toLowerCase().includes(filtr) || r.autor.toLowerCase().includes(filtr));
-            if (wynik.length === 0) {
-                div.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding:15px;">Brak raportów.</p>';
-                return;
-            }
-
-            div.innerHTML = wynik.map(r => `
-                <div class="citizen-card">
-                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8; margin-bottom:4px;">
-                        <span>Autor: ${r.autor}</span>
-                        <span>${r.data}</span>
-                    </div>
-                    <h4 style="color:#38bdf8; font-size:15px; margin-bottom:4px;">${r.tytul}</h4>
-                    <p style="font-size:13px; color:#cbd5e1;">${r.tresc}</p>
-                    <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunRaport(${r.id})">Usuń</button>
-                </div>
-            `).join('');
-        }
-
-        function usunRaport(id) {
-            let lista = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
-            lista = lista.filter(r => r.id !== id);
-            localStorage.setItem('mdt_raporty', JSON.stringify(lista));
-            pobierzRaporty();
-        }
-
-        function utworzBolo(event) {
-            event.preventDefault();
-            const sesja = JSON.parse(localStorage.getItem('mdt_sesja') || '{"imie":"Lukas Weber","odznaka":"LP-1150"}');
-            const typ = document.getElementById('boloTyp').value;
-            const priorytet = document.getElementById('boloPriorytet').value;
-            const osoba = document.getElementById('boloOsoba').value.trim();
-            const modelAuta = document.getElementById('boloModelAuta').value;
-            const tablica = document.getElementById('boloTablica').value.trim().toUpperCase() || 'BRAK';
-            const lokalizacja = document.getElementById('boloLokalizacja').value.trim();
-            const opis = document.getElementById('boloOpis').value.trim();
-            
-            const autor = sesja.imie;
-            const odznakaAutora = sesja.odznaka;
-            const dataUtworzenia = new Date().toLocaleString('pl-PL');
-
-            const noweBolo = {
-                id: Date.now(),
-                typ,
-                priorytet,
-                osoba,
-                modelAuta,
-                tablica,
-                lokalizacja,
-                opis,
-                autor,
-                odznakaAutora,
-                dataUtworzenia
-            };
-
-            let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
-            bolos.unshift(noweBolo);
-            localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
-            document.getElementById('dodajBoloForm').reset();
-            pobierzBolo();
-            aktualizujStatystyki();
-        }
-
-        function pobierzBolo() {
-            const szukajVal = (document.getElementById('searchBoloInput')?.value || '').toLowerCase();
-            let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
-            
-            const listaDiv = document.getElementById('listaBolo');
-            if (!listaDiv) return;
-
-            const przefiltrowane = bolos.filter(b => 
-                b.osoba.toLowerCase().includes(szukajVal) || 
-                b.modelAuta.toLowerCase().includes(szukajVal) || 
-                b.tablica.toLowerCase().includes(szukajVal) ||
-                b.lokalizacja.toLowerCase().includes(szukajVal) ||
-                b.typ.toLowerCase().includes(szukajVal)
-            );
-
-            if (przefiltrowane.length === 0) {
-                listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding: 20px;">Brak aktywnych alertów BOLO spełniających kryteria.</p>';
-                return;
-            }
-
-            listaDiv.innerHTML = przefiltrowane.map(b => {
-                let kolorPriorytetu = '#dc2626';
-                if (b.priorytet.includes('Code 3')) kolorPriorytetu = '#ea580c';
-                else if (b.priorytet.includes('Code 2')) kolorPriorytetu = '#ca8a04';
-                else if (b.priorytet.includes('Code 1')) kolorPriorytetu = '#16a34a';
-
-                const zdjecieAutoBolo = erlcVehicleImages[b.modelAuta] || "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png";
-
-                return `
-                    <div class="citizen-card" style="border-left: 5px solid ${kolorPriorytetu};">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="font-size: 11px; font-weight: bold; background: ${kolorPriorytetu}; color: white; padding: 2px 8px; border-radius: 4px;">
-                                🚨 ${b.priorytet}
-                            </span>
-                            <span style="font-size: 11px; color: #94a3b8;">${b.dataUtworzenia}</span>
-                        </div>
-                        <h3 style="margin: 4px 0; color: #f8fafc; font-size: 15px;">${b.typ}</h3>
-                        <div style="display: flex; gap: 12px; align-items: center; margin: 10px 0; background: #1e293b; padding: 8px; border-radius: 6px;">
-                            ${b.modelAuta !== 'Brak pojazdu' ? `<img src="${zdjecieAutoBolo}" alt="${b.modelAuta}" style="width: 75px; height: 45px; object-fit: contain;">` : ''}
-                            <div>
-                                <p style="margin: 0; font-size: 13px;"><strong>👤 Podejrzany:</strong> <span style="color: #38bdf8;">${b.osoba}</span></p>
-                                <p style="margin: 2px 0 0 0; font-size: 12px; color: #cbd5e1;"><strong>🚗 Pojazd:</strong> ${b.modelAuta} ${b.tablica !== 'BRAK' ? `[ Tablica: <span style="font-family:monospace; color:#38bdf8; font-weight:bold;">${b.tablica}</span> ]` : ''}</p>
-                            </div>
-                        </div>
-                        <p style="font-size: 13px; margin: 6px 0; color: #cbd5e1;"><strong>📍 Ostatnia lokalizacja:</strong> ${b.lokalizacja}</p>
-                        <p style="font-size: 13px; margin: 6px 0; background: #0f172a; padding: 8px; border-radius: 4px; border: 1px solid #1f2937; color: #e2e8f0;"><strong>📝 Instrukcje:</strong> ${b.opis}</p>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1f2937; padding-top: 8px;">
-                            <span style="font-size: 11px; color: #64748b;">Autor: ${b.autor} [${b.odznakaAutora}]</span>
-                            <button class="btn-small" style="background: #059669; color: white;" onclick="zamknijBolo(${b.id})">✅ Ujęto / Odwołaj BOLO</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function zamknijBolo(id) {
-            let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
-            bolos = bolos.filter(b => b.id !== id);
-            localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
-            pobierzBolo();
-            aktualizujStatystyki();
-        }
-
+        // Zegarek
         setInterval(() => {
-            const now = new Date();
-            const timeString = now.toTimeString().split(' ')[0];
+            const d = new Date();
+            const timeStr = d.toTimeString().split(' ')[0];
             const clockEl = document.getElementById('headerClock');
-            if (clockEl) clockEl.innerText = timeString;
+            if(clockEl) clockEl.innerText = timeStr;
         }, 1000);
 
-        window.onload = function() {
-            inicjalizujBazyDanych();
-            
-            const sesja = JSON.parse(localStorage.getItem('mdt_sesja'));
-            if (sesja) {
-                naklejDaneUzytkownika(sesja);
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-screen').style.display = 'block';
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('app-screen').style.display = 'none';
-            }
-            aktualizujStatystyki();
-            pobierzBolo();
-            pobierzFunkcjonariuszy();
-        };
+        // Funkcje bazodanowe (Stuby zapobiegające błędom)
+        function zapiszObywatela(e) { e.preventDefault(); alert('Zapisano obywatela (Symulacja)'); }
+        function pobierzObywateli() {}
+        function zapiszPojazd(e) { e.preventDefault(); alert('Zapisano pojazd (Symulacja)'); }
+        function pobierzPojazdy() {}
+        function zapiszRaport(e) { e.preventDefault(); alert('Zapisano raport (Symulacja)'); }
+        function pobierzRaporty() {}
+        function utworzBolo(e) { e.preventDefault(); alert('Utworzono BOLO (Symulacja)'); }
+        function pobierzBolo() {}
     </script>
 </body>
 </html>
