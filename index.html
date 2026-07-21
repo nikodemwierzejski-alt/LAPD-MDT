@@ -127,8 +127,8 @@
                     </div>
                     <div class="header-tools">
                         <input type="text" class="header-search" placeholder="Szukaj obywatela, pojazdu... (Ctrl+K)">
-                        <span style="display:flex; align-items:center; gap:6px;"><span style="color:#22c55e;" id="netSyncStatus">🌐 Sieć: Połączono</span></span>
-                        <span id="headerClock" style="font-family: monospace; color: #38bdf8;">22:23:23</span>
+                        <span style="display:flex; align-items:center; gap:6px;"><span style="color:#22c55e;" id="netSyncStatus">🌐 Chmura: Połączono Live</span></span>
+                        <span id="headerClock" style="font-family: monospace; color: #38bdf8;">00:00:00</span>
                         <span style="color: #38bdf8; font-size: 12px;">EN / PL</span>
                     </div>
                 </header>
@@ -672,7 +672,7 @@
     </div>
 
     <script>
-        // Baza danych MDT z domyślnymi bezpiecznymi pustymi strukturami
+        // Globalna struktura danych MDT
         let bazyDanych = {
             obywatele: [],
             pojazdy: [],
@@ -687,11 +687,11 @@
             isAdmin: false
         };
 
-        // Gwarantowany, otwarty endpoint z obsługą CORS na Firebase REST
+        // Główny publiczny węzeł synchronizacji sieciowej (Baza w chmurze z otwartym protokołem SSE)
         const CLOUD_SYNC_ENDPOINT = "https://la-mdt-sync-default-rtdb.europe-west1.firebasedatabase.app/mdt_database_v2.json";
-        let lastKnownJSON = "";
+        let isSaving = false;
 
-        // Funkcja weryfikująca czy dane są prawidłową strukturą
+        // Weryfikacja spójności bazy danych
         function zweryfikujStrukture(dane) {
             if (!dane || typeof dane !== 'object') return false;
             if (!Array.isArray(dane.obywatele)) dane.obywatele = [];
@@ -701,63 +701,88 @@
             return true;
         }
 
-        // Czytanie z pamięci podręcznej oraz synchronizacja w tle
-        function wczytajZStorage() {
-            const dane = localStorage.getItem('la_mdt_bazy');
-            if (dane) {
-                try {
-                    const parsed = JSON.parse(dane);
-                    if (zweryfikujStrukture(parsed)) {
-                        bazyDanych = parsed;
-                        lastKnownJSON = dane;
-                    }
-                } catch(e) {
-                    console.error("Błąd parsowania lokalnej bazy:", e);
-                }
-            }
+        // --- SILNIK SYNCHRONIZACJI W CZASIE RZECZYWISTYM (REAL-TIME WEBSOCKET/SSE MULTI-IP) ---
+        function inicjalizujChmureLive() {
+            // Pierwsze wczytanie przy uruchomieniu
             pobierzZChmury();
+
+            // Uruchomienie połączenia typu Server-Sent Events (push z chmury do każdego połączonego komputera na świecie)
+            try {
+                const eventSource = new EventSource(CLOUD_SYNC_ENDPOINT);
+                
+                eventSource.addEventListener('put', function(event) {
+                    if (isSaving) return; // Pomijaj własny zapis
+                    try {
+                        const parsed = JSON.parse(event.data);
+                        if (parsed && parsed.path === '/') {
+                            if (parsed.data && zweryfikujStrukture(parsed.data)) {
+                                bazyDanych = parsed.data;
+                                localStorage.setItem('la_mdt_bazy', JSON.stringify(bazyDanych));
+                                odswiezWszystkieWidoki();
+                                ustawStatusSieci(true);
+                            }
+                        } else {
+                            // Jeśli zmiana dotyczyła konkretnego pola, pobierz świeżą bazę
+                            pobierzZChmury();
+                        }
+                    } catch(err) {
+                        console.error("Błąd Live Stream:", err);
+                    }
+                });
+
+                eventSource.onerror = function() {
+                    ustawStatusSieci(false);
+                };
+            } catch(e) {
+                console.warn("Przeglądarka nie obsługuje SSE, używam szybkiego odświeżania:", e);
+            }
+
+            // Dodatkowe, zapasowe odświeżanie w tle co 3 sekundy na przypadek przerwania połączenia
+            setInterval(() => {
+                if (!isSaving) pobierzZChmury();
+            }, 3000);
         }
 
-        // Pobieranie danych ze wspólnej chmury
+        // Pobieranie danych z serwera chmury
         async function pobierzZChmury() {
             try {
                 const res = await fetch(CLOUD_SYNC_ENDPOINT, { cache: 'no-store' });
                 if (res.ok) {
                     const cloudData = await res.json();
                     if (cloudData && zweryfikujStrukture(cloudData)) {
-                        const newStr = JSON.stringify(cloudData);
-                        if (newStr !== lastKnownJSON) {
-                            bazyDanych = cloudData;
-                            lastKnownJSON = newStr;
-                            localStorage.setItem('la_mdt_bazy', newStr);
-                            odswiezWszystkieWidoki();
-                        }
+                        bazyDanych = cloudData;
+                        localStorage.setItem('la_mdt_bazy', JSON.stringify(cloudData));
+                        odswiezWszystkieWidoki();
                     }
                     ustawStatusSieci(true);
                 }
             } catch(err) {
-                console.warn("Błąd połączenia z chmurą MDT:", err);
+                console.warn("Błąd połącznia z chmurą:", err);
                 ustawStatusSieci(false);
             }
         }
 
-        // Wysyłanie zmian do chmury
+        // Zapisywanie danych do chmury i natychmiastowe wysyłanie ich do innych komputerów
         async function zapiszDoStorage() {
+            isSaving = true;
             zweryfikujStrukture(bazyDanych);
             const jsonStr = JSON.stringify(bazyDanych);
             localStorage.setItem('la_mdt_bazy', jsonStr);
-            lastKnownJSON = jsonStr;
 
             try {
-                await fetch(CLOUD_SYNC_ENDPOINT, {
+                const res = await fetch(CLOUD_SYNC_ENDPOINT, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: jsonStr
                 });
-                ustawStatusSieci(true);
+                if (res.ok) {
+                    ustawStatusSieci(true);
+                }
             } catch(e) {
-                console.error("Nie udało się wysłać danych do chmury:", e);
+                console.error("Błąd wysyłania do chmury:", e);
                 ustawStatusSieci(false);
+            } finally {
+                setTimeout(() => { isSaving = false; }, 500);
             }
         }
 
@@ -765,10 +790,10 @@
             const statusEl = document.getElementById('netSyncStatus');
             if (statusEl) {
                 if (online) {
-                    statusEl.innerHTML = '🌐 Sieć: Połączono';
+                    statusEl.innerHTML = '🌐 Chmura: Połączono Live';
                     statusEl.style.color = '#22c55e';
                 } else {
-                    statusEl.innerHTML = '⚠️ Sieć: Offline / Lokalnie';
+                    statusEl.innerHTML = '⚠️ Chmura: Rozłączono';
                     statusEl.style.color = '#eab308';
                 }
             }
@@ -780,11 +805,6 @@
             pobierzRaporty();
             pobierzBolo();
         }
-
-        // Automatyczne sprawdzanie zmian w tle co 2.5 sekundy
-        setInterval(() => {
-            pobierzZChmury();
-        }, 2500);
 
         function zalogujSie(event) {
             event.preventDefault();
@@ -820,8 +840,7 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             
-            wczytajZStorage();
-            odswiezWszystkieWidoki();
+            inicjalizujChmureLive();
         }
 
         function wylogujSie() {
@@ -880,12 +899,11 @@
             
             if (istniejacyIndex !== -1) {
                 bazyDanych.obywatele[istniejacyIndex] = nowy;
-                alert("Kartoteka obywatela (PESEL: " + peselWartosc + ") została pomyślnie zaktualizowana w sieci.");
             } else {
                 bazyDanych.obywatele.unshift(nowy);
-                alert("Nowy obywatel został zarejestrowany i zsynchronizowany w sieci.");
             }
 
+            pobierzObywateli();
             await zapiszDoStorage();
 
             document.getElementById('obywatelForm').reset();
@@ -893,7 +911,7 @@
             document.getElementById('obywatelBtnSubmit').innerText = "💾 Zapisz Pełną Kartotekę Obywatela";
             document.getElementById('obywatelPesel').readOnly = false;
             
-            pobierzObywateli();
+            alert("Kartoteka obywatela została zapisana i wysłana do wszystkich urządzeń w sieci.");
         }
 
         function edytujObywatela(pesel) {
@@ -980,11 +998,12 @@
                 czas: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
             };
             bazyDanych.pojazdy.unshift(pojazd);
+            
+            pobierzPojazdy();
             await zapiszDoStorage();
             
             document.getElementById('pojazdForm').reset();
-            pobierzPojazdy();
-            alert("Pojazd ERLC został pomyślnie zarejestrowany i zsynchronizowany.");
+            alert("Pojazd ERLC został pomyślnie zarejestrowany i zsynchronizowany ze wszystkimi użytkownikami.");
         }
 
         function pobierzPojazdy() {
@@ -1043,6 +1062,8 @@
                 czas: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
             };
             bazyDanych.raporty.unshift(raport);
+            
+            pobierzRaporty();
             await zapiszDoStorage();
             
             document.getElementById('raportTytul').value = '';
@@ -1051,8 +1072,7 @@
             document.getElementById('raportDowody').value = '';
             document.getElementById('raportTresc').value = '';
             
-            pobierzRaporty();
-            alert("Raport taktyczny został pomyślnie zarchiwizowany w sieci.");
+            alert("Raport taktyczny został zarchiwizowany w chmurze i udostępniony sieci.");
         }
 
         function pobierzRaporty() {
@@ -1114,11 +1134,12 @@
                 czas: new Date().toLocaleTimeString()
             };
             bazyDanych.bolo.unshift(bolo);
+            
+            pobierzBolo();
             await zapiszDoStorage();
 
             document.getElementById('dodajBoloForm').reset();
-            pobierzBolo();
-            alert("Ogólnokrajowy alert BOLO został pomyślnie zsynchronizowany w sieci MDT.");
+            alert("Ogólnokrajowy alert BOLO został opublikowany w całej sieci MDT.");
         }
 
         function pobierzBolo() {
@@ -1160,12 +1181,11 @@
             `).join('');
         }
 
-        // Zegar czasu rzeczywistego
+        // Zegar czasu rzeczywistego w nagłówku
         setInterval(() => {
             const now = new Date();
-            const timeString = now.toTimeString().split(' ')[0];
             const clockEl = document.getElementById('headerClock');
-            if (clockEl) clockEl.innerText = timeString;
+            if (clockEl) clockEl.innerText = now.toTimeString().split(' ')[0];
         }, 1000);
     </script>
 </body>
