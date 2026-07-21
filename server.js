@@ -71,6 +71,23 @@ async function inicjalizacjaBazy() {
             );
         `);
 
+        // Twoje unikalne konto admina oraz konta testowe
+        await db.query(`
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
+            VALUES ('Nikodem', 'Nikodem', '02122004', 'admin')
+            ON CONFLICT (odznaka) DO NOTHING;
+
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
+            VALUES ('99', 'Officer Smith', 'lspd', 'user')
+            ON CONFLICT (odznaka) DO NOTHING;
+        `);
+
+        console.log("Tabele i konta w bazie Neon zostały pomyślnie skonfigurowane.");
+    } catch (err) {
+        console.error("Błąd podczas inicjalizacji bazy danych:", err);
+    }
+}
+
         // Automatyczne dodanie kont testowych z odpowiednimi rolami
         await db.query(`
             INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
