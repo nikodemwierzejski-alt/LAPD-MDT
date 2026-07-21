@@ -68,14 +68,14 @@ function zmienZakladke(nazwaZakladki, event) {
     }
 }
 
-// System Logowania (Poprawiony pod kątem spójności przesyłania danych z innych sieci)
+// System Logowania - Oparty wyłącznie na numerze odznaki i haśle
 async function zaloguj() {
     const badge = document.getElementById('badgeInput').value.trim();
     const password = document.getElementById('passwordInput').value.trim();
     const errorDiv = document.getElementById('login-error');
 
-    if (!badge) {
-        errorDiv.innerText = "Wpisz numer odznaki lub imię!";
+    if (!badge || !password) {
+        errorDiv.innerText = "Wpisz numer odznaki oraz hasło!";
         return;
     }
 
