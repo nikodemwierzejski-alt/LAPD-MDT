@@ -90,22 +90,22 @@ async function inicjalizacjaBazy() {
 
 inicjalizacjaBazy();
 
-// Logowanie funkcjonariusza
+// --- LOGOWANIE WYŁĄCZNIE NA NUMER ODZNAKI I HASŁO ---
 app.post("/api/login", async (req, res) => {
     const { badge, password } = req.body;
     
-    console.log("Próba logowania dla:", badge);
+    console.log("Próba logowania dla odznaki:", badge);
 
     try {
-        // Sprawdzamy czy podany tekst pasuje do ODZNAKI lub do NAZWISKA/IMIENIA
+        // Sprawdzamy wyłącznie po kolumnie odznaka oraz hasło (ignorując wielkość liter w odznace)
         const query = `
             SELECT * FROM kadry 
-            WHERE (UPPER(odznaka) = UPPER($1) OR UPPER(stopien_nazwisko) = UPPER($1)) 
+            WHERE UPPER(odznaka) = UPPER($1) 
             AND haslo = $2
         `;
         const result = await db.query(query, [badge, password]);
 
-        console.log("Znaleziono w bazie:", result.rows.length);
+        console.log("Znaleziono w bazie pasujących użytkowników:", result.rows.length);
 
         if (result.rows.length > 0) {
             const user = result.rows[0];
@@ -115,7 +115,7 @@ app.post("/api/login", async (req, res) => {
                 rola: user.rola 
             });
         } else {
-            res.status(401).json({ success: false, message: "Błędne dane logowania" });
+            res.status(401).json({ success: false, message: "Błędne dane logowania (zły numer odznaki lub hasło)" });
         }
     } catch (err) {
         console.error("Błąd logowania:", err);
