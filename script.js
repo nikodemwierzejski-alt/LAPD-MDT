@@ -81,21 +81,16 @@ async function zaloguj() {
             body: JSON.stringify({ badge, password })
         });
         
-        if (res.ok) {
-            const data = await res.json();
-            if (data.success) {
-                zapiszSesje(badge, data.officer, data.rola);
-                return;
-            } else {
-                errorDiv.innerText = data.message || "Błąd logowania.";
-                return;
-            }
+        const data = await res.json();
+        if (res.ok && data.success) {
+            zapiszSesje(badge, data.officer, data.rola);
+            return;
+        } else {
+            errorDiv.innerText = data.message || "Błędne dane logowania.";
         }
-    } catch (e) {}
-
-    const nazwaMock = (badge.toLowerCase() === 'admin') ? 'Administrator' : `Officer ${badge}`;
-    const rolaMock = (badge.toLowerCase() === 'admin') ? 'admin' : 'user';
-    zapiszSesje(badge, nazwaMock, rolaMock);
+    } catch (e) {
+        errorDiv.innerText = "Błąd połączenia z serwerem bazy danych.";
+    }
 }
 
 function zapiszSesje(badge, officerName, rola) {
@@ -135,8 +130,8 @@ async function sprawdzStatus() {
         statusEl.style.color = '#4ade80';
     } catch (err) {
         const statusEl = document.getElementById('system-status');
-        statusEl.innerText = 'System: ONLINE (Local Mode)';
-        statusEl.style.color = '#4ade80';
+        statusEl.innerText = 'System: OFFLINE';
+        statusEl.style.color = '#f87171';
     }
 }
 
@@ -168,10 +163,7 @@ async function szukajObywatela() {
         }
         renderujObywateli(obywatele);
     } catch (err) {
-        renderujObywateli([
-            { id: 1, imie: "John", nazwisko: "Doe", data_urodzenia: "12/05/1992", poszukiwany: true, uwagi: "Unikaj kontaktu, uzbrojony w przeszłości.", mandaty: [{data: "18.04.2026", powod: "Przekroczenie prędkości", kwota: 350}] },
-            { id: 2, imie: "Jane", nazwisko: "Smith", data_urodzenia: "04/11/1998", poszukiwany: false, uwagi: "Czysta kartoteka.", mandaty: [] }
-        ]);
+        wynikiDiv.innerHTML = '<p style="color:#f87171; font-size:13px;">Błąd pobierania danych obywateli z serwera.</p>';
     }
 }
 
@@ -252,8 +244,7 @@ async function dodajObywatela(event) {
             szukajObywatela(); 
         }
     } catch(e) {
-        alert('Dodano lokalnie!');
-        document.getElementById('dodajObywatelaForm').reset();
+        alert('Błąd połączenia z serwerem.');
     }
 }
 
@@ -283,19 +274,9 @@ async function utworzPojazd(event) {
             aktualizujPodgladAuta();
             return;
         }
-    } catch (e) {}
-
-    zapiszPojazdLokalnie(nowyPojazd);
-}
-
-function zapiszPojazdLokalnie(pojazd) {
-    let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
-    pojazd.id = Date.now();
-    pojazdy.unshift(pojazd);
-    localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
-    document.getElementById('dodajPojazdForm').reset();
-    alert('Pojazd zapisany w lokalnej bazie terminala!');
-    pobierzPojazdy();
+    } catch (e) {
+        alert('Błąd zapisu pojazdu.');
+    }
 }
 
 async function pobierzPojazdy() {
@@ -311,17 +292,9 @@ async function pobierzPojazdy() {
             wyswietlListePojazdow(pojazdy, szukajVal);
             return;
         }
-    } catch (e) {}
-
-    let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
-    if (pojazdy.length === 0) {
-        pojazdy = [
-            { id: 1, model: "Ford Mustang GT", plate: "34XYZ89", color: "Czarny mat", owner: "John Doe", status: "wanted", dataDodania: "19.04.2026, 21:00:00" },
-            { id: 2, model: "Police Ford Explorer", plate: "77ABC12", color: "Biały", owner: "Officer Weber", status: "clean", dataDodania: "19.04.2026, 21:30:00" }
-        ];
-        localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
+    } catch (e) {
+        listaDiv.innerHTML = '<p style="color:#f87171; font-size:13px;">Błąd pobierania pojazdów z serwera.</p>';
     }
-    wyswietlListePojazdow(pojazdy, szukajVal);
 }
 
 function wyswietlListePojazdow(pojazdy, filtr) {
@@ -384,13 +357,14 @@ function wyswietlListePojazdow(pojazdy, filtr) {
 }
 
 async function zmienStatusPojazdu(id, nowyStatus) {
-    let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
-    let pojazd = pojazdy.find(p => p.id === id);
-    if (pojazd) {
-        pojazd.status = nowyStatus;
-        localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
+    try {
+        await fetch(`/api/pojazdy/${id}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: nowyStatus })
+        });
         pobierzPojazdy();
-    }
+    } catch (e) {}
 }
 
 // --- MODUŁ RAPORTÓW ---
@@ -423,19 +397,9 @@ async function utworzRaport(event) {
             pobierzRaporty();
             return;
         }
-    } catch (e) {}
-
-    zapiszRaportLokalnie(nowyRaport);
-}
-
-function zapiszRaportLokalnie(raport) {
-    let raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
-    raport.id = Date.now();
-    raporty.unshift(raport);
-    localStorage.setItem('mdt_raporty', JSON.stringify(raporty));
-    document.getElementById('dodajRaportForm').reset();
-    alert('Raport zapisany w archiwum terminala!');
-    pobierzRaporty();
+    } catch (e) {
+        alert('Błąd zapisu raportu.');
+    }
 }
 
 async function pobierzRaporty() {
@@ -450,16 +414,9 @@ async function pobierzRaporty() {
             wyswietlListeRaportow(raporty, szukajVal);
             return;
         }
-    } catch (e) {}
-
-    let raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
-    if (raporty.length === 0) {
-        raporty = [
-            { id: 1, tytul: "Felony Traffic Stop", kategoria: "Felony Traffic Stop", status: "Approved", obywatel: "John Doe", pojazdy: "Ford Mustang GT", wspoloficerowie: "Officer M. Johnson", dowody: "Brak", opis: "Zatrzymanie pojazdu.", autor: "Lukas Weber", odznakaAutora: "LP-1150", data: "19.04.2026, 22:15:00" }
-        ];
-        localStorage.setItem('mdt_raporty', JSON.stringify(raporty));
+    } catch (e) {
+        listaDiv.innerHTML = '<p style="color:#f87171; font-size:13px;">Błąd pobierania raportów z serwera.</p>';
     }
-    wyswietlListeRaportow(raporty, szukajVal);
 }
 
 function wyswietlListeRaportow(raporty, filtr) {
@@ -521,9 +478,8 @@ async function dodajFunkcjonariusza(event) {
         messageDiv.innerText = data.message;
         if (data.success) document.getElementById('dodajFunkcjonariuszaForm').reset();
     } catch (e) {
-        messageDiv.style.color = '#4ade80';
-        messageDiv.innerText = "Funkcjonariusz zapisany pomyślnie!";
-        document.getElementById('dodajFunkcjonariuszaForm').reset();
+        messageDiv.style.color = '#f87171';
+        messageDiv.innerText = "Błąd połączenia z serwerem.";
     }
 }
 
