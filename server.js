@@ -94,10 +94,15 @@ inicjalizacjaBazy();
 app.post("/api/login", async (req, res) => {
     const { badge, password } = req.body;
     
-    console.log("Próba logowania dla odznaka:", badge);
+    console.log("Próba logowania dla:", badge);
 
     try {
-        const query = "SELECT * FROM kadry WHERE UPPER(odznaka) = UPPER($1) AND haslo = $2";
+        // Sprawdzamy czy podany tekst pasuje do ODZNAKI lub do NAZWISKA/IMIENIA
+        const query = `
+            SELECT * FROM kadry 
+            WHERE (UPPER(odznaka) = UPPER($1) OR UPPER(stopien_nazwisko) = UPPER($1)) 
+            AND haslo = $2
+        `;
         const result = await db.query(query, [badge, password]);
 
         console.log("Znaleziono w bazie:", result.rows.length);
