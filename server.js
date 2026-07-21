@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const { Client } = require("pg");
+const { Pool } = require("pg");
 const cors = require("cors");
 
 const app = express();
@@ -11,11 +11,17 @@ app.use(express.json());
 app.use(express.static('.'));
 const PORT = process.env.PORT || 3000;
 
-const db = new Client({
-    connectionString: "postgresql://neondb_owner:npg_T94GvMwZcjyA@ep-old-bread-auu10o6b.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require"
+const db = new Pool({
+    connectionString: "postgresql://neondb_owner:npg_T94GvMwZcjyA@ep-old-bread-auu10o6b.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require",
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
-db.connect();
+// Zabezpieczenie przed crashem przy zerwaniu połączenia przez chmurę Neon
+db.on('error', (err) => {
+    console.error('Nieoczekiwany błąd w puli bazy danych:', err);
+});
 
 // Funkcja inicjalizująca tabele oraz konta domyślne w chmurze (Neon PostgreSQL)
 async function inicjalizacjaBazy() {
@@ -70,6 +76,11 @@ async function inicjalizacjaBazy() {
                 odznaka_autora TEXT,
                 data TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS app_state (
+                id INT PRIMARY KEY,
+                data JSONB
+            );
         `);
 
         // Wprowadzanie domyślnych kont z uwzględnieniem wszystkich użytkowników
@@ -95,6 +106,37 @@ async function inicjalizacjaBazy() {
 
 // Wywołanie inicjalizacji tylko raz przy starcie
 inicjalizacjaBazy();
+
+// --- ENDPOINT SYNCHRONIZACJI (obsługa chmury dla front-endu) ---
+app.get('/api/sync', async (req, res) => {
+    try {
+        const wynik = await db.query('SELECT data FROM app_state WHERE id = 1');
+        if (wynik.rows.length > 0) {
+            res.json(wynik.rows[0].data);
+        } else {
+            res.json({});
+        }
+    } catch (err) {
+        console.error("Błąd pobierania sync:", err);
+        res.status(500).json({ error: "Błąd serwera" });
+    }
+});
+
+app.put('/api/sync', async (req, res) => {
+    try {
+        const dane = req.body;
+        await db.query(`
+            INSERT INTO app_state (id, data) 
+            VALUES (1, $1) 
+            ON CONFLICT (id) 
+            DO UPDATE SET data = $1;
+        `, [dane]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Błąd zapisu sync:", err);
+        res.status(500).json({ error: "Błąd serwera" });
+    }
+});
 
 // --- LOGOWANIE WYŁĄCZNIE NA NUMER ODZNAKI I HASŁO ---
 app.post("/api/login", async (req, res) => {
