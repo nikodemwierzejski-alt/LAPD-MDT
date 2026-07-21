@@ -10,7 +10,7 @@
         body { background-color: #0b0f19; color: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
         
         /* Sidebar nawigacyjny */
-        sidebar { width: 260px; background: #0f172a; border-right: 1px solid #1e293b; display: flex; flex-direction: column; }
+        sidebar { width: 260px; background: #0f172a; border-right: 1px solid #1e293b; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-brand { padding: 20px; font-size: 18px; font-weight: bold; color: #38bdf8; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 10px; }
         .sidebar-menu { list-style: none; padding: 15px 10px; flex-grow: 1; overflow-y: auto; }
         .sidebar-menu li { padding: 12px 15px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; color: #94a3b8; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
@@ -25,7 +25,7 @@
 
         /* Formularze i Panele */
         .citizens-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
-        .panel-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; }
+        .panel-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .panel-box h3 { font-size: 16px; margin-bottom: 15px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
@@ -33,11 +33,15 @@
         .form-group textarea { resize: vertical; min-height: 90px; }
         .btn-primary { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
         .btn-primary:hover { background: #0369a1; }
-        .results-container { margin-top: 15px; max-height: 580px; overflow-y: auto; padding-right: 5px; }
+        .results-container { margin-top: 15px; max-height: 520px; overflow-y: auto; padding-right: 5px; }
         
         /* Karty i style dodatkowe */
         .citizen-card { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
         .btn-small { border: none; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 8px; border-left: 4px solid #0284c7; }
+        .stat-card h4 { font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; }
+        .stat-card .val { font-size: 26px; font-weight: bold; color: #f8fafc; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
@@ -49,10 +53,10 @@
             🛡️ MDT LSPD / SOG
         </div>
         <ul class="sidebar-menu">
-            <li onclick="zmienZakladke('dashboard')" id="nav-dashboard">📊 Dashboard</li>
+            <li onclick="zmienZakladke('dashboard')" id="nav-dashboard" class="active">📊 Dashboard</li>
             <li onclick="zmienZakladke('citizens')" id="nav-citizens">👥 Obywatele</li>
             <li onclick="zmienZakladke('vehicles')" id="nav-vehicles">🚗 Pojazdy</li>
-            <li onclick="zmienZakladke('bolo')" id="nav-bolo" class="active">🚨 Alerty BOLO</li>
+            <li onclick="zmienZakladke('bolo')" id="nav-bolo">🚨 Alerty BOLO</li>
             <li onclick="zmienZakladke('reports')" id="nav-reports">📁 Raportowanie</li>
         </ul>
     </sidebar>
@@ -60,37 +64,125 @@
     <!-- CONTENT -->
     <main>
         <!-- ZAKŁADKA: DASHBOARD -->
-        <section id="tab-dashboard" class="tab-pane">
-            <h2>Panel Główny</h2>
-            <p class="subtitle">Witaj w systemie dyspozycyjnym LSPD.</p>
+        <section id="tab-dashboard" class="tab-pane active">
+            <h2>Panel Główny Dashboard</h2>
+            <p class="subtitle">Podsumowanie operacyjne stanu departamentu oraz statystyki sieciowe.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card" style="border-left-color: #38bdf8;">
+                    <h4>Aktywni Obywatele</h4>
+                    <div class="val" id="statObywatele">0</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #22c55e;">
+                    <h4>Zarejestrowane Pojazdy</h4>
+                    <div class="val" id="statPojazdy">0</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #ef4444;">
+                    <h4>Aktywne BOLO</h4>
+                    <div class="val" id="statBolo">0</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #eab308;">
+                    <h4>Raporty Operacyjne</h4>
+                    <div class="val" id="statRaporty">0</div>
+                </div>
+            </div>
+
             <div class="panel-box">
-                <h3>Statystyki Operacyjne</h3>
-                <p>System operacyjny działa prawidłowo. Wybierz odpowiednią zakładkę z menu po lewej stronie.</p>
+                <h3>📢 Komunikat Dyspozytorni Głównej</h3>
+                <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5;">
+                    Wszystkie jednostki patrolujące proszone są o zwracanie szczególnej uwagi na pojazdy figurujące w systemie BOLO. Wszelkie interwencje podwyższonego ryzyka zgłaszać bezpośrednio przez kanał radiowy taktyczny. System MDT zsynchronizowany z bazą ERLC.
+                </p>
             </div>
         </section>
 
         <!-- ZAKŁADKA: OBYWATELE -->
         <section id="tab-citizens" class="tab-pane">
             <h2>Baza Obywateli</h2>
-            <p class="subtitle">Przeglądaj kartoteki mieszkańców.</p>
-            <div class="panel-box">
-                <h3>Wyszukiwanie Obywateli</h3>
-                <p>Moduł aktywny i nienaruszony.</p>
+            <p class="subtitle">Ewidencja ludności, kartoteki kryminalne oraz statusy poszukiwanych.</p>
+            
+            <div class="citizens-grid">
+                <div class="panel-box">
+                    <h3>➕ Dodaj / Aktualizuj Obywatela</h3>
+                    <form id=" obywatelForm" onsubmit="zapiszObywatela(event)">
+                        <div class="form-group">
+                            <label>Imię i Nazwisko</label>
+                            <input type="text" id="obywatelImie" required placeholder="np. John Smith">
+                        </div>
+                        <div class="form-group">
+                            <label>Data Urodzenia / Wiek</label>
+                            <input type="text" id="obywatelWiek" required placeholder="np. 25 lat (1999)">
+                        </div>
+                        <div class="form-group">
+                            <label>Status Prawny / Kartoteka</label>
+                            <select id="obywatelStatus" class="form-control-select">
+                                <option value="Czysty (Clean)">Czysty (Clean)</option>
+                                <option value="Poszukiwany (Warrant)">Poszukiwany (Warrant)</option>
+                                <option value="Warunkowe Zwolnienie">Warunkowe Zwolnienie</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Notatki / Wyroki / Opis</label>
+                            <textarea id="obywatelNotatki" placeholder="Wpisz historię kryminalną lub uwagi..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Zapisz Kartotekę Obywatela</button>
+                    </form>
+                </div>
+
+                <div class="panel-box">
+                    <h3>🔍 Wyszukiwarka Mieszkańców</h3>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <input type="text" id="searchObywatelInput" placeholder="Szukaj po imieniu i nazwisku..." oninput="pobierzObywateli()">
+                    </div>
+                    <div id="listaObywateli" class="results-container"></div>
+                </div>
             </div>
         </section>
 
         <!-- ZAKŁADKA: POJAZDY -->
         <section id="tab-vehicles" class="tab-pane">
             <h2>Baza Pojazdów</h2>
-            <p class="subtitle">Rejestr pojazdów stanowych ERLC.</p>
-            <div class="panel-box">
-                <h3>Rejestr Pojazdów</h3>
-                <p>Moduł aktywny i nienaruszony.</p>
+            <p class="subtitle">Rejestr pojazdów stanowych, tablice rejestracyjne oraz właściciele.</p>
+            
+            <div class="citizens-grid">
+                <div class="panel-box">
+                    <h3>🚗 Rejestracja Pojazdu</h3>
+                    <form id="pojazdForm" onsubmit="zapiszPojazd(event)">
+                        <div class="form-group">
+                            <label>Model Pojazdu ERLC</label>
+                            <input type="text" id="pojazdModel" required placeholder="np. Ford Mustang GT">
+                        </div>
+                        <div class="form-group">
+                            <label>Tablica Rejestracyjna</label>
+                            <input type="text" id="pojazdTablica" required placeholder="np. 34XYZ89" style="text-transform: uppercase;">
+                        </div>
+                        <div class="form-group">
+                            <label>Właściciel (Imię i Nazwisko)</label>
+                            <input type="text" id="pojazdWlasciciel" required placeholder="np. John Smith">
+                        </div>
+                        <div class="form-group">
+                            <label>Status Rejestracji</label>
+                            <select id="pojazdStatus" class="form-control-select">
+                                <option value="Zarejestrowany / Legalny">Zarejestrowany / Legalny</option>
+                                <option value="Skradziony / Poszukiwany">Skradziony / Poszukiwany</option>
+                                <option value="Brak ubezpieczenia">Brak ubezpieczenia</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">Dodaj Pojazd do Bazy</button>
+                    </form>
+                </div>
+
+                <div class="panel-box">
+                    <h3>🔎 Sprawdź Tablicę Rejestracyjną</h3>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <input type="text" id="searchPojazdInput" placeholder="Wpisz numer tablicy lub model..." oninput="pobierzPojazdy()">
+                    </div>
+                    <div id="listaPojazdow" class="results-container"></div>
+                </div>
             </div>
         </section>
 
         <!-- ZAKŁADKA: BOLO (PROFESJONALNIE ROZBUDOWANA) -->
-        <section id="tab-bolo" class="tab-pane active">
+        <section id="tab-bolo" class="tab-pane">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
                     <h2>System Alertywny BOLO (Be On the Lookout)</h2>
@@ -199,10 +291,35 @@
         <!-- ZAKŁADKA: RAPORTOWANIE -->
         <section id="tab-reports" class="tab-pane">
             <h2>Raporty Operacyjne</h2>
-            <p class="subtitle">Ewidencja incydentów i zatrzymań.</p>
-            <div class="panel-box">
-                <h3>Rejestr Raportów</h3>
-                <p>Moduł aktywny i nienaruszony.</p>
+            <p class="subtitle">Ewidencja incydentów, protokołów z zatrzymań oraz notatek służbowych.</p>
+            
+            <div class="citizens-grid">
+                <div class="panel-box">
+                    <h3>📝 Sporządź Nowy Raport</h3>
+                    <form id="raportForm" onsubmit="zapiszRaport(event)">
+                        <div class="form-group">
+                            <label>Tytuł / Rodzaj Incydentu</label>
+                            <input type="text" id="raportTytul" required placeholder="np. Napad z bronią w ręku na sklep">
+                        </div>
+                        <div class="form-group">
+                            <label>Funkcjonariusz Sporządzający</label>
+                            <input type="text" id="raportAutor" required placeholder="np. Lukas Weber [LP-1150]">
+                        </div>
+                        <div class="form-group">
+                            <label>Treść i Przebieg Zdarzenia</label>
+                            <textarea id="raportTresc" required placeholder="Opisz dokładnie przebieg interwencji..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Zatwierdź i Archiwizuj Raport</button>
+                    </form>
+                </div>
+
+                <div class="panel-box">
+                    <h3>📁 Archiwum Raportów</h3>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <input type="text" id="searchRaportInput" placeholder="Szukaj w raportach..." oninput="pobierzRaporty()">
+                    </div>
+                    <div id="listaRaportow" class="results-container"></div>
+                </div>
             </div>
         </section>
     </main>
@@ -234,7 +351,7 @@
             "Police Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4e/Chevrolet_Tahoe.png"
         };
 
-        // Główna funkcja przełączania zakładek w systemie
+        // Przełączanie zakładek
         function zmienZakladke(nazwaZakladki) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
@@ -245,12 +362,164 @@
             if (docTab) docTab.classList.add('active');
             if (docNav) docNav.classList.add('active');
 
-            if (nazwaZakladki === 'bolo') {
-                pobierzBolo();
-            }
+            if (nazwaZakladki === 'dashboard') aktualizujStatystyki();
+            if (nazwaZakladki === 'citizens') pobierzObywateli();
+            if (nazwaZakladki === 'vehicles') pobierzPojazdy();
+            if (nazwaZakladki === 'bolo') pobierzBolo();
+            if (nazwaZakladki === 'reports') pobierzRaporty();
         }
 
-        // --- MODUŁ BOLO (ZAAWANSOWANY) ---
+        // --- DASHBOARD STATYSTYKI ---
+        function aktualizujStatystyki() {
+            const obywatele = JSON.parse(localStorage.getItem('mdt_obywatele') || '[]');
+            const pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
+            const bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
+            const raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
+
+            document.getElementById('statObywatele').innerText = obywatele.length;
+            document.getElementById('statPojazdy').innerText = pojazdy.length;
+            document.getElementById('statBolo').innerText = bolos.length;
+            document.getElementById('statRaporty').innerText = raporty.length;
+        }
+
+        // --- OBYWATELE ---
+        function zapiszObywatela(e) {
+            e.preventDefault();
+            const imie = document.getElementById('obywatelImie').value;
+            const wiek = document.getElementById('obywatelWiek').value;
+            const status = document.getElementById('obywatelStatus').value;
+            const notatki = document.getElementById('obywatelNotatki').value;
+
+            let obywatele = JSON.parse(localStorage.getItem('mdt_obywatele') || '[]');
+            obywatele.unshift({ id: Date.now(), imie, wiek, status, notatki });
+            localStorage.setItem('mdt_obywatele', JSON.stringify(obywatele));
+            document.getElementById('obywatelForm').reset();
+            alert('Dodano obywatela do bazy!');
+            pobierzObywateli();
+        }
+
+        function pobierzObywateli() {
+            const filtr = (document.getElementById('searchObywatelInput')?.value || '').toLowerCase();
+            const lista = JSON.parse(localStorage.getItem('mdt_obywatele') || '[]');
+            const div = document.getElementById('listaObywateli');
+            if (!div) return;
+
+            const wynik = lista.filter(o => o.imie.toLowerCase().includes(filtr));
+            if (wynik.length === 0) {
+                div.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding:15px;">Brak obywateli w bazie.</p>';
+                return;
+            }
+
+            div.innerHTML = wynik.map(o => `
+                <div class="citizen-card">
+                    <h4 style="color:#38bdf8; font-size:15px;">${o.imie}</h4>
+                    <p style="font-size:12px; color:#94a3b8;">Wiek: ${o.wiek} | Status: <strong>${o.status}</strong></p>
+                    <p style="font-size:13px; margin-top:5px; color:#cbd5e1;">Notatki: ${o.notatki || 'Brak'}</p>
+                    <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunObywatela(${o.id})">Usuń</button>
+                </div>
+            `).join('');
+        }
+
+        function usunObywatela(id) {
+            let lista = JSON.parse(localStorage.getItem('mdt_obywatele') || '[]');
+            lista = lista.filter(o => o.id !== id);
+            localStorage.setItem('mdt_obywatele', JSON.stringify(lista));
+            pobierzObywateli();
+        }
+
+        // --- POJAZDY ---
+        function zapiszPojazd(e) {
+            e.preventDefault();
+            const model = document.getElementById('pojazdModel').value;
+            const tablica = document.getElementById('pojazdTablica').value.toUpperCase();
+            const wlasciciel = document.getElementById('pojazdWlasciciel').value;
+            const status = document.getElementById('pojazdStatus').value;
+
+            let pojazdy = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
+            pojazdy.unshift({ id: Date.now(), model, tablica, wlasciciel, status });
+            localStorage.setItem('mdt_pojazdy', JSON.stringify(pojazdy));
+            document.getElementById('pojazdForm').reset();
+            alert('Zarejestrowano pojazd!');
+            pobierzPojazdy();
+        }
+
+        function pobierzPojazdy() {
+            const filtr = (document.getElementById('searchPojazdInput')?.value || '').toLowerCase();
+            const lista = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
+            const div = document.getElementById('listaPojazdow');
+            if (!div) return;
+
+            const wynik = lista.filter(p => p.tablica.toLowerCase().includes(filtr) || p.model.toLowerCase().includes(filtr));
+            if (wynik.length === 0) {
+                div.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding:15px;">Brak pojazdów w bazie.</p>';
+                return;
+            }
+
+            div.innerHTML = wynik.map(p => `
+                <div class="citizen-card">
+                    <h4 style="color:#38bdf8; font-size:15px;">${p.model} [ <span style="color:#facc15;">${p.tablica}</span> ]</h4>
+                    <p style="font-size:12px; color:#94a3b8;">Właściciel: ${p.wlasciciel} | Status: <strong>${p.status}</strong></p>
+                    <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunPojazd(${p.id})">Usuń</button>
+                </div>
+            `).join('');
+        }
+
+        function usunPojazd(id) {
+            let lista = JSON.parse(localStorage.getItem('mdt_pojazdy') || '[]');
+            lista = lista.filter(p => p.id !== id);
+            localStorage.setItem('mdt_pojazdy', JSON.stringify(lista));
+            pobierzPojazdy();
+        }
+
+        // --- RAPORTY ---
+        function zapiszRaport(e) {
+            e.preventDefault();
+            const tytul = document.getElementById('raportTytul').value;
+            const autor = document.getElementById('raportAutor').value;
+            const tresc = document.getElementById('raportTresc').value;
+            const data = new Date().toLocaleString('pl-PL');
+
+            let raporty = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
+            raporty.unshift({ id: Date.now(), tytul, autor, tresc, data });
+            localStorage.setItem('mdt_raporty', JSON.stringify(raporty));
+            document.getElementById('raportForm').reset();
+            alert('Raport został zapisany w archiwum!');
+            pobierzRaporty();
+        }
+
+        function pobierzRaporty() {
+            const filtr = (document.getElementById('searchRaportInput')?.value || '').toLowerCase();
+            const lista = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
+            const div = document.getElementById('listaRaportow');
+            if (!div) return;
+
+            const wynik = lista.filter(r => r.tytul.toLowerCase().includes(filtr) || r.autor.toLowerCase().includes(filtr));
+            if (wynik.length === 0) {
+                div.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding:15px;">Brak raportów.</p>';
+                return;
+            }
+
+            div.innerHTML = wynik.map(r => `
+                <div class="citizen-card">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8; margin-bottom:4px;">
+                        <span>Autor: ${r.autor}</span>
+                        <span>${r.data}</span>
+                    </div>
+                    <h4 style="color:#38bdf8; font-size:15px; margin-bottom:4px;">${r.tytul}</h4>
+                    <p style="font-size:13px; color:#cbd5e1;">${r.tresc}</p>
+                    <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunRaport(${r.id})">Usuń</button>
+                </div>
+            `).join('');
+        }
+
+        function usunRaport(id) {
+            let lista = JSON.parse(localStorage.getItem('mdt_raporty') || '[]');
+            lista = lista.filter(r => r.id !== id);
+            localStorage.setItem('mdt_raporty', JSON.stringify(lista));
+            pobierzRaporty();
+        }
+
+        // --- BOLO ---
         async function utworzBolo(event) {
             event.preventDefault();
 
@@ -281,47 +550,19 @@
                 status: 'Aktywny'
             };
 
-            try {
-                const res = await fetch('/api/bolo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(noweBolo)
-                });
-                if (res.ok) {
-                    document.getElementById('dodajBoloForm').reset();
-                    alert('Alert BOLO został pomyślnie rozesłany do wszystkich jednostek!');
-                    pobierzBolo();
-                    return;
-                }
-            } catch (e) {}
-
-            zapiszBoloLokalnie(noweBolo);
-        }
-
-        function zapiszBoloLokalnie(bolo) {
             let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
-            bolos.unshift(bolo);
+            bolos.unshift(noweBolo);
             localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
             document.getElementById('dodajBoloForm').reset();
-            alert('Alert BOLO rozesłany w sieci lokalnej terminala!');
+            alert('Alert BOLO został opublikowany!');
             pobierzBolo();
         }
 
-        async function pobierzBolo() {
+        function pobierzBolo() {
             const listaDiv = document.getElementById('listaBolo');
             const szukajVal = (document.getElementById('searchBoloInput')?.value || '').toLowerCase();
             
             if (!listaDiv) return;
-            listaDiv.innerHTML = '<p style="color:#94a3b8; font-size:13px; text-align:center; padding: 20px;">Pobieranie aktualnych alertów BOLO...</p>';
-
-            try {
-                const res = await fetch('/api/bolo');
-                if (res.ok) {
-                    const bolos = await res.json();
-                    wyswietlListeBolo(bolos, szukajVal);
-                    return;
-                }
-            } catch (e) {}
 
             let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
             if (bolos.length === 0) {
@@ -401,15 +642,16 @@
             }).join('');
         }
 
-        async function zamknijBolo(id) {
+        function zamknijBolo(id) {
             let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
             bolos = bolos.filter(b => b.id !== id);
             localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
             pobierzBolo();
         }
 
-        // Automatyczne załadowanie BOLO przy starcie strony
+        // Start aplikacji
         window.onload = function() {
+            aktualizujStatystyki();
             pobierzBolo();
         };
     </script>
