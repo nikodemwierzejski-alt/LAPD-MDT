@@ -44,6 +44,31 @@ async function inicjalizacjaBazy() {
                 haslo VARCHAR(100) NOT NULL,
                 rola VARCHAR(50) DEFAULT 'user'
             );
+
+            CREATE TABLE IF NOT EXISTS pojazdy (
+                id SERIAL PRIMARY KEY,
+                model TEXT,
+                plate TEXT,
+                color TEXT,
+                owner TEXT,
+                status TEXT,
+                data_dodania TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS raporty (
+                id SERIAL PRIMARY KEY,
+                tytul TEXT,
+                kategoria TEXT,
+                status TEXT,
+                obywatel TEXT,
+                pojazdy TEXT,
+                wspoloficerowie TEXT,
+                dowody TEXT,
+                opis TEXT,
+                autor TEXT,
+                odznaka_autora TEXT,
+                data TEXT
+            );
         `);
 
         // Automatyczne dodanie kont testowych z odpowiednimi rolami
@@ -65,7 +90,7 @@ async function inicjalizacjaBazy() {
 
 inicjalizacjaBazy();
 
-// Logowanie funkcjonariusza (dostosowane do zmiennych badge i password wysyłanych przez script.js)
+// Logowanie funkcjonariusza
 app.post("/api/login", async (req, res) => {
     const { badge, password } = req.body;
     
@@ -89,7 +114,7 @@ app.post("/api/login", async (req, res) => {
         }
     } catch (err) {
         console.error("Błąd logowania:", err);
-        res.status(500).send(err.message);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
@@ -164,6 +189,7 @@ app.post("/api/obywatele", async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 // Usuwanie obywatela (tylko dla administratora)
 app.delete("/api/obywatele/:id", async (req, res) => {
     const { id } = req.params;
@@ -199,11 +225,68 @@ app.post("/api/obywatele/:id/poszukiwany", async (req, res) => {
     try {
         const query = "UPDATE obywatele SET poszukiwany = $1 WHERE id = $2";
         await db.query(query, [poszukiwany, id]);
-        
         res.json({ success: true });
     } catch (err) {
         console.error("Błąd aktualizacji statusu:", err);
         res.status(500).send("Błąd serwera");
+    }
+});
+
+// --- ENDPOINTY DLA POJAZDÓW ---
+app.get("/api/pojazdy", async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM pojazdy ORDER BY id DESC");
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+app.post("/api/pojazdy", async (req, res) => {
+    const { model, plate, color, owner, status, dataDodania } = req.body;
+    try {
+        await db.query(
+            "INSERT INTO pojazdy (model, plate, color, owner, status, data_dodania) VALUES ($1, $2, $3, $4, $5, $6)",
+            [model, plate, color, owner, status, dataDodania]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post("/api/pojazdy/:id/status", async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+        await db.query("UPDATE pojazdy SET status = $1 WHERE id = $2", [status, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// --- ENDPOINTY DLA RAPORTÓW ---
+app.get("/api/raporty", async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM raporty ORDER BY id DESC");
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+app.post("/api/raporty", async (req, res) => {
+    const { tytul, kategoria, status, obywatel, pojazdy, wspoloficerowie, dowody, opis, autor, odznakaAutora, data } = req.body;
+    try {
+        await db.query(
+            `INSERT INTO raporty (tytul, kategoria, status, obywatel, pojazdy, wspoloficerowie, dowody, opis, autor, odznaka_autora, data) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            [tytul, kategoria, status, obywatel, pojazdy, wspoloficerowie, dowody, opis, autor, odznakaAutora, data]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
