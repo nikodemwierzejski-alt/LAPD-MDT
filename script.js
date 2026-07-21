@@ -32,7 +32,7 @@ const erlcVehicleImages = {
 };
 
 // Automatyczne wykrywanie hosta (zapobiega problemom w sieciach zewnętrznych)
-const API_URL = window.location.origin;
+const API_URL = "https://lapd-mdt-5y78.onrender.com";
 
 // Zegarek w górnym pasku
 setInterval(() => {
