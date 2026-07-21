@@ -77,16 +77,16 @@
             <form onsubmit="zalogujSie(event)">
                 <div class="form-group" style="text-align: left;">
                     <label>Login / Imię i Nazwisko / Odznaka</label>
-                    <input type="text" id="loginImie" required placeholder="np. Nikodem(Administrator) lub Lukas Weber">
+                    <input type="text" id="loginImie" required placeholder="np. Nikodem lub Lukas Weber">
                 </div>
                 <div class="form-group" style="text-align: left;">
                     <label>Hasło lub Numer Odznaki</label>
-                    <input type="password" id="loginHasloOdznaka" required placeholder="Hasło lub Badge ID">
+                    <input type="password" id="loginHasloOdznaka" required placeholder="Hasło">
                 </div>
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Zaloguj do Terminala</button>
             </form>
             <div style="margin-top: 15px; font-size: 11px; color: #64748b;">
-                Admin: Nikodem(Administrator) | Hasło: 02122004
+                Admin: Nikodem | Hasło: 02122004
             </div>
         </div>
     </div>
@@ -190,8 +190,7 @@
                             <div class="panel-box">
                                 <h3>🌐 OSTATNIA AKTYWNOŚĆ</h3>
                                 <div style="font-size: 12px; color: #94a3b8; display: flex; flex-direction: column; gap: 8px; max-height: 120px; overflow-y: auto;">
-                                    <div><strong style="color: #38bdf8;" id="logUserText">Lukas Weber</strong> — Login<br><span style="color: #64748b; font-size: 11px;">Auth 20:22:21</span></div>
-                                    <div><strong style="color: #38bdf8;">Lukas Weber</strong> — Logout<br><span style="color: #64748b; font-size: 11px;">Auth 20:22:11</span></div>
+                                    <div><strong style="color: #38bdf8;" id="logUserText">Lukas Weber</strong> — Login<br><span style="color: #64748b; font-size: 11px;">Auth system</span></div>
                                 </div>
                             </div>
                         </div>
@@ -502,8 +501,7 @@
                         <div class="panel-box">
                             <h3>📜 Historia Zdarzeń</h3>
                             <div style="font-family: monospace; font-size: 12px; color: #94a3b8; display: flex; flex-direction: column; gap: 6px;">
-                                <div>[22:22:21] SYSTEM: Zalogowano użytkownika Lukas Weber (LP-1150)</div>
-                                <div>[21:15:00] SYSTEM: Zsynchronizowano bazę danych ERLC</div>
+                                <div>[System] Zainicjalizowano dziennik zdarzeń MDT.</div>
                             </div>
                         </div>
                     </section>
@@ -531,7 +529,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Hasło do logowania</label>
-                                        <input type="password" id="nowyUserHaslo" required placeholder="Wpisz hasło dla użytkownika">
+                                        <input type="text" id="nowyUserHaslo" required placeholder="Wpisz hasło dla użytkownika">
                                     </div>
                                     <button type="submit" class="btn-primary">Utwórz Konto Funkcjonariusza</button>
                                 </form>
@@ -602,47 +600,46 @@
 
             let sesja = null;
 
-            // Sprawdzenie konta administratora (Nikodem)
-            if (inputImie === "Nikodem(Administrator)" && inputHasloOdznaka === "02122004") {
+            // 1. Sprawdzenie konta administratora (Nikodem)
+            if (inputImie.toLowerCase() === "nikodem" && inputHasloOdznaka === "02122004") {
                 sesja = {
                     imie: "Nikodem",
                     odznaka: "ADMIN-01",
                     stopien: "Chief of Police / Admin",
                     isAdmin: true
                 };
-            } else {
+            } 
+            // 2. Sprawdzenie domyślnego konta Lukas Weber
+            else if (inputImie.toLowerCase() === "lukas weber" && (inputHasloOdznaka === "LP-1150" || inputHasloOdznaka === "sergeant")) {
+                sesja = {
+                    imie: "Lukas Weber",
+                    odznaka: "LP-1150",
+                    stopien: "Sergeant",
+                    isAdmin: false
+                };
+            } 
+            // 3. Sprawdzanie kont dodanych przez administratora
+            else {
                 let customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
                 
-                // Sprawdzenie domyślnego konta Lukas Weber
-                if ((inputImie.toLowerCase() === "lukas weber" && inputHasloOdznaka === "LP-1150") ||
-                    (inputImie.toLowerCase() === "lukas weber" && inputHasloOdznaka === "sergeant") ||
-                    (inputImie.toUpperCase() === "LP-1150" && inputHasloOdznaka === "LP-1150")) {
+                // Szukamy po Imieniu LUB Numerze Odznaki ORAZ zgodnym haśle
+                const znaleziony = customUsers.find(u => 
+                    (u.imie.toLowerCase() === inputImie.toLowerCase() || u.odznaka.toLowerCase() === inputImie.toLowerCase()) && 
+                    u.haslo === inputHasloOdznaka
+                );
+
+                if (znaleziony) {
                     sesja = {
-                        imie: "Lukas Weber",
-                        odznaka: "LP-1150",
-                        stopien: "Sergeant",
+                        imie: znaleziony.imie,
+                        odznaka: znaleziony.odznaka,
+                        stopien: znaleziony.stopien,
                         isAdmin: false
                     };
-                } else {
-                    // Sprawdzanie nowo dodanych użytkowników po imieniu lub odznaki oraz haśle
-                    const znaleziony = customUsers.find(u => 
-                        (u.imie.toLowerCase() === inputImie.toLowerCase() || u.odznaka.toUpperCase() === inputImie.toUpperCase()) && 
-                        u.haslo === inputHasloOdznaka
-                    );
-
-                    if (znaleziony) {
-                        sesja = {
-                            imie: znaleziony.imie,
-                            odznaka: znaleziony.odznaka,
-                            stopien: znaleziony.stopien,
-                            isAdmin: false
-                        };
-                    }
                 }
             }
 
             if (!sesja) {
-                alert("Błędne dane logowania! Sprawdź login (imię lub numer odznaki) oraz hasło.");
+                alert("Błędne dane logowania!\n- Dla admina wpisz: Nikodem oraz 02122004\n- Dla nowo dodanego użytkownika wpisz jego imię (lub odznakę) oraz ustawione przez Ciebie hasło.");
                 return;
             }
 
@@ -678,10 +675,8 @@
             if (raportAutorInput) raportAutorInput.value = `${sesja.imie} [${sesja.odznaka}]`;
 
             const navKadra = document.getElementById('nav-kadra');
-            if (sesja.isAdmin) {
-                if (navKadra) navKadra.style.display = 'flex';
-            } else {
-                if (navKadra) navKadra.style.display = 'none';
+            if (navKadra) {
+                navKadra.style.display = sesja.isAdmin ? 'flex' : 'none';
             }
         }
 
@@ -735,7 +730,7 @@
             document.getElementById('kadraForm').reset();
             pobierzFunkcjonariuszy();
             aktualizujStatystyki();
-            alert("Pomyślnie dodano nowe konto funkcjonariusza! Może się teraz zalogować.");
+            alert("Pomyślnie dodano nowe konto funkcjonariusza! Może się teraz zalogować wpisując jego imię/odznakę oraz utworzone hasło.");
         }
 
         function pobierzFunkcjonariuszy() {
@@ -752,7 +747,7 @@
             div.innerHTML = lista.map(u => `
                 <div class="citizen-card">
                     <h4 style="color:#38bdf8; font-size:15px;">${u.imie} <span class="user-badge">${u.odznaka}</span></h4>
-                    <p style="font-size:12px; color:#94a3b8; margin-top:4px;">Stopień: <strong>${u.stopien}</strong> | Hasło: <span style="font-family:monospace; color:#facc15;">${u.haslo}</span></p>
+                    <p style="font-size:12px; color:#94a3b8; margin-top:4px;">Stopień: <strong>${u.stopien}</strong> | Hasło do logowania: <span style="font-family:monospace; color:#facc15;">${u.haslo}</span></p>
                     <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunFunkcjonariusza(${u.id})">Usuń konto</button>
                 </div>
             `).join('');
@@ -1007,10 +1002,6 @@
         window.onload = function() {
             inicjalizujBazyDanych();
             
-            // Wymuszenie czyszczenia starej sesji przy starcie, abyś zawsze widział ekran logowania
-            // (Możesz usunąć poniższą linię, jeśli nie chcesz logować się po każdym całkowitym odświeżeniu)
-            // localStorage.removeItem('mdt_sesja');
-
             const sesja = JSON.parse(localStorage.getItem('mdt_sesja'));
             if (sesja) {
                 naklejDaneUzytkownika(sesja);
