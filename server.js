@@ -23,7 +23,7 @@ const db = new Client({
 
 db.connect();
 
-// Funkcja inicjalizująca tabele oraz konta domyślne z uwzględnieniem roli
+// Funkcja inicjalizująca tabele oraz automatycznie naprawiająca brakujące kolumny
 async function inicjalizacjaBazy() {
     try {
         await db.query(`
@@ -78,6 +78,11 @@ async function inicjalizacjaBazy() {
             );
         `);
 
+        // Zabezpieczenie: dodaje kolumnę rola, jeśli tabela kadry już istniała wcześniej w bazie
+        await db.query(`
+            ALTER TABLE kadry ADD COLUMN IF NOT EXISTS rola VARCHAR(50) DEFAULT 'user';
+        `);
+
         // Automatyczne dodanie kont testowych z odpowiednimi rolami
         await db.query(`
             INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
@@ -114,7 +119,7 @@ app.post("/api/login", async (req, res) => {
             res.json({ 
                 success: true, 
                 officer: user.stopien_nazwisko, 
-                rola: user.rola 
+                rola: user.rola || 'user'
             });
         } else {
             res.status(401).json({ success: false, message: "Błędne dane logowania" });
