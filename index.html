@@ -713,10 +713,10 @@
             }, 2500);
         }
 
-        // Pobieranie danych z serwera chmury
+       // Pobieranie danych z serwera chmury
         async function pobierzZChmury() {
             try {
-                const CLOUD_SYNC_ENDPOINT = "/api/sync";
+                const res = await fetch(CLOUD_SYNC_ENDPOINT);
                 if (res.ok) {
                     const cloudData = await res.json();
                     if (cloudData && zweryfikujStrukture(cloudData)) {
@@ -733,7 +733,6 @@
                 ustawStatusSieci(false);
             }
         }
-
         // Zapisywanie danych do chmury
         async function zapiszDoStorage() {
             isSaving = true;
