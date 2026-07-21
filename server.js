@@ -1,250 +1,324 @@
-const express = require('express');
-const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const express = require("express");
+const path = require("path");
+const { Client } = require("pg");
+const cors = require("cors");
+
 const app = express();
+app.use(express.static('.'));
+const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-// --- INICJALIZACJA TRWAŁEJ BAZY DANYCH (ZAPIS NA DYSKU) ---
-const db = new sqlite3.Database('./baza.db', (err) => {
-    if (err) {
-        console.error('Błąd otwierania bazy danych:', err.message);
-    } else {
-        console.log('Połączono z trwalą bazą danych SQLite.');
+const db = new Client({
+    connectionString: "postgresql://neondb_owner:npg_T94GvMwZcjyA@ep-old-bread-auu10o6b.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require"
+});
+
+db.connect();
+
+// Funkcja inicjalizująca tabele oraz konta domyślne w chmurze (Neon PostgreSQL)
+async function inicjalizacjaBazy() {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS obywatele (
+                id SERIAL PRIMARY KEY,
+                imie TEXT,
+                nazwisko TEXT,
+                data_urodzenia TEXT,
+                poszukiwany INTEGER DEFAULT 0,
+                uwagi TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS mandaty (
+                id SERIAL PRIMARY KEY,
+                obywatel_id INTEGER REFERENCES obywatele(id) ON DELETE CASCADE,
+                powod TEXT,
+                kwota INTEGER,
+                data TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS kadry (
+                id SERIAL PRIMARY KEY,
+                odznaka VARCHAR(50) UNIQUE NOT NULL,
+                stopien_nazwisko VARCHAR(100) NOT NULL,
+                haslo VARCHAR(100) NOT NULL,
+                rola VARCHAR(50) DEFAULT 'user'
+            );
+
+            CREATE TABLE IF NOT EXISTS pojazdy (
+                id SERIAL PRIMARY KEY,
+                model TEXT,
+                plate TEXT,
+                color TEXT,
+                owner TEXT,
+                status TEXT,
+                data_dodania TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS raporty (
+                id SERIAL PRIMARY KEY,
+                tytul TEXT,
+                kategoria TEXT,
+                status TEXT,
+                obywatel TEXT,
+                pojazdy TEXT,
+                wspoloficerowie TEXT,
+                dowody TEXT,
+                opis TEXT,
+                autor TEXT,
+                odznaka_autora TEXT,
+                data TEXT
+            );
+        `);
+
+        // Automatyczne dodanie kont testowych z odpowiednimi rolami
+        await db.query(`
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
+            VALUES ('99', 'Officer Smith', 'lspd', 'user')
+            ON CONFLICT (odznaka) DO NOTHING;
+
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
+            VALUES ('admin', 'Komendant Główny', 'admin123', 'admin')
+            ON CONFLICT (odznaka) DO NOTHING;
+        `);
+
+        console.log("Tabele w bazie danych (Chmura PostgreSQL) zostały sprawdzone/utworzone pomyślnie.");
+    } catch (err) {
+        console.error("Błąd podczas inicjalizacji bazy danych:", err);
     }
-});
+}
 
-// Tworzenie tabel, jeśli nie istnieją
-db.serialize(() => {
-    // Tabela funkcjonariuszy
-    db.run(`CREATE TABLE IF NOT EXISTS officers (
-        badge TEXT PRIMARY KEY,
-        name TEXT,
-        password TEXT,
-        rola TEXT
-    )`);
+inicjalizacjaBazy();
 
-    // Domyślny admin (zostanie dodany tylko raz, jeśli tabela jest pusta)
-    db.get(`SELECT count(*) as count FROM officers`, (err, row) => {
-        if (row.count === 0) {
-            db.run(`INSERT INTO officers (badge, name, password, rola) VALUES (?, ?, ?, ?)`, 
-                ['NIKODEM', 'Nikodem', '02122004', 'admin']);
-        }
-    });
-
-    // Tabela obywateli
-    db.run(`CREATE TABLE IF NOT EXISTS obywatele (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        imie TEXT,
-        nazwisko TEXT,
-        data_urodzenia TEXT,
-        uwagi TEXT,
-        poszukiwany INTEGER DEFAULT 0
-    )`);
-
-    // Tabela mandatów
-    db.run(`CREATE TABLE IF NOT EXISTS mandaty (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        obywatel_id INTEGER,
-        powod TEXT,
-        kwota INTEGER,
-        data TEXT,
-        FOREIGN KEY(obywatel_id) REFERENCES obywatele(id)
-    )`);
-
-    // Tabela pojazdów
-    db.run(`CREATE TABLE IF NOT EXISTS pojazdy (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        model TEXT,
-        plate TEXT,
-        color TEXT,
-        owner TEXT,
-        status TEXT,
-        dataDodania TEXT
-    )`);
-
-    // Tabela raportów
-    db.run(`CREATE TABLE IF NOT EXISTS raporty (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tytul TEXT,
-        kategoria TEXT,
-        status TEXT,
-        obywatel TEXT,
-        pojazdy TEXT,
-        wspoloficerowie TEXT,
-        dowody TEXT,
-        opis TEXT,
-        autor TEXT,
-        odznakaAutora TEXT,
-        data TEXT
-    )`);
-});
-
-// --- 1. LOGOWANIE ---
-app.post('/api/login', (req, res) => {
+// Logowanie funkcjonariusza
+app.post("/api/login", async (req, res) => {
     const { badge, password } = req.body;
-    const cleanBadge = (badge || '').trim().toUpperCase();
+    
+    console.log("Próba logowania dla odznaka:", badge);
 
-    db.get(`SELECT * FROM officers WHERE UPPER(badge) = ? AND password = ?`, [cleanBadge, password], (err, row) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Błąd serwera bazy danych." });
-        }
-        if (row) {
-            res.json({
-                success: true,
-                officer: row.name,
-                rola: row.rola || 'officer'
+    try {
+        const query = "SELECT * FROM kadry WHERE UPPER(odznaka) = UPPER($1) AND haslo = $2";
+        const result = await db.query(query, [badge, password]);
+
+        console.log("Znaleziono w bazie:", result.rows.length);
+
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            res.json({ 
+                success: true, 
+                officer: user.stopien_nazwisko, 
+                rola: user.rola 
             });
         } else {
-            res.status(401).json({ success: false, message: "Błędny numer odznaki lub hasło!" });
+            res.status(401).json({ success: false, message: "Błędne dane logowania" });
         }
-    });
+    } catch (err) {
+        console.error("Błąd logowania:", err);
+        res.status(500).send(err.message);
+    }
 });
 
-// --- 2. ZARZĄDZANIE KADRAMI ---
-app.get('/api/officers', (req, res) => {
-    db.all(`SELECT badge, name, password, rola FROM officers`, [], (err, rows) => {
-        if (err) return res.status(500).json([]);
-        res.json(rows);
-    });
+// Pobieranie listy kadr (funkcjonariuszy) dla panelu Admina
+app.get("/api/officers", async (req, res) => {
+    try {
+        const result = await db.query("SELECT odznaka as badge, stopien_nazwisko as name, haslo as password, rola FROM kadry");
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Błąd pobierania kadr:", err);
+        res.status(500).json([]);
+    }
 });
 
-app.post('/api/officers', (req, res) => {
+// Dodawanie nowego funkcjonariusza (Kadr)
+app.post("/api/officers", async (req, res) => {
     const { badge, name, password } = req.body;
-    if (!badge || !name || !password) {
-        return res.status(400).json({ success: false, message: "Uzupełnij wszystkie pola!" });
+    try {
+        const query = "INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) VALUES ($1, $2, $3, 'user')";
+        await db.query(query, [badge, name, password]);
+        res.json({ success: true, message: "Pomyślnie dodano funkcjonariusza!" });
+    } catch (err) {
+        console.error("Błąd dodawania kadra:", err);
+        res.status(500).json({ success: false, message: "Błąd bazy danych (prawdopodobnie odznaka już istnieje)." });
     }
+});
 
-    const cleanBadge = badge.trim().toUpperCase();
-    db.get(`SELECT * FROM officers WHERE UPPER(badge) = ?`, [cleanBadge], (err, row) => {
-        if (row) {
-            return res.json({ success: false, message: "Funkcjonariusz o takim numerze odznaki już istnieje!" });
+// Usuwanie funkcjonariusza (Admin)
+app.delete("/api/officers/:badge", async (req, res) => {
+    const { badge } = req.params;
+    try {
+        await db.query("DELETE FROM kadry WHERE UPPER(odznaka) = UPPER($1)", [badge]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Błąd usuwania funkcjonariusza:", err);
+        res.status(500).json({ success: false });
+    }
+});
+
+// Pobieranie obywateli z ich mandatami
+app.get("/api/obywatele", async (req, res) => {
+    const search = req.query.search || "";
+    try {
+        let query, params;
+
+        if (search.trim() === "") {
+            query = `
+                SELECT o.*, 
+                       COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]') AS mandaty
+                FROM obywatele o
+                LEFT JOIN mandaty m ON m.obywatel_id = o.id
+                GROUP BY o.id
+            `;
+            params = [];
+        } else {
+            const parts = search.trim().split(" ");
+            if (parts.length > 1) {
+                query = `
+                    SELECT o.*, 
+                           COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]') AS mandaty
+                    FROM obywatele o
+                    LEFT JOIN mandaty m ON m.obywatel_id = o.id
+                    WHERE (o.imie ILIKE $1 AND o.nazwisko ILIKE $2) OR (o.imie ILIKE $2 AND o.nazwisko ILIKE $1)
+                    GROUP BY o.id
+                `;
+                params = [`%${parts[0]}%`, `%${parts[1]}%`];
+            } else {
+                query = `
+                    SELECT o.*, 
+                           COALESCE(json_agg(m.*) FILTER (WHERE m.id IS NOT NULL), '[]') AS mandaty
+                    FROM obywatele o
+                    LEFT JOIN mandaty m ON m.obywatel_id = o.id
+                    WHERE o.imie ILIKE $1 OR o.nazwisko ILIKE $1
+                    GROUP BY o.id
+                `;
+                params = [`%${search}%`];
+            }
         }
 
-        db.run(`INSERT INTO officers (badge, name, password, rola) VALUES (?, ?, ?, ?)`, 
-            [cleanBadge, name.trim(), password, 'officer'], (err) => {
-            if (err) {
-                return res.status(500).json({ success: false, message: "Błąd zapisu w bazie." });
-            }
-            res.json({ success: true, message: `Pomyślnie zarejestrowano funkcjonariusza: ${name} (${cleanBadge})` });
-        });
-    });
-});
-
-app.delete('/api/officers/:badge', (req, res) => {
-    const badgeToDelete = req.params.badge.toUpperCase();
-    db.run(`DELETE FROM officers WHERE UPPER(badge) = ?`, [badgeToDelete], (err) => {
-        res.json({ success: true });
-    });
-});
-
-// --- 3. OBYWATELE ---
-app.get('/api/obywatele', (req, res) => {
-    const search = (req.query.search || '').toLowerCase();
-    let query = `SELECT * FROM obywatele`;
-    let params = [];
-
-    if (search) {
-        query += ` WHERE LOWER(imie) LIKE ? OR LOWER(nazwisko) LIKE ?`;
-        params = [`%${search}%`, `%${search}%`];
+        const result = await db.query(query, params);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Błąd SQL:", err);
+        res.status(500).send(err.message);
     }
-
-    db.all(query, params, (err, obywatele) => {
-        if (err) return res.status(500).json([]);
-
-        // Pobieramy mandaty dla każdego obywatela
-        let completed = 0;
-        if (obywatele.length === 0) return res.json([]);
-
-        obywatele.forEach((o, index) => {
-            db.all(`SELECT powod, kwota, data FROM mandaty WHERE obywatel_id = ?`, [o.id], (err, mandaty) => {
-                obywatele[index].mandaty = mandaty || [];
-                completed++;
-                if (completed === obywatele.length) {
-                    res.json(obywatele);
-                }
-            });
-        });
-    });
 });
 
-app.post('/api/obywatele', (req, res) => {
+// Dodawanie obywatela
+app.post("/api/obywatele", async (req, res) => {
     const { imie, nazwisko, data_urodzenia, uwagi } = req.body;
-    db.run(`INSERT INTO obywatele (imie, nazwisko, data_urodzenia, uwagi, poszukiwany) VALUES (?, ?, ?, ?, 0)`,
-        [imie, nazwisko, data_urodzenia, uwagi], (err) => {
-        res.json({ success: !err });
-    });
-});
-
-app.post('/api/obywatele/:id/poszukiwany', (req, res) => {
-    const { poszukiwany } = req.body;
-    db.run(`UPDATE obywatele SET poszukiwany = ? WHERE id = ?`, [poszukiwany, req.params.id], (err) => {
+    try {
+        await db.query("INSERT INTO obywatele (imie, nazwisko, data_urodzenia, uwagi) VALUES ($1, $2, $3, $4)", [imie, nazwisko, data_urodzenia, uwagi]);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.delete('/api/obywatele/:id', (req, res) => {
-    db.run(`DELETE FROM obywatele WHERE id = ?`, [req.params.id], (err) => {
-        db.run(`DELETE FROM mandaty WHERE obywatel_id = ?`, [req.params.id], () => {
-            res.json({ success: true });
-        });
-    });
+// Usuwanie obywatela
+app.delete("/api/obywatele/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.query("DELETE FROM obywatele WHERE id = $1", [id]);
+        res.json({ success: true, message: "Pomyślnie usunięto obywatela." });
+    } catch (err) {
+        console.error("Błąd usuwania obywatela:", err);
+        res.status(500).json({ success: false, message: "Błąd serwera podczas usuwania." });
+    }
 });
 
-// --- 4. MANDATY ---
-app.post('/api/mandaty', (req, res) => {
+// Wystawianie mandatu
+app.post("/api/mandaty", async (req, res) => {
     const { obywatel_id, powod, kwota, data } = req.body;
-    db.run(`INSERT INTO mandaty (obywatel_id, powod, kwota, data) VALUES (?, ?, ?, ?)`,
-        [obywatel_id, powod, kwota, data], (err) => {
+    try {
+        await db.query("INSERT INTO mandaty (obywatel_id, powod, kwota, data) VALUES ($1, $2, $3, $4)", [obywatel_id, powod, kwota, data]);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// --- 5. POJAZDY ---
-app.get('/api/pojazdy', (req, res) => {
-    db.all(`SELECT * FROM pojazdy`, [], (err, rows) => {
-        res.json(rows || []);
-    });
+// Aktualizacja statusu poszukiwanego obywatela
+app.post("/api/obywatele/:id/poszukiwany", async (req, res) => {
+    const { id } = req.params;
+    const { poszukiwany } = req.body;
+
+    try {
+        const query = "UPDATE obywatele SET poszukiwany = $1 WHERE id = $2";
+        await db.query(query, [poszukiwany, id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Błąd aktualizacji statusu:", err);
+        res.status(500).send("Błąd serwera");
+    }
 });
 
-app.post('/api/pojazdy', (req, res) => {
+// --- MODUŁ POJAZDÓW (DMV) ---
+app.get("/api/pojazdy", async (req, res) => {
+    try {
+        const result = await db.query("SELECT id, model, plate, color, owner, status, data_dodania as \"dataDodania\" FROM pojazdy ORDER BY id DESC");
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Błąd pobierania pojazdów:", err);
+        res.status(500).json([]);
+    }
+});
+
+app.post("/api/pojazdy", async (req, res) => {
     const { model, plate, color, owner, status, dataDodania } = req.body;
-    db.run(`INSERT INTO pojazdy (model, plate, color, owner, status, dataDodania) VALUES (?, ?, ?, ?, ?, ?)`,
-        [model, plate, color, owner, status || 'clean', dataDodania], (err) => {
+    try {
+        await db.query(
+            "INSERT INTO pojazdy (model, plate, color, owner, status, data_dodania) VALUES ($1, $2, $3, $4, $5, $6)",
+            [model, plate, color, owner, status || 'clean', dataDodania]
+        );
         res.json({ success: true });
-    });
+    } catch (err) {
+        console.error("Błąd dodawania pojazdu:", err);
+        res.status(500).json({ success: false });
+    }
 });
 
-app.post('/api/pojazdy/:id/status', (req, res) => {
+app.post("/api/pojazdy/:id/status", async (req, res) => {
+    const { id } = req.params;
     const { status } = req.body;
-    db.run(`UPDATE pojazdy SET status = ? WHERE id = ?`, [status, req.params.id], (err) => {
+    try {
+        await db.query("UPDATE pojazdy SET status = $1 WHERE id = $2", [status, id]);
         res.json({ success: true });
-    });
+    } catch (err) {
+        console.error("Błąd zmiany statusu pojazdu:", err);
+        res.status(500).json({ success: false });
+    }
 });
 
-// --- 6. RAPORTY ---
-app.get('/api/raporty', (req, res) => {
-    db.all(`SELECT * FROM raporty`, [], (err, rows) => {
-        res.json(rows || []);
-    });
+// --- MODUŁ RAPORTÓW ---
+app.get("/api/raporty", async (req, res) => {
+    try {
+        const result = await db.query("SELECT id, tytul, kategoria, status, obywatel, pojazdy, wspoloficerowie, dowody, opis, autor, odznaka_autora as \"odznakaAutora\", data FROM raporty ORDER BY id DESC");
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Błąd pobierania raportów:", err);
+        res.status(500).json([]);
+    }
 });
 
-app.post('/api/raporty', (req, res) => {
+app.post("/api/raporty", async (req, res) => {
     const r = req.body;
-    db.run(`INSERT INTO raporty (tytul, kategoria, status, obywatel, pojazdy, wspoloficerowie, dowody, opis, autor, odznakaAutora, data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [r.tytul, r.kategoria, r.status, r.obywatel, r.pojazdy, r.wspoloficerowie, r.dowody, r.opis, r.autor, r.odznakaAutora, r.data], (err) => {
+    try {
+        await db.query(
+            `INSERT INTO raporty (tytul, kategoria, status, obywatel, pojazdy, wspoloficerowie, dowody, opis, autor, odznaka_autora, data) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            [r.tytul, r.kategoria, r.status, r.obywatel, r.pojazdy, r.wspoloficerowie, r.dowody, r.opis, r.autor, r.odznakaAutora, r.data]
+        );
         res.json({ success: true });
-    });
+    } catch (err) {
+        console.error("Błąd dodawania raportu:", err);
+        res.status(500).json({ success: false });
+    }
 });
 
-// --- 7. STATUS ---
-app.get('/api/status', (req, res) => {
-    res.json({ status: "ONLINE", system: "LSPD CAD SQLite Persistent Storage" });
+// Endpoint sprawdzający status
+app.get("/api/status", (req, res) => {
+    res.json({ status: "ONLINE", system: "LAPD-MDT Cloud Database" });
 });
 
-// Uruchomienie serwera
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Serwer z trwalą bazą danych SQLite uruchomiony na porcie ${PORT}`);
+    console.log(`Serwer działa na porcie ${PORT}`);
 });
