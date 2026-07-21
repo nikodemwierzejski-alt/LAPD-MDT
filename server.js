@@ -79,6 +79,10 @@ async function inicjalizacjaBazy() {
             ON CONFLICT (odznaka) DO NOTHING;
 
             INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
+            VALUES ('S01', 'Bartek', '5678', 'user')
+            ON CONFLICT (odznaka) DO NOTHING;
+
+            INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
             VALUES ('99', 'Officer Smith', 'lspd', 'user')
             ON CONFLICT (odznaka) DO NOTHING;
         `);
