@@ -42,7 +42,7 @@
         h2 { font-size: 22px; color: #f8fafc; margin-bottom: 5px; }
         .subtitle { font-size: 13px; color: #64748b; margin-bottom: 25px; }
 
-        .citizens-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
+        .citizens-grid { display: grid; grid-template-columns: 1.1fr 1.3fr; gap: 20px; }
         .panel-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .panel-box h3 { font-size: 15px; margin-bottom: 15px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         .form-group { margin-bottom: 15px; }
@@ -51,7 +51,7 @@
         .form-group textarea { resize: vertical; min-height: 90px; }
         .btn-primary { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
         .btn-primary:hover { background: #0369a1; }
-        .results-container { margin-top: 15px; max-height: 520px; overflow-y: auto; padding-right: 5px; }
+        .results-container { margin-top: 15px; max-height: 580px; overflow-y: auto; padding-right: 5px; }
         
         .citizen-card, .vehicle-card, .report-card, .bolo-card { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
         .btn-small { border: none; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
@@ -136,7 +136,7 @@
 
                 <main>
                     <!-- DASHBOARD -->
-                    <section id="tab-dashboard" class="tab-pane active">
+                    <section id="tab-dashboard" class="tab-pane">
                         <h2>Panel główny</h2>
                         <p class="subtitle" id="dashboardWelcome">Witaj, Lukas Weber – LAPD Sergeant</p>
                         
@@ -297,35 +297,81 @@
                         </div>
                     </section>
 
-                    <!-- RAPORTOWANIE (REPORTS) -->
+                    <!-- RAPORTOWANIE (REPORTS) - BARDZO MOCNO ROZBUDOWANE -->
                     <section id="tab-reports" class="tab-pane">
-                        <h2>Raporty Operacyjne</h2>
-                        <p class="subtitle">Ewidencja incydentów, protokołów z zatrzymań oraz notatek służbowych.</p>
+                        <h2>Centralne Archiwum i Generator Raportów</h2>
+                        <p class="subtitle">Zaawansowany system ewidencji incydentów, protokołów z zatrzymań, śledztw oraz raportów taktycznych.</p>
                         
                         <div class="citizens-grid">
-                            <div class="panel-box">
-                                <h3>📝 Sporządź Nowy Raport</h3>
+                            <div class="panel-box" style="border-left: 4px solid #0284c7;">
+                                <h3>📝 Nowy Raport Operacyjny / Dochodzeniowy</h3>
                                 <form id="raportForm" onsubmit="zapiszRaport(event)">
                                     <div class="form-group">
-                                        <label>Tytuł / Rodzaj Incydentu</label>
-                                        <input type="text" id="raportTytul" required placeholder="np. Napad z bronią w ręku na sklep">
+                                        <label>Tytuł / Nazwa Incydentu</label>
+                                        <input type="text" id="raportTytul" required placeholder="np. Napad z bronią na Pacific Standard Bank">
                                     </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div class="form-group">
+                                            <label>Kategoria / Typ Incydentu</label>
+                                            <select id="raportKategoria" required>
+                                                <option value="Felony Incident (Przestępstwo Ciężkie)">Felony Incident (Przestępstwo Ciężkie)</option>
+                                                <option value="Misdemeanor (Wykroczenie)">Misdemeanor (Wykroczenie)</option>
+                                                <option value="Traffic Stop / Pursuit (Pościg Drogowy)">Traffic Stop / Pursuit (Pościg Drogowy)</option>
+                                                <option value="Investigative Report (Dochodzenie)">Investigative Report (Dochodzenie)</option>
+                                                <option value="Use of Force (Użycie Siły)">Use of Force (Użycie Siły)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Status Sprawy</label>
+                                            <select id="raportStatus" required>
+                                                <option value="Zamknięta / Skazany (Closed)">Zamknięta / Skazany (Closed)</option>
+                                                <option value="W toku / Dochodzenie (Active)">W toku / Dochodzenie (Active)</option>
+                                                <option value="Oczekuje na Sąd (Pending Trial)">Oczekuje na Sąd (Pending Trial)</option>
+                                                <option value="Archiwum (Archived)">Archiwum (Archived)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div class="form-group">
+                                            <label>Główny Oskarżony / Podejrzany</label>
+                                            <input type="text" id="raportPodejrzany" placeholder="np. John Smith (lub Brak)">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Powiązany Pojazd / Tablica</label>
+                                            <input type="text" id="raportPojazd" placeholder="np. Ford Mustang [34XYZ89]">
+                                        </div>
+                                    </div>
+
                                     <div class="form-group">
-                                        <label>Funkcjonariusz Sporządzający</label>
+                                        <label>Zaangażowani Oficerowie / Jednostki</label>
+                                        <input type="text" id="raportJednostki" placeholder="np. 1L-12, 1A-45, SOG-3" value="1L-12">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Funkcjonariusz Sporządzający (Autor)</label>
                                         <input type="text" id="raportAutor" required value="Lukas Weber [LP-1150]">
                                     </div>
+
                                     <div class="form-group">
-                                        <label>Treść i Przebieg Zdarzenia</label>
-                                        <textarea id="raportTresc" required placeholder="Opisz dokładnie przebieg interwencji..."></textarea>
+                                        <label>Zabezpieczone Dowody / Konfiskaty</label>
+                                        <input type="text" id="raportDowody" placeholder="np. Pistolet (Class 2), gotówka ($12,500), narkotyki">
                                     </div>
-                                    <button type="submit" class="btn-primary">Zatwierdź i Archiwizuj Raport</button>
+
+                                    <div class="form-group">
+                                        <label>Szczegółowy Przebieg Zdarzenia (Raport Taktyczny)</label>
+                                        <textarea id="raportTresc" required placeholder="Opisz krok po kroku przebieg interwencji, użycie środków przymusu, zeznania świadków..."></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn-primary">💾 Zatwierdź i Dodaj Raport do Systemu</button>
                                 </form>
                             </div>
 
                             <div class="panel-box">
-                                <h3>📁 Archiwum Raportów</h3>
+                                <h3>📁 Baza i Archiwum Raportów Służbowych</h3>
                                 <div class="form-group" style="margin-bottom: 15px;">
-                                    <input type="text" id="searchRaportInput" placeholder="Szukaj w raportach..." oninput="pobierzRaporty()">
+                                    <input type="text" id="searchRaportInput" placeholder="Szukaj po tytule, podejrzanym, autorze lub tablicy..." oninput="pobierzRaporty()">
                                 </div>
                                 <div id="listaRaportow" class="results-container"></div>
                             </div>
@@ -669,40 +715,71 @@
             `).join('');
         }
 
-        // --- RAPORTY ---
+        // --- RAPORTY (ROZBUDOWANE) ---
         function zapiszRaport(e) {
             e.preventDefault();
             const raport = {
                 tytul: document.getElementById('raportTytul').value,
+                kategoria: document.getElementById('raportKategoria').value,
+                status: document.getElementById('raportStatus').value,
+                podejrzany: document.getElementById('raportPodejrzany').value || "Brak / Nieznany",
+                pojazd: document.getElementById('raportPojazd').value || "Brak",
+                jednostki: document.getElementById('raportJednostki').value,
                 autor: document.getElementById('raportAutor').value,
+                dowody: document.getElementById('raportDowody').value || "Brak dowodów rzeczowych",
                 tresc: document.getElementById('raportTresc').value,
                 czas: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
             };
             bazyDanych.raporty.unshift(raport);
-            document.getElementById('raportTresc').value = '';
+            
+            // Czyszczenie pól dynamicznych (z zachowaniem autora)
             document.getElementById('raportTytul').value = '';
+            document.getElementById('raportPodejrzany').value = '';
+            document.getElementById('raportPojazd').value = '';
+            document.getElementById('raportDowody').value = '';
+            document.getElementById('raportTresc').value = '';
+            
             pobierzRaporty();
-            alert("Raport został zarchiwizowany.");
+            alert("Raport taktyczny został pomyślnie zarchiwizowany w systemie.");
         }
 
         function pobierzRaporty() {
             const query = (document.getElementById('searchRaportInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaRaportow');
-            const wyniki = bazyDanych.raporty.filter(r => r.tytul.toLowerCase().includes(query) || r.autor.toLowerCase().includes(query));
+            const wyniki = bazyDanych.raporty.filter(r => 
+                r.tytul.toLowerCase().includes(query) || 
+                r.autor.toLowerCase().includes(query) || 
+                r.podejrzany.toLowerCase().includes(query) || 
+                r.pojazd.toLowerCase().includes(query) ||
+                r.kategoria.toLowerCase().includes(query)
+            );
 
             if (wyniki.length === 0) {
-                kontener.innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center; padding: 20px;">Brak raportów w archiwum.</p>';
+                kontener.innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center; padding: 20px;">Brak raportów w centralnym archiwum.</p>';
                 return;
             }
 
             kontener.innerHTML = wyniki.map(r => `
-                <div class="report-card">
-                    <div style="display: flex; justify-content: space-between;">
-                        <strong style="color: #38bdf8; font-size: 14px;">📁 ${r.tytul}</strong>
+                <div class="report-card" style="border-left: 3px solid #0284c7;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 10px; background: rgba(2, 132, 199, 0.2); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase;">${r.kategoria}</span>
                         <span style="font-size: 11px; color: #64748b;">${r.czas}</span>
                     </div>
-                    <p style="font-size: 12px; color: #94a3b8; margin: 4px 0;">Autor: ${r.autor}</p>
-                    <p style="font-size: 12px; color: #e2e8f0; background: #0f172a; padding: 8px; border-radius: 4px; margin-top: 6px;">${r.tresc}</p>
+                    <strong style="color: #f8fafc; font-size: 15px; display: block; margin-bottom: 4px;">📁 ${r.tytul}</strong>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 12px; color: #94a3b8; margin-bottom: 6px; background: #0f172a; padding: 8px; border-radius: 4px;">
+                        <div>👤 <strong>Podejrzany:</strong> <span style="color: #f8fafc;">${r.podejrzany}</span></div>
+                        <div>🚗 <strong>Pojazd:</strong> <span style="color: #facc15;">${r.pojazd}</span></div>
+                        <div>🛡️ <strong>Autor:</strong> ${r.autor}</div>
+                        <div>📡 <strong>Jednostki:</strong> ${r.jednostki}</div>
+                    </div>
+
+                    <div style="font-size: 12px; color: #38bdf8; margin-bottom: 4px;"><strong>Dowody:</strong> ${r.dowody}</div>
+                    <p style="font-size: 12px; color: #cbd5e1; background: #0b0f19; padding: 8px; border-radius: 4px; margin-top: 6px; line-height: 1.4;">${r.tresc}</p>
+                    
+                    <div style="margin-top: 8px; font-size: 11px; text-align: right;">
+                        <span style="background: ${r.status.includes('Zamknięta') ? 'rgba(34, 197, 94, 0.2)' : 'rgba(234, 179, 8, 0.2)'}; color: ${r.status.includes('Zamknięta') ? '#22c55e' : '#eab308'}; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Status: ${r.status}</span>
+                    </div>
                 </div>
             `).join('');
         }
