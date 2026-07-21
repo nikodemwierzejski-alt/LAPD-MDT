@@ -472,32 +472,45 @@ function drukujRaport(r) {
 }
 
 // --- MODUŁ ZARZĄDZANIA KADRAMI (ADMIN) ---
-async function dodajFunkcjonariusza(event) {
+// --- MODUŁ ZARZĄDZANIA KADRAMI (ADMIN) ---
+async function zarejestrujFunkcjonariusza(event) {
     event.preventDefault();
-    const badge = document.getElementById('activeBadge').value.trim();
-    const name = document.getElementById('activeName').value.trim();
-    const password = document.getElementById('activePassword').value;
-    const messageDiv = document.getElementById('admin-message');
     
+    // Pobieramy dane dokładnie z takich id, jakie masz w swoim index.html
+    const imieNazwisko = document.getElementById('nowyUserImie').value.trim();
+    const stopien = document.getElementById('nowyUserStopien').value.trim();
+    const badge = document.getElementById('nowyUserOdznaka').value.trim();
+    const password = document.getElementById('nowyUserHaslo').value;
+    
+    // Łączymy stopień i imię/nazwisko w jedną wartość (np. "Officer Alex Murphy")
+    const name = `${stopien} ${imieNazwisko}`;
+    
+    const messageDiv = document.getElementById('admin-message'); // upewnij się, że taki element istnieje lub dostosuj jego pobieranie
+
     try {
         const res = await fetch(`${API_URL}/api/officers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ badge, name, password })
         });
+        
         const data = await res.json();
-        messageDiv.style.color = data.success ? '#4ade80' : '#f87171';
-        messageDiv.innerText = data.message;
+        
         if (data.success) {
-            document.getElementById('dodajFunkcjonariuszaForm').reset();
-            pobierzFunkcjonariuszy(); // Odśwież listę po dodaniu nowego konta
+            alert("Pomyślnie utworzono konto funkcjonariusza w chmurze!");
+            document.getElementById('kadraForm').reset();
+            // Jeśli masz funkcję pobierającą listę, wywołaj ją tutaj:
+            if (typeof pobierzFunkcjonariuszy === 'function') {
+                pobierzFunkcjonariuszy();
+            }
+        } else {
+            alert("Błąd: " + (data.message || "Nie udało się dodać użytkownika."));
         }
     } catch (e) {
-        messageDiv.style.color = '#f87171';
-        messageDiv.innerText = "Błąd połączenia z serwerem.";
+        console.error("Błąd połączenia z serwerem:", e);
+        alert("Błąd połączenia z serwerem podczas dodawania konta.");
     }
 }
-
 async function pobierzFunkcjonariuszy() {
     // Sprawdzamy czy kontener na listę istnieje w HTML (zależnie od tego, jak nazwałeś div na liście w adminie)
     // Jeśli kontener nazywa się inaczej, dopasuj ID lub dodaj go w sekcji admina.
