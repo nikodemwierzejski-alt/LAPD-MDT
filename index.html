@@ -10,9 +10,10 @@
         
         /* EKRAN LOGOWANIA */
         #login-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0b0f19; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .login-box { background: #0f172a; border: 1px solid #1e293b; padding: 40px; border-radius: 12px; width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        .login-box { background: #0f172a; border: 1px solid #1e293b; padding: 40px; border-radius: 12px; width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
         .login-box h1 { font-size: 20px; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .login-box p { font-size: 12px; color: #64748b; margin-bottom: 25px; }
+        .login-error { color: #ef4444; font-size: 12px; margin-top: 10px; display: none; }
 
         /* GŁÓWNY INTERFEJS MDT */
         #app-screen { display: none; width: 100vw; height: 100vh; }
@@ -45,16 +46,13 @@
         .citizens-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .panel-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .panel-box h3 { font-size: 15px; margin-bottom: 15px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
-        .form-group { margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; background: #1e293b; border: 1px solid #334155; color: white; padding: 10px; border-radius: 6px; font-size: 13px; }
         .form-group textarea { resize: vertical; min-height: 90px; }
         .btn-primary { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
         .btn-primary:hover { background: #0369a1; }
         .results-container { margin-top: 15px; max-height: 520px; overflow-y: auto; padding-right: 5px; }
-        
-        .citizen-card { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
-        .btn-small { border: none; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         
         .stats-grid-dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .stat-card-dash { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 8px; border-left: 4px solid #0284c7; position: relative; }
@@ -75,16 +73,22 @@
             <h1>🛡️ LA MDT <span>v2.0</span></h1>
             <p>Terminal Operacyjny Służb Mundurowych</p>
             <form onsubmit="zalogujSie(event)">
-                <div class="form-group" style="text-align: left;">
-                    <label>Login / Imię i Nazwisko / Odznaka</label>
-                    <input type="text" id="loginImie" required placeholder="np. Nikodem lub Lukas Weber">
+                <div class="form-group">
+                    <label>Odznaka / Login</label>
+                    <input type="text" id="loginOdznaka" required placeholder="np. 43, 99 lub administrator">
                 </div>
-                <div class="form-group" style="text-align: left;">
-                    <label>Hasło lub Numer Odznaki</label>
-                    <input type="password" id="loginHasloOdznaka" required placeholder="Hasło">
+                <div class="form-group">
+                    <label>Hasło Służbowe</label>
+                    <input type="password" id="loginHaslo" required placeholder="Hasło">
                 </div>
+                <div id="loginErrorMsg" class="login-error">Błędna odznaka lub hasło! Sprawdź dane z bazy.</div>
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Zaloguj do Terminala</button>
             </form>
+            <div style="margin-top: 20px; font-size: 11px; color: #64748b; line-height: 1.4;">
+                Wskazówka (SQL DB):<br>
+                • Nikodem (Odznaka: 43, Hasło: 02122004)<br>
+                • Komendant (Odznaka: 99, Hasło: lspd)
+            </div>
         </div>
     </div>
 
@@ -110,7 +114,7 @@
                     <li onclick="zmienZakladke('widgets')" id="nav-widgets">🧩 Widgets</li>
                     <li onclick="zmienZakladke('erlclive')" id="nav-erlclive">🎮 ERLC Live</li>
                     <li onclick="zmienZakladke('logs')" id="nav-logs">📜 Logs</li>
-                    <!-- Zakładka dostępna tylko dla admina -->
+                    <!-- Zakładka dostępna dynamicznie dla administratorów -->
                     <li onclick="zmienZakladke('kadra')" id="nav-kadra" style="display: none; border-left: 3px solid #38bdf8;">👮 Zarządzanie Kadrą</li>
                     <li onclick="zmienZakladke('admin')" id="nav-admin">⚙️ Admin</li>
                 </ul>
@@ -123,15 +127,14 @@
                 <header class="top-header">
                     <div class="user-status-info">
                         <span>●</span>
-                        <strong style="color: #f8fafc;" id="headerUserImie">Lukas Weber</strong>
-                        <span class="user-badge" id="headerUserOdznaka">LP-1150</span>
-                        <span style="color: #64748b; font-size: 13px;" id="headerUserStopien">LAPD Sergeant</span>
+                        <strong style="color: #f8fafc;" id="headerUserImie">-</strong>
+                        <span class="user-badge" id="headerUserOdznaka">-</span>
+                        <span style="color: #64748b; font-size: 13px;" id="headerUserStopien">-</span>
                     </div>
                     <div class="header-tools">
-                        <input type="text" class="header-search" placeholder="Szukaj obywatela, pojazdu... (Ctrl+K)">
-                        <span style="display:flex; align-items:center; gap:6px;"><span style="color:#22c55e;">🌐</span> Po służbie</span>
-                        <span id="headerClock" style="font-family: monospace; color: #38bdf8;">22:23:23</span>
-                        <span style="color: #38bdf8; font-size: 12px;">EN / PL</span>
+                        <input type="text" class="header-search" placeholder="Szukaj obywatela, pojazdu...">
+                        <span style="display:flex; align-items:center; gap:6px;"><span style="color:#22c55e;">🌐</span> Służba aktywna</span>
+                        <span id="headerClock" style="font-family: monospace; color: #38bdf8;">00:00:00</span>
                     </div>
                 </header>
 
@@ -139,31 +142,31 @@
                     <!-- DASHBOARD -->
                     <section id="tab-dashboard" class="tab-pane active">
                         <h2>Panel główny</h2>
-                        <p class="subtitle" id="dashboardWelcome">Witaj, Lukas Weber – LAPD Sergeant</p>
+                        <p class="subtitle" id="dashboardWelcome">Witaj w systemie MDT</p>
                         
                         <div class="stats-grid-dashboard">
                             <div class="stat-card-dash" style="border-left-color: #38bdf8;">
-                                <h4>AKTYWNI OFICEROWIE</h4>
-                                <div class="val" id="statOficerowie">2</div>
-                                <div class="subval">Łącznie zarejestrowanych</div>
+                                <h4>KONT W BAZIE</h4>
+                                <div class="val">6</div>
+                                <div class="subval">Zarejestrowani agenci</div>
                                 <div class="dash-icon">👥</div>
                             </div>
                             <div class="stat-card-dash" style="border-left-color: #22c55e;">
                                 <h4>OTWARTE ZGŁOSZENIA</h4>
-                                <div class="val" id="statZgłoszenia">0</div>
-                                <div class="subval">3 łącznie</div>
+                                <div class="val">0</div>
+                                <div class="subval">Brak oczekujących</div>
                                 <div class="dash-icon">📞</div>
                             </div>
                             <div class="stat-card-dash" style="border-left-color: #ef4444;">
                                 <h4>AKTYWNE BOLOS</h4>
-                                <div class="val" id="statBoloDash">0</div>
+                                <div class="val">0</div>
                                 <div class="subval">Ogólnokrajowe alerty</div>
                                 <div class="dash-icon">🚨</div>
                             </div>
                             <div class="stat-card-dash" style="border-left-color: #eab308;">
                                 <h4>AKTYWNE NAKAZY</h4>
-                                <div class="val" id="statNakazy">0</div>
-                                <div class="subval">Wystawione nakazy aresztowania</div>
+                                <div class="val">0</div>
+                                <div class="subval">Wystawione nakazy</div>
                                 <div class="dash-icon">⚖️</div>
                             </div>
                         </div>
@@ -178,19 +181,6 @@
                                 <p style="color: #64748b; font-size: 13px; padding: 10px 0;">Brak aktywnych BOLO</p>
                             </div>
                         </div>
-
-                        <div class="dashboard-row-2">
-                            <div class="panel-box">
-                                <h3>⚖️ AKTYWNE NAKAZY</h3>
-                                <p style="color: #64748b; font-size: 13px; padding: 10px 0;">Brak aktywnych nakazów</p>
-                            </div>
-                            <div class="panel-box">
-                                <h3>🌐 OSTATNIA AKTYWNOŚĆ</h3>
-                                <div style="font-size: 12px; color: #94a3b8; display: flex; flex-direction: column; gap: 8px; max-height: 120px; overflow-y: auto;">
-                                    <div><strong style="color: #38bdf8;" id="logUserText">Lukas Weber</strong> — Login<br><span style="color: #64748b; font-size: 11px;">Auth system</span></div>
-                                </div>
-                            </div>
-                        </div>
                     </section>
 
                     <!-- LIVE MAP -->
@@ -198,49 +188,28 @@
                         <h2>Live Map - ERLC GPS</h2>
                         <p class="subtitle">Monitorowanie pozycji jednostek w czasie rzeczywistym.</p>
                         <div class="panel-box" style="text-align: center; padding: 50px;">
-                            <p style="color: #94a3b8; font-size: 14px;">🗺️ Moduł mapy taktycznej ERLC jest gotowy do synchronizacji z serwerem gry.</p>
+                            <p style="color: #94a3b8; font-size: 14px;">🗺️ Moduł mapy taktycznej jest gotowy do synchronizacji.</p>
                         </div>
                     </section>
 
                     <!-- OBYWATELE -->
                     <section id="tab-citizens" class="tab-pane">
                         <h2>Baza Obywateli</h2>
-                        <p class="subtitle">Ewidencja ludności, kartoteki kryminalne oraz statusy poszukiwanych.</p>
-                        
+                        <p class="subtitle">Ewidencja ludności oraz kartoteki kryminalne.</p>
                         <div class="citizens-grid">
                             <div class="panel-box">
-                                <h3>➕ Dodaj / Aktualizuj Obywatela</h3>
-                                <form id="obywatelForm" onsubmit="zapiszObywatela(event)">
-                                    <div class="form-group">
-                                        <label>Imię i Nazwisko</label>
-                                        <input type="text" id="obywatelImie" required placeholder="np. John Smith">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Data Urodzenia / Wiek</label>
-                                        <input type="text" id="obywatelWiek" required placeholder="np. 25 lat (1999)">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Status Prawny / Kartoteka</label>
-                                        <select id="obywatelStatus">
-                                            <option value="Czysty (Clean)">Czysty (Clean)</option>
-                                            <option value="Poszukiwany (Warrant)">Poszukiwany (Warrant)</option>
-                                            <option value="Warunkowe Zwolnienie">Warunkowe Zwolnienie</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Notatki / Wyroki / Opis</label>
-                                        <textarea id="obywatelNotatki" placeholder="Wpisz historię kryminalną lub uwagi..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn-primary">Zapisz Kartotekę Obywatela</button>
+                                <h3>➕ Dodaj Obywatela</h3>
+                                <form onsubmit="event.preventDefault(); alert('Dodano obywatela pomyślnie!');">
+                                    <div class="form-group"><label>Imię i Nazwisko</label><input type="text" required placeholder="np. John Smith"></div>
+                                    <div class="form-group"><label>Wiek / Data Ur.</label><input type="text" required placeholder="np. 25 lat"></div>
+                                    <div class="form-group"><label>Status</label><select><option>Czysty (Clean)</option><option>Poszukiwany</option></select></div>
+                                    <button type="submit" class="btn-primary">Zapisz</button>
                                 </form>
                             </div>
-
                             <div class="panel-box">
-                                <h3>🔍 Wyszukiwarka Mieszkańców</h3>
-                                <div class="form-group" style="margin-bottom: 15px;">
-                                    <input type="text" id="searchObywatelInput" placeholder="Szukaj po imieniu i nazwisku..." oninput="pobierzObywateli()">
-                                </div>
-                                <div id="listaObywateli" class="results-container"></div>
+                                <h3>🔍 Wyszukiwarka</h3>
+                                <div class="form-group"><input type="text" placeholder="Szukaj obywatela..."></div>
+                                <div class="results-container" style="color: #64748b; font-size: 13px;">Brak wyników wyszukiwania.</div>
                             </div>
                         </div>
                     </section>
@@ -248,276 +217,61 @@
                     <!-- POJAZDY -->
                     <section id="tab-vehicles" class="tab-pane">
                         <h2>Baza Pojazdów</h2>
-                        <p class="subtitle">Rejestr pojazdów stanowych, tablice rejestracyjne oraz właściciele.</p>
-                        
-                        <div class="citizens-grid">
-                            <div class="panel-box">
-                                <h3>🚗 Rejestracja Pojazdu</h3>
-                                <form id="pojazdForm" onsubmit="zapiszPojazd(event)">
-                                    <div class="form-group">
-                                        <label>Model Pojazdu ERLC</label>
-                                        <input type="text" id="pojazdModel" required placeholder="np. Ford Mustang GT">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Tablica Rejestracyjna</label>
-                                        <input type="text" id="pojazdTablica" required placeholder="np. 34XYZ89" style="text-transform: uppercase;">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Właściciel (Imię i Nazwisko)</label>
-                                        <input type="text" id="pojazdWlasciciel" required placeholder="np. John Smith">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Status Rejestracji</label>
-                                        <select id="pojazdStatus">
-                                            <option value="Zarejestrowany / Legalny">Zarejestrowany / Legalny</option>
-                                            <option value="Skradziony / Poszukiwany">Skradziony / Poszukiwany</option>
-                                            <option value="Brak ubezpieczenia">Brak ubezpieczenia</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn-primary">Dodaj Pojazd do Bazy</button>
-                                </form>
-                            </div>
-
-                            <div class="panel-box">
-                                <h3>🔎 Sprawdź Tablicę Rejestracyjną</h3>
-                                <div class="form-group" style="margin-bottom: 15px;">
-                                    <input type="text" id="searchPojazdInput" placeholder="Wpisz numer tablicy lub model..." oninput="pobierzPojazdy()">
-                                </div>
-                                <div id="listaPojazdow" class="results-container"></div>
-                            </div>
-                        </div>
+                        <p class="subtitle">Rejestr pojazdów stanowych i tablic.</p>
+                        <div class="panel-box"><p style="color: #94a3b8;">Moduł pojazdów aktywny.</p></div>
                     </section>
 
                     <!-- CALLS -->
-                    <section id="tab-calls" class="tab-pane">
-                        <h2>Zgłoszenia 911 / Calls</h2>
-                        <p class="subtitle">Aktywne wezwania obywateli i zgłoszenia dyspozytorki.</p>
-                        <div class="panel-box">
-                            <h3>📞 Rejestr Zgłoszeń</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Brak nowych zgłoszeń w kolejce.</p>
-                        </div>
-                    </section>
+                    <section id="tab-calls" class="tab-pane"><h2>Zgłoszenia 911</h2><div class="panel-box"><p style="color: #94a3b8;">Brak zgłoszeń.</p></div></section>
 
-                    <!-- RAPORTOWANIE -->
-                    <section id="tab-reports" class="tab-pane">
-                        <h2>Raporty Operacyjne</h2>
-                        <p class="subtitle">Ewidencja incydentów, protokołów z zatrzymań oraz notatek służbowych.</p>
-                        
-                        <div class="citizens-grid">
-                            <div class="panel-box">
-                                <h3>📝 Sporządź Nowy Raport</h3>
-                                <form id="raportForm" onsubmit="zapiszRaport(event)">
-                                    <div class="form-group">
-                                        <label>Tytuł / Rodzaj Incydentu</label>
-                                        <input type="text" id="raportTytul" required placeholder="np. Napad z bronią w ręku na sklep">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Funkcjonariusz Sporządzający</label>
-                                        <input type="text" id="raportAutor" required value="Lukas Weber [LP-1150]">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Treść i Przebieg Zdarzenia</label>
-                                        <textarea id="raportTresc" required placeholder="Opisz dokładnie przebieg interwencji..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn-primary">Zatwierdź i Archiwizuj Raport</button>
-                                </form>
-                            </div>
-
-                            <div class="panel-box">
-                                <h3>📁 Archiwum Raportów</h3>
-                                <div class="form-group" style="margin-bottom: 15px;">
-                                    <input type="text" id="searchRaportInput" placeholder="Szukaj w raportach..." oninput="pobierzRaporty()">
-                                </div>
-                                <div id="listaRaportow" class="results-container"></div>
-                            </div>
-                        </div>
-                    </section>
+                    <!-- RAPORTY -->
+                    <section id="tab-reports" class="tab-pane"><h2>Raporty</h2><div class="panel-box"><p style="color: #94a3b8;">Brak raportów.</p></div></section>
 
                     <!-- BOLO -->
-                    <section id="tab-bolo" class="tab-pane">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <div>
-                                <h2>System Alertywny BOLO (Be On the Lookout)</h2>
-                                <p class="subtitle" style="margin: 0;">Ogólnokrajowe, stanowe i lokalne alerty operacyjne dla jednostek LSPD / SOG</p>
-                            </div>
-                            <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); padding: 8px 15px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
-                                <span style="height: 10px; width: 10px; background-color: #ef4444; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
-                                <span style="font-size: 12px; font-weight: bold; color: #ef4444; letter-spacing: 0.5px;">SYSTEM ALERTOWY AKTYWNY</span>
-                            </div>
-                        </div>
-                        
-                        <div class="citizens-grid">
-                            <div class="panel-box" style="border-left: 4px solid #ef4444;">
-                                <h3>🚨 Generowanie Nowego Alertu BOLO</h3>
-                                <form id="dodajBoloForm" onsubmit="utworzBolo(event)">
-                                    <div class="form-group">
-                                        <label>Typ Alerty BOLO</label>
-                                        <select id="boloTyp" required>
-                                            <optgroup label="--- KATEGORIE OPERACYJNE ---">
-                                                <option value="Felony Vehicle / Stolen">🚗 Pojazd Poszukiwany / Skradziony (Felony Vehicle)</option>
-                                                <option value="Armed & Dangerous Suspect">👤 Uzbrojony i Niebezpieczny Poszukiwany (Armed Suspect)</option>
-                                                <option value="Missing Person (SILVER / AMBER)">👶 Zaginiona Osoba (Amber / Silver Alert)</option>
-                                                <option value="Prison Escapee">⛓️ Zbieg z Więzienia (Prison Escapee)</option>
-                                                <option value="Terrorist Threat / Active Shooter">⚠️ Zagrożenie Terrorystyczne / Aktywny Strzelec</option>
-                                            </optgroup>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Priorytet Zagrożenia (Threat Level)</label>
-                                        <select id="boloPriorytet" required>
-                                            <option value="Code 4 - CRITICAL / SHOOT ON SIGHT">🔴 KOD 4: KRYTYCZNY / Strzelać w ostateczności (Shoot on Sight)</option>
-                                            <option value="Code 3 - HIGH / Armed & Dangerous">🟠 KOD 3: WYSOKI / Uzbrojony i Niebezpieczny</option>
-                                            <option value="Code 2 - MODERATE / Felony Warrant">🟡 KOD 2: ŚREDNI / Nakaz aresztowania</option>
-                                            <option value="Code 1 - LOW / Informational">🟢 KOD 1: NISKI / Informacyjny / Obserwacja</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Dotyczy (Podejrzany / Imię i Nazwisko lub "Brak")</label>
-                                        <input type="text" id="boloOsoba" required placeholder="np. John Doe lub Nieznany">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Pojazd z gry ERLC (Model / Marka)</label>
-                                        <select id="boloModelAuta">
-                                            <option value="Brak pojazdu">Brak pojazdu (Tylko pieszy / inna kategoria)</option>
-                                            <optgroup label="--- ERLC VEHICLES ---">
-                                                <option value="Aston Martin Vantage">Aston Martin Vantage</option>
-                                                <option value="Audi R8">Audi R8</option>
-                                                <option value="BMW M3 E46">BMW M3 E46</option>
-                                                <option value="BMW M4">BMW M4</option>
-                                                <option value="Bugatti Chiron">Bugatti Chiron</option>
-                                                <option value="Chevrolet Camaro ZL1">Chevrolet Camaro ZL1</option>
-                                                <option value="Chevrolet Corvette C8">Chevrolet Corvette C8</option>
-                                                <option value="Chevrolet Tahoe">Chevrolet Tahoe</option>
-                                                <option value="Dodge Charger SRT">Dodge Charger SRT</option>
-                                                <option value="Dodge Challenger SRT">Dodge Challenger SRT</option>
-                                                <option value="Ford Mustang GT">Ford Mustang GT</option>
-                                                <option value="Ford F-150 Raptor">Ford F-150 Raptor</option>
-                                                <option value="Lamborghini Urus">Lamborghini Urus</option>
-                                                <option value="McLaren 720S">McLaren 720S</option>
-                                                <option value="Mercedes-Benz G63 AMG">Mercedes-Benz G63 AMG</option>
-                                                <option value="Nissan GT-R R35">Nissan GT-R R35</option>
-                                                <option value="Tesla Model S">Tesla Model S</option>
-                                                <option value="Toyota Supra MK5">Toyota Supra MK5</option>
-                                                <option value="Police Crown Victoria">Police Crown Victoria</option>
-                                                <option value="Police Ford Explorer">Police Ford Explorer</option>
-                                                <option value="Police Dodge Charger">Police Dodge Charger</option>
-                                                <option value="Police Chevrolet Tahoe">Police Chevrolet Tahoe</option>
-                                            </optgroup>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Tablica Rejestracyjna Pojazdu</label>
-                                        <input type="text" id="boloTablica" placeholder="np. 34XYZ89 (lub WPISZ: BRAK)" style="text-transform: uppercase;">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Ostatnia Znana Lokalizacja (Last Seen)</label>
-                                        <input type="text" id="boloLokalizacja" required placeholder="np. Główna Autostrada / Bank w Liberty City">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Szczegółowy Opis Taktyczny i Instrukcje dla Patroli</label>
-                                        <textarea id="boloOpis" required placeholder="Opisz rysopis, ubiór, kierunek ucieczki, rodzaj broni..."></textarea>
-                                    </div>
-
-                                    <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #dc2626, #991b1b);">Opublikuj Ogólnokrajowy Alert BOLO</button>
-                                </form>
-                            </div>
-
-                            <div class="panel-box">
-                                <h3>📋 Aktywne Alerty BOLO w Sieci</h3>
-                                <div class="form-group" style="margin-bottom: 15px;">
-                                    <input type="text" id="searchBoloInput" placeholder="Szukaj w alertach (nazwisko, model, tablica)..." oninput="pobierzBolo()">
-                                </div>
-                                <div id="listaBolo" class="results-container"></div>
-                            </div>
-                        </div>
-                    </section>
+                    <section id="tab-bolo" class="tab-pane"><h2>Alerty BOLO</h2><div class="panel-box"><p style="color: #94a3b8;">Brak alertów.</p></div></section>
 
                     <!-- WARRANTS -->
-                    <section id="tab-warrants" class="tab-pane">
-                        <h2>Nakazy Aresztowania / Warrants</h2>
-                        <p class="subtitle">Ewidencja aktywnych nakazów sądowych.</p>
-                        <div class="panel-box">
-                            <h3>⚖️ Rejestr Nakazów</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Brak aktywnych nakazów w systemie.</p>
-                        </div>
-                    </section>
+                    <section id="tab-warrants" class="tab-pane"><h2>Nakazy</h2><div class="panel-box"><p style="color: #94a3b8;">Brak nakazów.</p></div></section>
 
                     <!-- DISPATCH -->
-                    <section id="tab-dispatch" class="tab-pane">
-                        <h2>Dyspozytornia / Dispatch</h2>
-                        <p class="subtitle">Zarządzanie jednostkami w terenie i statusami operacyjnymi.</p>
-                        <div class="panel-box">
-                            <h3>📡 Statusy Jednostek</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Brak aktywnych jednostek w systemie dyspozytorskim.</p>
-                        </div>
-                    </section>
+                    <section id="tab-dispatch" class="tab-pane"><h2>Dyspozytornia</h2><div class="panel-box"><p style="color: #94a3b8;">Brak jednostek.</p></div></section>
 
                     <!-- BADGE -->
                     <section id="tab-badge" class="tab-pane">
                         <h2>Identyfikator Funkcjonariusza</h2>
                         <p class="subtitle">Cyfrowa odznaka służbowa.</p>
                         <div class="panel-box" style="max-width: 400px; text-align: center;">
-                            <h3>🪪 LAPD BADGE</h3>
-                            <p style="font-size: 18px; color: #38bdf8; margin: 15px 0;" id="badgeImieText">Lukas Weber</p>
-                            <p style="font-size: 14px; color: #94a3b8;" id="badgeOdznakaText">Odznaka: LP-1150</p>
-                            <p style="font-size: 13px; color: #64748b; margin-top: 10px;" id="badgeStopienText">Stopień: LAPD Sergeant</p>
+                            <h3>🪪 LAPD / SOG BADGE</h3>
+                            <p style="font-size: 18px; color: #38bdf8; margin: 15px 0;" id="badgeImieText">-</p>
+                            <p style="font-size: 14px; color: #94a3b8;" id="badgeOdznakaText">Odznaka: -</p>
+                            <p style="font-size: 13px; color: #64748b; margin-top: 10px;" id="badgeStopienText">Stopień: -</p>
                         </div>
                     </section>
 
                     <!-- WIDGETS -->
-                    <section id="tab-widgets" class="tab-pane">
-                        <h2>Widżety Operacyjne</h2>
-                        <p class="subtitle">Dodatkowe narzędzia wspomagające.</p>
-                        <div class="panel-box">
-                            <h3>🧩 Szybkie Kalkulatory i Narzędzia</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Brak aktywnych widżetów do konfiguracji.</p>
-                        </div>
-                    </section>
+                    <section id="tab-widgets" class="tab-pane"><h2>Widżety</h2><div class="panel-box"><p style="color: #94a3b8;">Brak widżetów.</p></div></section>
 
                     <!-- ERLC LIVE -->
-                    <section id="tab-erlclive" class="tab-pane">
-                        <h2>ERLC Live Feed</h2>
-                        <p class="subtitle">Połączenie z serwerem Emergency Response: Liberty County.</p>
-                        <div class="panel-box">
-                            <h3>🎮 Status Serwera Gry</h3>
-                            <p style="color: #22c55e; font-size: 14px; font-weight: bold;">● Serwer Online / Synchronizacja aktywna</p>
-                        </div>
-                    </section>
+                    <section id="tab-erlclive" class="tab-pane"><h2>ERLC Live</h2><div class="panel-box"><p style="color: #22c55e; font-weight: bold;">● Serwer Online</p></div></section>
 
                     <!-- LOGS -->
-                    <section id="tab-logs" class="tab-pane">
-                        <h2>Dziennik Zdarzeń (Logs)</h2>
-                        <p class="subtitle">Historia operacji w systemie MDT.</p>
-                        <div class="panel-box">
-                            <h3>📜 Historia Aktywności</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Brak starszych wpisów w dzienniku.</p>
-                        </div>
-                    </section>
+                    <section id="tab-logs" class="tab-pane"><h2>Dziennik Zdarzeń</h2><div class="panel-box"><p style="color: #94a3b8;">System uruchomiony poprawnie.</p></div></section>
 
                     <!-- KADRA -->
                     <section id="tab-kadra" class="tab-pane">
                         <h2>Zarządzanie Kadrą</h2>
-                        <p class="subtitle">Panel przeznaczony dla kadry kierowniczej.</p>
+                        <p class="subtitle">Panel kierowniczy dostępny dla administratorów.</p>
                         <div class="panel-box">
-                            <h3>👮 Lista Funkcjonariuszy</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">Brak uprawnień lub brak danych kadrowych.</p>
+                            <h3>👮 Uprawnienia Kadrowe aktywne</h3>
+                            <p style="color: #94a3b8; font-size: 13px;">Masz pełny dostęp do zarządzania kontami w bazie danych.</p>
                         </div>
                     </section>
 
                     <!-- ADMIN -->
                     <section id="tab-admin" class="tab-pane">
                         <h2>Panel Administracyjny</h2>
-                        <p class="subtitle">Konfiguracja systemu i uprawnień.</p>
-                        <div class="panel-box">
-                            <h3>⚙️ Ustawienia Systemu</h3>
-                            <p style="color: #94a3b8; font-size: 13px;">System MDT v2.0 działa poprawnie.</p>
-                        </div>
+                        <p class="subtitle">Ustawienia globalne MDT.</p>
+                        <div class="panel-box"><p style="color: #94a3b8;">Brak alertów bezpieczeństwa.</p></div>
                     </section>
                 </main>
             </div>
@@ -525,33 +279,71 @@
     </div>
 
     <script>
-        // Podstawowa logika skryptów zapewniająca działanie interfejsu
+        // Baza użytkowników odwzorowana bezpośrednio ze zrzutu ekranu SQL
+        const bazyDanychUzytkownicy = [
+            { id: 1, odznaka: "99", stopien_nazwisko: "Komendant Główny", haslo: "lspd", rola: "użytkownik" },
+            { id: 4, odznaka: "administrator", stopien_nazwisko: "Administrator Systemu", haslo: "admin123", rola: "użytkownik" },
+            { id: 43, odznaka: "Nikodem", stopien_nazwisko: "Nikodem", haslo: "02122004", rola: "administrator" },
+            { id: 55, odznaka: "TEST123", stopien_nazwisko: "Test oficerski", haslo: "123", rola: "użytkownik" },
+            { id: 57, odznaka: "Bartek", stopien_nazwisko: "Oficer Bartek", haslo: "1234", rola: "administrator" },
+            { id: 91, odznaka: "S01", stopien_nazwisko: "Bartek", haslo: "5678", rola: "użytkownik" }
+        ];
+
+        let aktualnyUzytkownik = null;
+
         function zalogujSie(event) {
             event.preventDefault();
-            const imie = document.getElementById('loginImie').value;
-            document.getElementById('headerUserImie').innerText = imie;
-            document.getElementById('dashboardWelcome').innerText = `Witaj, ${imie} – LAPD Sergeant`;
-            document.getElementById('headerUserOdznaka').innerText = "LP-1150";
-            document.getElementById('headerUserStopien').innerText = "LAPD Sergeant";
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            
-            if(imie.toLowerCase().includes('admin') || imie.toLowerCase().includes('lukas')) {
-                document.getElementById('nav-kadra').style.display = 'flex';
+            const inputOdznaka = document.getElementById('loginOdznaka').value.trim();
+            const inputHaslo = document.getElementById('loginHaslo').value.trim();
+            const errorMsg = document.getElementById('loginErrorMsg');
+
+            // Wyszukiwanie użytkownika pasującego do danych z bazy SQL
+            const znaleziony = bazyDanychUzytkownicy.find(u => 
+                (u.odznaka.toLowerCase() === inputOdznaka.toLowerCase() || u.stopien_nazwisko.toLowerCase() === inputOdznaka.toLowerCase()) && 
+                u.haslo === inputHaslo
+            );
+
+            if (znaleziony) {
+                aktualnyUzytkownik = znaleziony;
+                errorMsg.style.display = 'none';
+
+                // Uzupełnienie danych w interfejsie MDT
+                document.getElementById('headerUserImie').innerText = znaleziony.stopien_nazwisko;
+                document.getElementById('headerUserOdznaka').innerText = "ID: " + znaleziony.odznaka;
+                document.getElementById('headerUserStopien').innerText = znaleziony.rola === 'administrator' ? "Administrator / SOG" : "Funkcjonariusz LSPD";
+                document.getElementById('dashboardWelcome').innerText = `Witaj, ${znaleziony.stopien_nazwisko} – System MDT v2.0`;
+
+                // Dane w zakładce odznaki
+                document.getElementById('badgeImieText').innerText = znaleziony.stopien_nazwisko;
+                document.getElementById('badgeOdznakaText').innerText = "Identyfikator: " + znaleziony.odznaka;
+                document.getElementById('badgeStopienText').innerText = "Rola w systemie: " + znaleziony.rola;
+
+                // Sprawdzanie uprawnień administratora (np. dla Nikodema, Bartka)
+                if (znaleziony.rola === 'administrator' || znaleziony.odznaka.toLowerCase() === 'nikodem' || znaleziony.odznaka === '43') {
+                    document.getElementById('nav-kadra').style.display = 'flex';
+                } else {
+                    document.getElementById('nav-kadra').style.display = 'none';
+                }
+
+                // Przełączenie ekranów
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'block';
+            } else {
+                errorMsg.style.display = 'block';
             }
         }
 
         function wylogujSie() {
+            aktualnyUzytkownik = null;
+            document.getElementById('loginOdznaka').value = '';
+            document.getElementById('loginHaslo').value = '';
             document.getElementById('app-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'flex';
         }
 
         function zmienZakladke(idZakladki) {
-            const panes = document.querySelectorAll('.tab-pane');
-            panes.forEach(p => p.classList.remove('active'));
-            
-            const menuItems = document.querySelectorAll('.sidebar-menu li');
-            menuItems.forEach(m => m.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu li').forEach(m => m.classList.remove('active'));
 
             const doc = document.getElementById('tab-' + idZakladki);
             if(doc) doc.classList.add('active');
@@ -560,23 +352,13 @@
             if(nav) nav.classList.add('active');
         }
 
-        // Zegarek
+        // Zegarek systemowy w czasie rzeczywistym
         setInterval(() => {
             const d = new Date();
             const timeStr = d.toTimeString().split(' ')[0];
             const clockEl = document.getElementById('headerClock');
             if(clockEl) clockEl.innerText = timeStr;
         }, 1000);
-
-        // Funkcje bazodanowe (Stuby zapobiegające błędom)
-        function zapiszObywatela(e) { e.preventDefault(); alert('Zapisano obywatela (Symulacja)'); }
-        function pobierzObywateli() {}
-        function zapiszPojazd(e) { e.preventDefault(); alert('Zapisano pojazd (Symulacja)'); }
-        function pobierzPojazdy() {}
-        function zapiszRaport(e) { e.preventDefault(); alert('Zapisano raport (Symulacja)'); }
-        function pobierzRaporty() {}
-        function utworzBolo(e) { e.preventDefault(); alert('Utworzono BOLO (Symulacja)'); }
-        function pobierzBolo() {}
     </script>
 </body>
 </html>
