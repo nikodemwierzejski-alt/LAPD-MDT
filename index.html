@@ -85,9 +85,6 @@
                 </div>
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Zaloguj do Terminala</button>
             </form>
-            <div style="margin-top: 15px; font-size: 11px; color: #64748b;">
-                Admin: Nikodem | Hasło: 02122004
-            </div>
         </div>
     </div>
 
@@ -595,13 +592,13 @@
             e.preventDefault();
             inicjalizujBazyDanych();
 
-            const inputImie = document.getElementById('loginImie').value.trim();
+            const inputImie = document.getElementById('loginImie').value.trim().toLowerCase();
             const inputHasloOdznaka = document.getElementById('loginHasloOdznaka').value.trim();
 
             let sesja = null;
 
-            // 1. Sprawdzenie konta administratora (Nikodem)
-            if (inputImie.toLowerCase() === "nikodem" && inputHasloOdznaka === "02122004") {
+            // 1. Sprawdzenie konta administratora (głównego)
+            if (inputImie === "nikodem" && inputHasloOdznaka === "02122004") {
                 sesja = {
                     imie: "Nikodem",
                     odznaka: "ADMIN-01",
@@ -610,7 +607,7 @@
                 };
             } 
             // 2. Sprawdzenie domyślnego konta Lukas Weber
-            else if (inputImie.toLowerCase() === "lukas weber" && (inputHasloOdznaka === "LP-1150" || inputHasloOdznaka === "sergeant")) {
+            else if (inputImie === "lukas weber" && (inputHasloOdznaka === "LP-1150" || inputHasloOdznaka.toLowerCase() === "sergeant")) {
                 sesja = {
                     imie: "Lukas Weber",
                     odznaka: "LP-1150",
@@ -618,15 +615,20 @@
                     isAdmin: false
                 };
             } 
-            // 3. Sprawdzanie kont dodanych przez administratora
+            // 3. Sprawdzanie kont dodanych przez administratora (pobierane na świeżo z localStorage)
             else {
                 let customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
                 
-                // Szukamy po Imieniu LUB Numerze Odznaki ORAZ zgodnym haśle
-                const znaleziony = customUsers.find(u => 
-                    (u.imie.toLowerCase() === inputImie.toLowerCase() || u.odznaka.toLowerCase() === inputImie.toLowerCase()) && 
-                    u.haslo === inputHasloOdznaka
-                );
+                const znaleziony = customUsers.find(u => {
+                    const dbImie = u.imie ? u.imie.toLowerCase() : "";
+                    const dbOdznaka = u.odznaka ? u.odznaka.toLowerCase() : "";
+                    const dbHaslo = u.haslo ? u.haslo.trim() : "";
+
+                    const pasujeLogin = (dbImie === inputImie || dbOdznaka === inputImie);
+                    const pasujeHaslo = (dbHaslo === inputHasloOdznaka);
+
+                    return pasujeLogin && pasujeHaslo;
+                });
 
                 if (znaleziony) {
                     sesja = {
@@ -639,7 +641,7 @@
             }
 
             if (!sesja) {
-                alert("Błędne dane logowania!\n- Dla admina wpisz: Nikodem oraz 02122004\n- Dla nowo dodanego użytkownika wpisz jego imię (lub odznakę) oraz ustawione przez Ciebie hasło.");
+                alert("Błędne dane logowania! Sprawdź poprawność wpisanego imienia/odznaki oraz hasła.");
                 return;
             }
 
@@ -719,7 +721,7 @@
 
             let customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
             
-            if (customUsers.some(u => u.odznaka === odznaka) || odznaka === "LP-1150" || odznaka === "ADMIN-01") {
+            if (customUsers.some(u => u.odznaka.toUpperCase() === odznaka) || odznaka === "LP-1150" || odznaka === "ADMIN-01") {
                 alert("Funkcjonariusz z takim numerem odznaki już istnieje w systemie!");
                 return;
             }
@@ -730,7 +732,7 @@
             document.getElementById('kadraForm').reset();
             pobierzFunkcjonariuszy();
             aktualizujStatystyki();
-            alert("Pomyślnie dodano nowe konto funkcjonariusza! Może się teraz zalogować wpisując jego imię/odznakę oraz utworzone hasło.");
+            alert("Pomyślnie dodano nowe konto funkcjonariusza!");
         }
 
         function pobierzFunkcjonariuszy() {
@@ -747,7 +749,7 @@
             div.innerHTML = lista.map(u => `
                 <div class="citizen-card">
                     <h4 style="color:#38bdf8; font-size:15px;">${u.imie} <span class="user-badge">${u.odznaka}</span></h4>
-                    <p style="font-size:12px; color:#94a3b8; margin-top:4px;">Stopień: <strong>${u.stopien}</strong> | Hasło do logowania: <span style="font-family:monospace; color:#facc15;">${u.haslo}</span></p>
+                    <p style="font-size:12px; color:#94a3b8; margin-top:4px;">Stopień: <strong>${u.stopien}</strong> | Hasło: <span style="font-family:monospace; color:#facc15;">${u.haslo}</span></p>
                     <button class="btn-small" style="background:#dc2626; color:white; margin-top:8px;" onclick="usunFunkcjonariusza(${u.id})">Usuń konto</button>
                 </div>
             `).join('');
@@ -1013,7 +1015,7 @@
             }
             aktualizujStatystyki();
             pobierzBolo();
-            pobierzFunkcjonariusze();
+            pobierzFunkcjonariuszy();
         };
     </script>
 </body>
