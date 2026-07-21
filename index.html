@@ -244,43 +244,100 @@
                         </div>
                     </section>
 
-                    <!-- POJAZDY (VEHICLES) -->
+                    <!-- POJAZDY (VEHICLES) - BARDZO MOCNO ROZBUDOWANE Z MODELAMI ERLC -->
                     <section id="tab-vehicles" class="tab-pane">
-                        <h2>Baza Pojazdów</h2>
-                        <p class="subtitle">Rejestr pojazdów stanowych, tablice rejestracyjne oraz właściciele.</p>
+                        <h2>Centralna Baza Pojazdów ERLC</h2>
+                        <p class="subtitle">Rejestr floty stanowej, cywilnej oraz sportowej z pełną gamą pojazdów z gry Emergency Response: Liberty County.</p>
                         
                         <div class="citizens-grid">
-                            <div class="panel-box">
-                                <h3>🚗 Rejestracja Pojazdu</h3>
+                            <div class="panel-box" style="border-left: 4px solid #38bdf8;">
+                                <h3>🚗 Rejestracja / Wprowadzanie Pojazdu do Systemu</h3>
                                 <form id="pojazdForm" onsubmit="zapiszPojazd(event)">
                                     <div class="form-group">
-                                        <label>Model Pojazdu ERLC</label>
-                                        <input type="text" id="pojazdModel" required placeholder="np. Ford Mustang GT">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Tablica Rejestracyjna</label>
-                                        <input type="text" id="pojazdTablica" required placeholder="np. 34XYZ89" style="text-transform: uppercase;">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Właściciel (Imię i Nazwisko)</label>
-                                        <input type="text" id="pojazdWlasciciel" required placeholder="np. John Smith">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Status Rejestracji</label>
-                                        <select id="pojazdStatus">
-                                            <option value="Zarejestrowany / Legalny">Zarejestrowany / Legalny</option>
-                                            <option value="Skradziony / Poszukiwany">Skradziony / Poszukiwany</option>
-                                            <option value="Brak ubezpieczenia">Brak ubezpieczenia</option>
+                                        <label>Wybierz Model Pojazdu (ERLC Catalog)</label>
+                                        <select id="pojazdModel" required>
+                                            <option value="">-- Wybierz pojazd z gry ERLC --</option>
+                                            <optgroup label="--- SUPERAUTA I SPORTOWE (SUPER / SPORTS) ---">
+                                                <option value="Aston Martin Vantage">Aston Martin Vantage</option>
+                                                <option value="Audi R8">Audi R8</option>
+                                                <option value="BMW M3 E46">BMW M3 E46</option>
+                                                <option value="BMW M4">BMW M4</option>
+                                                <option value="Bugatti Chiron">Bugatti Chiron</option>
+                                                <option value="Chevrolet Camaro ZL1">Chevrolet Camaro ZL1</option>
+                                                <option value="Chevrolet Corvette C8">Chevrolet Corvette C8</option>
+                                                <option value="Dodge Charger SRT">Dodge Charger SRT</option>
+                                                <option value="Dodge Challenger SRT">Dodge Challenger SRT</option>
+                                                <option value="Ford Mustang GT">Ford Mustang GT</option>
+                                                <option value="Lamborghini Urus">Lamborghini Urus</option>
+                                                <option value="McLaren 720S">McLaren 720S</option>
+                                                <option value="Mercedes-Benz G63 AMG">Mercedes-Benz G63 AMG</option>
+                                                <option value="Nissan GT-R R35">Nissan GT-R R35</option>
+                                                <option value="Porsche 911 GT3">Porsche 911 GT3</option>
+                                                <option value="Tesla Model S">Tesla Model S</option>
+                                                <option value="Toyota Supra MK5">Toyota Supra MK5</option>
+                                            </optgroup>
+                                            <optgroup label="--- SEDANY, SUV-Y I AUTA MIEJSKIE (SEDANS / SUVS) ---">
+                                                <option value="Ford Crown Victoria">Ford Crown Victoria (Civilian)</option>
+                                                <option value="Ford F-150 Raptor">Ford F-150 Raptor</option>
+                                                <option value="Chevrolet Tahoe">Chevrolet Tahoe (Civilian)</option>
+                                                <option value="Tesla Model X">Tesla Model X</option>
+                                                <option value="Dodge Ram 2500">Dodge Ram 2500</option>
+                                                <option value="Jeep Wrangler Rubicon">Jeep Wrangler Rubicon</option>
+                                                <option value="Toyota Prius">Toyota Prius (Taxi / Civilian)</option>
+                                                <option value="Honda Civic Type R">Honda Civic Type R</option>
+                                                <option value="Subaru WRX STI">Subaru WRX STI</option>
+                                            </optgroup>
+                                            <optgroup label="--- POJAZDY POLICYJNE / SŁUŻBOWE (LAW ENFORCEMENT) ---">
+                                                <option value="Police Crown Victoria">Police Crown Victoria (LSPD)</option>
+                                                <option value="Police Ford Explorer">Police Ford Explorer (FPIU)</option>
+                                                <option value="Police Dodge Charger">Police Dodge Charger (Charger Pursuit)</option>
+                                                <option value="Police Chevrolet Tahoe">Police Chevrolet Tahoe (SUV)</option>
+                                                <option value="Unmarked Dodge Charger">Unmarked Dodge Charger (Nieoznakowany)</option>
+                                                <option value="SOG Tactical BearCat">SOG Armored BearCat (Opancerzony)</option>
+                                            </optgroup>
                                         </select>
                                     </div>
-                                    <button type="submit" class="btn-primary">Dodaj Pojazd do Bazy</button>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div class="form-group">
+                                            <label>Tablica Rejestracyjna</label>
+                                            <input type="text" id="pojazdTablica" required placeholder="np. 34XYZ89" style="text-transform: uppercase;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Kolor Nadwozia</label>
+                                            <input type="text" id="pojazdKolor" required placeholder="np. Czarny mat / Czerwony">
+                                        </div>
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div class="form-group">
+                                            <label>Właściciel (Imię i Nazwisko)</label>
+                                            <input type="text" id="pojazdWlasciciel" required placeholder="np. John Smith">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Status Rejestracji / Prawny</label>
+                                            <select id="pojazdStatus" required>
+                                                <option value="Zarejestrowany / Legalny">Zarejestrowany / Legalny (Clean)</option>
+                                                <option value="Skradziony / Felony Vehicle">Skradziony / Felony Vehicle (Stolen)</option>
+                                                <option value="Brak ubezpieczenia / Do kontroli">Brak ubezpieczenia / Do kontroli</option>
+                                                <option value="Skonfiskowany na parkingu">Skonfiskowany na parkingu (Impounded)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Dodatkowe Uwagi / Tuning / Broń w pojeździe</label>
+                                        <input type="text" id="pojazdUwagi" placeholder="np. Przyciemniane szyby, spojler carbonowy, brak oświetlenia">
+                                    </div>
+
+                                    <button type="submit" class="btn-primary">💾 Zarejestruj Pojazd w Bazie</button>
                                 </form>
                             </div>
 
                             <div class="panel-box">
-                                <h3>🔎 Sprawdź Tablicę Rejestracyjną</h3>
+                                <h3>🔎 Baza i Wyszukiwarka Pojazdów ERLC</h3>
                                 <div class="form-group" style="margin-bottom: 15px;">
-                                    <input type="text" id="searchPojazdInput" placeholder="Wpisz numer tablicy lub model..." oninput="pobierzPojazdy()">
+                                    <input type="text" id="searchPojazdInput" placeholder="Szukaj po tablicy, modelu, właścicielu lub kolorze..." oninput="pobierzPojazdy()">
                                 </div>
                                 <div id="listaPojazdow" class="results-container"></div>
                             </div>
@@ -297,7 +354,7 @@
                         </div>
                     </section>
 
-                    <!-- RAPORTOWANIE (REPORTS) - BARDZO MOCNO ROZBUDOWANE -->
+                    <!-- RAPORTOWANIE (REPORTS) -->
                     <section id="tab-reports" class="tab-pane">
                         <h2>Centralne Archiwum i Generator Raportów</h2>
                         <p class="subtitle">Zaawansowany system ewidencji incydentów, protokołów z zatrzymań, śledztw oraz raportów taktycznych.</p>
@@ -678,25 +735,34 @@
             `).join('');
         }
 
-        // --- POJAZDY ---
+        // --- POJAZDY (ROZBUDOWANE ERLC) ---
         function zapiszPojazd(e) {
             e.preventDefault();
             const pojazd = {
                 model: document.getElementById('pojazdModel').value,
                 tablica: document.getElementById('pojazdTablica').value.toUpperCase(),
+                kolor: document.getElementById('pojazdKolor').value,
                 wlasciciel: document.getElementById('pojazdWlasciciel').value,
-                status: document.getElementById('pojazdStatus').value
+                status: document.getElementById('pojazdStatus').value,
+                uwagi: document.getElementById('pojazdUwagi').value || "Brak uwag",
+                czas: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
             };
             bazyDanych.pojazdy.unshift(pojazd);
+            
             document.getElementById('pojazdForm').reset();
             pobierzPojazdy();
-            alert("Pojazd został zarejestrowany.");
+            alert("Pojazd ERLC został pomyślnie zarejestrowany w centralnej bazie.");
         }
 
         function pobierzPojazdy() {
             const query = (document.getElementById('searchPojazdInput').value || "").toLowerCase();
             const kontener = document.getElementById('listaPojazdow');
-            const wyniki = bazyDanych.pojazdy.filter(p => p.tablica.toLowerCase().includes(query) || p.model.toLowerCase().includes(query) || p.wlasciciel.toLowerCase().includes(query));
+            const wyniki = bazyDanych.pojazdy.filter(p => 
+                p.tablica.toLowerCase().includes(query) || 
+                p.model.toLowerCase().includes(query) || 
+                p.wlasciciel.toLowerCase().includes(query) ||
+                p.kolor.toLowerCase().includes(query)
+            );
 
             if (wyniki.length === 0) {
                 kontener.innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center; padding: 20px;">Brak zarejestrowanych pojazdów spełniających kryteria.</p>';
@@ -704,18 +770,27 @@
             }
 
             kontener.innerHTML = wyniki.map(p => `
-                <div class="vehicle-card">
-                    <div style="display: flex; justify-content: space-between;">
+                <div class="vehicle-card" style="border-left: 3px solid #38bdf8;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <strong style="color: #38bdf8; font-size: 14px;">🚗 ${p.model}</strong>
-                        <span style="background: #1e293b; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #facc15; font-weight: bold;">${p.tablica}</span>
+                        <span style="background: #1e293b; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #facc15; font-weight: bold; font-size: 13px;">${p.tablica}</span>
                     </div>
-                    <p style="font-size: 12px; color: #cbd5e1; margin-top: 4px;">Właściciel: ${p.wlasciciel}</p>
-                    <span style="font-size: 11px; color: ${p.status.includes('Skradziony') ? '#ef4444' : '#22c55e'};">Stan: ${p.status}</span>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 12px; color: #94a3b8; margin-bottom: 6px; background: #0f172a; padding: 8px; border-radius: 4px;">
+                        <div>👤 <strong>Właściciel:</strong> <span style="color: #f8fafc;">${p.wlasciciel}</span></div>
+                        <div>🎨 <strong>Kolor:</strong> <span style="color: #f8fafc;">${p.kolor}</span></div>
+                        <div style="grid-column: span 2;">📝 <strong>Uwagi:</strong> ${p.uwagi}</div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                        <span style="font-size: 11px; color: ${p.status.includes('Skradziony') || p.status.includes('Skonfiskowany') ? '#ef4444' : '#22c55e'}; font-weight: bold;">● Stan: ${p.status}</span>
+                        <span style="font-size: 10px; color: #64748b;">Rej: ${p.czas}</span>
+                    </div>
                 </div>
             `).join('');
         }
 
-        // --- RAPORTY (ROZBUDOWANE) ---
+        // --- RAPORTY ---
         function zapiszRaport(e) {
             e.preventDefault();
             const raport = {
@@ -732,7 +807,6 @@
             };
             bazyDanych.raporty.unshift(raport);
             
-            // Czyszczenie pól dynamicznych (z zachowaniem autora)
             document.getElementById('raportTytul').value = '';
             document.getElementById('raportPodejrzany').value = '';
             document.getElementById('raportPojazd').value = '';
