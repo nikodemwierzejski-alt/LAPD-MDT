@@ -24,21 +24,21 @@
         .subtitle { font-size: 13px; color: #64748b; margin-bottom: 25px; }
 
         /* Formularze i Panele */
-        .citizens-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .citizens-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .panel-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; }
         .panel-box h3 { font-size: 16px; margin-bottom: 15px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; background: #1e293b; border: 1px solid #334155; color: white; padding: 10px; border-radius: 6px; font-size: 14px; }
-        .form-group textarea { resize: vertical; min-height: 80px; }
-        .btn-primary { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .form-group label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; background: #1e293b; border: 1px solid #334155; color: white; padding: 10px; border-radius: 6px; font-size: 13px; }
+        .form-group textarea { resize: vertical; min-height: 90px; }
+        .btn-primary { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
         .btn-primary:hover { background: #0369a1; }
-        .full-width { width: 100%; }
-        .results-container { margin-top: 15px; max-height: 500px; overflow-y: auto; }
+        .results-container { margin-top: 15px; max-height: 580px; overflow-y: auto; padding-right: 5px; }
         
-        /* Karty BOLO */
-        .citizen-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 15px; margin-bottom: 12px; }
-        .btn-small { border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600; }
+        /* Karty i style dodatkowe */
+        .citizen-card { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
+        .btn-small { border: none; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -75,7 +75,7 @@
             <p class="subtitle">Przeglądaj kartoteki mieszkańców.</p>
             <div class="panel-box">
                 <h3>Wyszukiwanie Obywateli</h3>
-                <p>Moduł aktywny (zawartość zachowana).</p>
+                <p>Moduł aktywny i nienaruszony.</p>
             </div>
         </section>
 
@@ -85,14 +85,22 @@
             <p class="subtitle">Rejestr pojazdów stanowych ERLC.</p>
             <div class="panel-box">
                 <h3>Rejestr Pojazdów</h3>
-                <p>Moduł aktywny (zawartość zachowana).</p>
+                <p>Moduł aktywny i nienaruszony.</p>
             </div>
         </section>
 
-        <!-- ZAKŁADKA: BOLO (W PEŁNI ROZBUDOWANA) -->
+        <!-- ZAKŁADKA: BOLO (PROFESJONALNIE ROZBUDOWANA) -->
         <section id="tab-bolo" class="tab-pane active">
-            <h2>System Alertywny BOLO (Be On the Lookout)</h2>
-            <p class="subtitle">Ogólnokrajowe, stanowe i lokalne alerty operacyjne dla jednostek LSPD / SOG</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2>System Alertywny BOLO (Be On the Lookout)</h2>
+                    <p class="subtitle" style="margin: 0;">Ogólnokrajowe, stanowe i lokalne alerty operacyjne dla jednostek LSPD / SOG</p>
+                </div>
+                <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); padding: 8px 15px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                    <span style="height: 10px; width: 10px; background-color: #ef4444; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
+                    <span style="font-size: 12px; font-weight: bold; color: #ef4444; letter-spacing: 0.5px;">SYSTEM ALERTOWY AKTYWNY</span>
+                </div>
+            </div>
             
             <div class="citizens-grid">
                 <!-- Panel Tworzenia Nowego Alertu BOLO -->
@@ -173,7 +181,7 @@
                             <textarea id="boloOpis" required placeholder="Opisz rysopis, ubiór, kierunek ucieczki, rodzaj broni..."></textarea>
                         </div>
 
-                        <button type="submit" class="btn-primary full-width" style="background: linear-gradient(135deg, #dc2626, #991b1b);">Opublikuj Ogólnokrajowy Alert BOLO</button>
+                        <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #dc2626, #991b1b);">Opublikuj Ogólnokrajowy Alert BOLO</button>
                     </form>
                 </div>
 
@@ -194,7 +202,7 @@
             <p class="subtitle">Ewidencja incydentów i zatrzymań.</p>
             <div class="panel-box">
                 <h3>Rejestr Raportów</h3>
-                <p>Moduł aktywny (zawartość zachowana).</p>
+                <p>Moduł aktywny i nienaruszony.</p>
             </div>
         </section>
     </main>
@@ -205,18 +213,37 @@
             "Aston Martin Vantage": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/1/18/Aston_Martin_Vantage.png",
             "Audi R8": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5a/Audi_R8.png",
             "BMW M3 E46": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/33/BMW_M3_E46.png",
+            "BMW M4": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/38/BMW_M4.png",
+            "Bugatti Chiron": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/a/a2/Bugatti_Chiron.png",
+            "Chevrolet Camaro ZL1": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/6/6f/Camaro_ZL1.png",
+            "Chevrolet Corvette C8": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5e/Corvette_C8.png",
+            "Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4e/Chevrolet_Tahoe.png",
+            "Dodge Charger SRT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/d/d4/Dodge_Charger_SRT.png",
+            "Dodge Challenger SRT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/f/f3/Dodge_Challenger_SRT.png",
             "Ford Mustang GT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png",
+            "Ford F-150 Raptor": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/8/87/Ford_F-150_Raptor.png",
+            "Lamborghini Urus": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/e/ea/Lamborghini_Urus.png",
+            "McLaren 720S": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/3b/McLaren_720S.png",
+            "Mercedes-Benz G63 AMG": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5a/Mercedes-Benz_G63_AMG.png",
+            "Nissan GT-R R35": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/33/Nissan_GT-R_R35.png",
+            "Tesla Model S": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/1/1a/Tesla_Model_S.png",
+            "Toyota Supra MK5": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/2/22/Toyota_Supra_MK5.png",
             "Police Crown Victoria": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/f/f0/Crown_Victoria.png",
-            "Police Ford Explorer": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/7/7b/Ford_Explorer.png"
+            "Police Ford Explorer": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/7/7b/Ford_Explorer.png",
+            "Police Dodge Charger": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/d/d4/Dodge_Charger_SRT.png",
+            "Police Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4e/Chevrolet_Tahoe.png"
         };
 
-        // Główna funkcja przełączania zakładek
+        // Główna funkcja przełączania zakładek w systemie
         function zmienZakladke(nazwaZakladki) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
             
-            document.getElementById('tab-' + nazwaZakladki).classList.add('active');
-            document.getElementById('nav-' + nazwaZakladki).classList.add('active');
+            const docTab = document.getElementById('tab-' + nazwaZakladki);
+            const docNav = document.getElementById('nav-' + nazwaZakladki);
+
+            if (docTab) docTab.classList.add('active');
+            if (docNav) docNav.classList.add('active');
 
             if (nazwaZakladki === 'bolo') {
                 pobierzBolo();
@@ -285,7 +312,7 @@
             const szukajVal = (document.getElementById('searchBoloInput')?.value || '').toLowerCase();
             
             if (!listaDiv) return;
-            listaDiv.innerHTML = 'Pobieranie aktualnych alertów BOLO...';
+            listaDiv.innerHTML = '<p style="color:#94a3b8; font-size:13px; text-align:center; padding: 20px;">Pobieranie aktualnych alertów BOLO...</p>';
 
             try {
                 const res = await fetch('/api/bolo');
@@ -331,7 +358,7 @@
             );
 
             if (przefiltrowane.length === 0) {
-                listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px;">Brak aktywnych alertów BOLO w systemie.</p>';
+                listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px; text-align:center; padding: 20px;">Brak aktywnych alertów BOLO spełniających kryteria wyszukiwania.</p>';
                 return;
             }
 
@@ -344,7 +371,7 @@
                 const zdjecieAutoBolo = erlcVehicleImages[b.modelAuta] || "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png";
 
                 return `
-                    <div class="citizen-card" style="border-left: 5px solid ${kolorPriorytetu}; background: #0f172a; margin-bottom: 12px; padding: 12px; border-radius: 6px;">
+                    <div class="citizen-card" style="border-left: 5px solid ${kolorPriorytetu};">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <span style="font-size: 11px; font-weight: bold; background: ${kolorPriorytetu}; color: white; padding: 2px 8px; border-radius: 4px;">
                                 🚨 ${b.priorytet}
@@ -352,22 +379,22 @@
                             <span style="font-size: 11px; color: #94a3b8;">${b.dataUtworzenia}</span>
                         </div>
 
-                        <h3 style="margin: 4px 0; color: #f8fafc; font-size: 16px;">${b.typ}</h3>
+                        <h3 style="margin: 4px 0; color: #f8fafc; font-size: 15px;">${b.typ}</h3>
                         
                         <div style="display: flex; gap: 12px; align-items: center; margin: 10px 0; background: #1e293b; padding: 8px; border-radius: 6px;">
                             ${b.modelAuta !== 'Brak pojazdu' ? `<img src="${zdjecieAutoBolo}" alt="${b.modelAuta}" style="width: 75px; height: 45px; object-fit: contain;">` : ''}
                             <div>
                                 <p style="margin: 0; font-size: 13px;"><strong>👤 Podejrzany:</strong> <span style="color: #38bdf8;">${b.osoba}</span></p>
-                                <p style="margin: 2px 0 0 0; font-size: 12px;"><strong>🚗 Pojazd:</strong> ${b.modelAuta} ${b.tablica !== 'BRAK' ? `[ Tablica: <span style="font-family:monospace; color:#38bdf8;">${b.tablica}</span> ]` : ''}</p>
+                                <p style="margin: 2px 0 0 0; font-size: 12px; color: #cbd5e1;"><strong>🚗 Pojazd:</strong> ${b.modelAuta} ${b.tablica !== 'BRAK' ? `[ Tablica: <span style="font-family:monospace; color:#38bdf8; font-weight:bold;">${b.tablica}</span> ]` : ''}</p>
                             </div>
                         </div>
 
-                        <p style="font-size: 13px; margin: 6px 0;"><strong>📍 Ostatnia lokalizacja:</strong> ${b.lokalizacja}</p>
-                        <p style="font-size: 13px; margin: 6px 0; background: #111827; padding: 6px; border-radius: 4px; border: 1px solid #1f2937;"><strong>📝 Instrukcje:</strong> ${b.opis}</p>
+                        <p style="font-size: 13px; margin: 6px 0; color: #cbd5e1;"><strong>📍 Ostatnia lokalizacja:</strong> ${b.lokalizacja}</p>
+                        <p style="font-size: 13px; margin: 6px 0; background: #0f172a; padding: 8px; border-radius: 4px; border: 1px solid #1f2937; color: #e2e8f0;"><strong>📝 Instrukcje:</strong> ${b.opis}</p>
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1e293b; padding-top: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1f2937; padding-top: 8px;">
                             <span style="font-size: 11px; color: #64748b;">Autor: ${b.autor} [${b.odznakaAutora}]</span>
-                            <button class="btn-small" style="background: #059669; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;" onclick="zamknijBolo(${b.id})">✅ Ujęto / Odwołaj BOLO</button>
+                            <button class="btn-small" style="background: #059669; color: white;" onclick="zamknijBolo(${b.id})">✅ Ujęto / Odwołaj BOLO</button>
                         </div>
                     </div>
                 `;
@@ -381,7 +408,7 @@
             pobierzBolo();
         }
 
-        // Automatyczne załadowanie BOLO po starcie jeśli domyślnie aktywna
+        // Automatyczne załadowanie BOLO przy starcie strony
         window.onload = function() {
             pobierzBolo();
         };
