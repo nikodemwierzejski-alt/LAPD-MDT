@@ -5,7 +5,7 @@ const cors = require("cors");
 
 const app = express();
 
-// Konfiguracja pozwalająca na ruch z zewnętrznych sieci i tuneli bez restrykcji CORS
+// Konfiguracja CORS dla zewnętrznych sieci
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -23,7 +23,7 @@ const db = new Client({
 
 db.connect();
 
-// Funkcja inicjalizująca tabele oraz automatycznie naprawiająca brakujące kolumny
+// Inicjalizacja bazy danych i struktury
 async function inicjalizacjaBazy() {
     try {
         await db.query(`
@@ -78,12 +78,12 @@ async function inicjalizacjaBazy() {
             );
         `);
 
-        // Zabezpieczenie: dodaje kolumnę rola, jeśli tabela kadry już istniała wcześniej w bazie
+        // Zabezpieczenie dodania kolumny rola
         await db.query(`
             ALTER TABLE kadry ADD COLUMN IF NOT EXISTS rola VARCHAR(50) DEFAULT 'user';
         `);
 
-        // Automatyczne dodanie kont testowych z odpowiednimi rolami
+        // Konta domyślne
         await db.query(`
             INSERT INTO kadry (odznaka, stopien_nazwisko, haslo, rola) 
             VALUES ('99', 'Officer Smith', 'lspd', 'user')
@@ -102,17 +102,21 @@ async function inicjalizacjaBazy() {
 
 inicjalizacjaBazy();
 
-// Logowanie funkcjonariusza
+// POPRAWIONE LOGOWANIE: Obsługuje logowanie zarówno po odznake, jak i po imieniu/nazwisku (stopien_nazwisko)
 app.post("/api/login", async (req, res) => {
     const { badge, password } = req.body;
     
-    console.log("Próba logowania dla odznaka:", badge);
+    console.log("Próba logowania dla identyfikatora:", badge);
 
     try {
-        const query = "SELECT * FROM kadry WHERE odznaka = $1 AND haslo = $2";
+        const query = `
+            SELECT * FROM kadry 
+            WHERE (odznaka = $1 OR stopien_nazwisko ILIKE $1) 
+              AND haslo = $2
+        `;
         const result = await db.query(query, [badge, password]);
 
-        console.log("Znaleziono w bazie:", result.rows.length);
+        console.log("Znaleziono w bazie pasujących użytkowników:", result.rows.length);
 
         if (result.rows.length > 0) {
             const user = result.rows[0];
@@ -202,7 +206,7 @@ app.post("/api/obywatele", async (req, res) => {
     }
 });
 
-// Usuwanie obywatela (tylko dla administratora)
+// Usuwanie obywatela
 app.delete("/api/obywatele/:id", async (req, res) => {
     const { id } = req.params;
     try {
@@ -225,7 +229,7 @@ app.post("/api/mandaty", async (req, res) => {
     }
 });
 
-// Endpoint sprawdzający status
+// Endpoint statusu
 app.get("/api/status", (req, res) => {
     res.json({ status: "ONLINE", system: "LAPD-MDT" });
 });
@@ -244,7 +248,7 @@ app.post("/api/obywatele/:id/poszukiwany", async (req, res) => {
     }
 });
 
-// --- ENDPOINTY DLA POJAZDÓW ---
+// Pojazdy
 app.get("/api/pojazdy", async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM pojazdy ORDER BY id DESC");
@@ -278,7 +282,7 @@ app.post("/api/pojazdy/:id/status", async (req, res) => {
     }
 });
 
-// --- ENDPOINTY DLA RAPORTÓW ---
+// Raporty
 app.get("/api/raporty", async (req, res) => {
     try {
         const result = await db.query("SELECT * FROM raporty ORDER BY id DESC");
