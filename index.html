@@ -581,7 +581,6 @@
             "Police Chevrolet Tahoe": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/4/4e/Chevrolet_Tahoe.png"
         };
 
-        // Automatyczna inicjalizacja domyślnych danych współdzielonych (gdyby pamięć podręczna była pusta)
         function inicjalizujBazyDanych() {
             if (!localStorage.getItem('mdt_funkcjonariusze')) {
                 const domyslniFunkcjonariusze = [
@@ -622,7 +621,6 @@
                         isAdmin: false
                     };
                 } else {
-                    // Dokładne dopasowanie uwzględniające login jako Imię lub Odznakę oraz poprawne hasło
                     const znaleziony = customUsers.find(u => 
                         (u.imie.toLowerCase() === inputImie.toLowerCase() || u.odznaka.toLowerCase() === inputImie.toLowerCase()) && 
                         u.haslo === inputHasloOdznaka
@@ -673,7 +671,6 @@
             const raportAutorInput = document.getElementById('raportAutor');
             if (raportAutorInput) raportAutorInput.value = `${sesja.imie} [${sesja.odznaka}]`;
 
-            // Obsługa widoczności zakładki kadry dla administratora
             const navKadra = document.getElementById('nav-kadra');
             if (sesja.isAdmin) {
                 if (navKadra) navKadra.style.display = 'flex';
@@ -711,7 +708,6 @@
             if (statOficerowie) statOficerowie.innerText = 1 + customUsers.length;
         }
 
-        // Zarządzanie nowymi funkcjonariuszami (Dla Administratora)
         function zarejestrujFunkcjonariusza(e) {
             e.preventDefault();
             inicjalizujBazyDanych();
@@ -722,7 +718,6 @@
 
             let customUsers = JSON.parse(localStorage.getItem('mdt_funkcjonariusze') || '[]');
             
-            // Sprawdź czy odznaka już istnieje
             if (customUsers.some(u => u.odznaka === odznaka) || odznaka === "LP-1150" || odznaka === "ADMIN-01") {
                 alert("Funkcjonariusz z takim numerem odznaki już istnieje w systemie!");
                 return;
@@ -996,7 +991,6 @@
             aktualizujStatystyki();
         }
 
-        // Zegar w nagłówku
         setInterval(() => {
             const now = new Date();
             const timeString = now.toTimeString().split(' ')[0];
