@@ -64,14 +64,14 @@ function zmienZakladke(nazwaZakladki, event) {
     } else if (nazwaZakladki === 'reports') {
         pobierzRaporty();
     } else if (nazwaZakladki === 'admin') {
-        pobierzFunkcjonariuszy(); // Automatyczne ładowanie listy kadr po wejściu w panel admina
+        pobierzFunkcjonariuszy(); 
     }
 }
 
-// System Logowania
+// System Logowania (Poprawiony pod kątem spójności przesyłania danych z innych sieci)
 async function zaloguj() {
     const badge = document.getElementById('badgeInput').value.trim();
-    const password = document.getElementById('passwordInput').value;
+    const password = document.getElementById('passwordInput').value.trim();
     const errorDiv = document.getElementById('login-error');
 
     if (!badge) {
@@ -472,20 +472,15 @@ function drukujRaport(r) {
 }
 
 // --- MODUŁ ZARZĄDZANIA KADRAMI (ADMIN) ---
-// --- MODUŁ ZARZĄDZANIA KADRAMI (ADMIN) ---
 async function zarejestrujFunkcjonariusza(event) {
     event.preventDefault();
     
-    // Pobieramy dane dokładnie z takich id, jakie masz w swoim index.html
     const imieNazwisko = document.getElementById('nowyUserImie').value.trim();
     const stopien = document.getElementById('nowyUserStopien').value.trim();
     const badge = document.getElementById('nowyUserOdznaka').value.trim();
     const password = document.getElementById('nowyUserHaslo').value;
     
-    // Łączymy stopień i imię/nazwisko w jedną wartość (np. "Officer Alex Murphy")
     const name = `${stopien} ${imieNazwisko}`;
-    
-    const messageDiv = document.getElementById('admin-message'); // upewnij się, że taki element istnieje lub dostosuj jego pobieranie
 
     try {
         const res = await fetch(`${API_URL}/api/officers`, {
@@ -499,7 +494,6 @@ async function zarejestrujFunkcjonariusza(event) {
         if (data.success) {
             alert("Pomyślnie utworzono konto funkcjonariusza w chmurze!");
             document.getElementById('kadraForm').reset();
-            // Jeśli masz funkcję pobierającą listę, wywołaj ją tutaj:
             if (typeof pobierzFunkcjonariuszy === 'function') {
                 pobierzFunkcjonariuszy();
             }
@@ -511,9 +505,8 @@ async function zarejestrujFunkcjonariusza(event) {
         alert("Błąd połączenia z serwerem podczas dodawania konta.");
     }
 }
+
 async function pobierzFunkcjonariuszy() {
-    // Sprawdzamy czy kontener na listę istnieje w HTML (zależnie od tego, jak nazwałeś div na liście w adminie)
-    // Jeśli kontener nazywa się inaczej, dopasuj ID lub dodaj go w sekcji admina.
     const listaDiv = document.getElementById('listaFunkcjonariuszy');
     if (!listaDiv) return;
 
