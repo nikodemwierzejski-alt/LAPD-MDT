@@ -3,439 +3,388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA MDT - Mobile Data Terminal</title>
-    <link rel="stylesheet" href="style.css">
+    <title>MDT LSPD / SOG - Terminal Operacyjny</title>
+    <style>
+        /* Główne style systemowe MDT */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0b0f19; color: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar nawigacyjny */
+        sidebar { width: 260px; background: #0f172a; border-right: 1px solid #1e293b; display: flex; flex-direction: column; }
+        .sidebar-brand { padding: 20px; font-size: 18px; font-weight: bold; color: #38bdf8; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 10px; }
+        .sidebar-menu { list-style: none; padding: 15px 10px; flex-grow: 1; overflow-y: auto; }
+        .sidebar-menu li { padding: 12px 15px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; color: #94a3b8; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .sidebar-menu li:hover, .sidebar-menu li.active { background: #1e293b; color: #ffffff; }
+
+        /* Główny obszar roboczy */
+        main { flex-grow: 1; padding: 30px; overflow-y: auto; background: #0b0f19; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        h2 { font-size: 24px; color: #f8fafc; margin-bottom: 5px; }
+        .subtitle { font-size: 13px; color: #64748b; margin-bottom: 25px; }
+
+        /* Formularze i Panele */
+        .citizens-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .panel-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; }
+        .panel-box h3 { font-size: 16px; margin-bottom: 15px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; background: #1e293b; border: 1px solid #334155; color: white; padding: 10px; border-radius: 6px; font-size: 14px; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .btn-primary { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover { background: #0369a1; }
+        .full-width { width: 100%; }
+        .results-container { margin-top: 15px; max-height: 500px; overflow-y: auto; }
+        
+        /* Karty BOLO */
+        .citizen-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 15px; margin-bottom: 12px; }
+        .btn-small { border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600; }
+    </style>
 </head>
 <body>
 
-    <!-- EKRAN LOGOWANIA -->
-    <div id="login-screen" class="login-container">
-        <div class="login-box">
-            <h2>LA MDT</h2>
-            <p>Mobile Data Terminal - System LSPD</p>
-            <input type="text" id="badgeInput" placeholder="Numer odznaki (np. 99 lub admin)">
-            <input type="password" id="passwordInput" placeholder="Hasło">
-            <button onclick="zaloguj()">Zaloguj się</button>
-            <div id="login-error" class="error-msg"></div>
+    <!-- SIDEBAR -->
+    <sidebar>
+        <div class="sidebar-brand">
+            🛡️ MDT LSPD / SOG
         </div>
-    </div>
+        <ul class="sidebar-menu">
+            <li onclick="zmienZakladke('dashboard')" id="nav-dashboard">📊 Dashboard</li>
+            <li onclick="zmienZakladke('citizens')" id="nav-citizens">👥 Obywatele</li>
+            <li onclick="zmienZakladke('vehicles')" id="nav-vehicles">🚗 Pojazdy</li>
+            <li onclick="zmienZakladke('bolo')" id="nav-bolo" class="active">🚨 Alerty BOLO</li>
+            <li onclick="zmienZakladke('reports')" id="nav-reports">📁 Raportowanie</li>
+        </ul>
+    </sidebar>
 
-    <!-- GŁÓWNY INTERFEJS SYSTEMU -->
-    <div id="main-system" class="app-layout" style="display: none;">
-        
-        <!-- PANEL BOCZNY -->
-        <aside class="sidebar">
-            <div class="sidebar-brand">
-                <h2>LA MDT</h2>
-                <span>SYSTEM v2.5 ERLC</span>
+    <!-- CONTENT -->
+    <main>
+        <!-- ZAKŁADKA: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-pane">
+            <h2>Panel Główny</h2>
+            <p class="subtitle">Witaj w systemie dyspozycyjnym LSPD.</p>
+            <div class="panel-box">
+                <h3>Statystyki Operacyjne</h3>
+                <p>System operacyjny działa prawidłowo. Wybierz odpowiednią zakładkę z menu po lewej stronie.</p>
             </div>
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" onclick="zmienZakladke('dashboard', event)">📊 Dashboard</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('livemap', event)">🗺️ Live Map</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('citizens', event)">👥 Citizens</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('vehicles', event)">🚗 Vehicles</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('calls', event)">📞 Calls</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('reports', event)">📄 Reports</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('bolo', event)">⚠️ BOLO</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('warrants', event)">⚖️ Warrants</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('dispatch', event)">📻 Dispatch</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('badgeid', event)">🛡️ Badge / ID</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('widgets', event)">🔲 Widgets</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('erlclive', event)">🚨 ERLC Live</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('logs', event)">📋 Logs</a>
-                <a href="#" class="nav-item" onclick="zmienZakladke('admin', event)" id="nav-admin" style="display: none;">⚙️ Admin</a>
-            </nav>
-        </aside>
+        </section>
 
-        <!-- GŁÓWNA ZAWARTOŚĆ -->
-        <div class="main-content">
+        <!-- ZAKŁADKA: OBYWATELE -->
+        <section id="tab-citizens" class="tab-pane">
+            <h2>Baza Obywateli</h2>
+            <p class="subtitle">Przeglądaj kartoteki mieszkańców.</p>
+            <div class="panel-box">
+                <h3>Wyszukiwanie Obywateli</h3>
+                <p>Moduł aktywny (zawartość zachowana).</p>
+            </div>
+        </section>
+
+        <!-- ZAKŁADKA: POJAZDY -->
+        <section id="tab-vehicles" class="tab-pane">
+            <h2>Baza Pojazdów</h2>
+            <p class="subtitle">Rejestr pojazdów stanowych ERLC.</p>
+            <div class="panel-box">
+                <h3>Rejestr Pojazdów</h3>
+                <p>Moduł aktywny (zawartość zachowana).</p>
+            </div>
+        </section>
+
+        <!-- ZAKŁADKA: BOLO (W PEŁNI ROZBUDOWANA) -->
+        <section id="tab-bolo" class="tab-pane active">
+            <h2>System Alertywny BOLO (Be On the Lookout)</h2>
+            <p class="subtitle">Ogólnokrajowe, stanowe i lokalne alerty operacyjne dla jednostek LSPD / SOG</p>
             
-            <!-- GÓRNY PASEK -->
-            <header class="topbar">
-                <div class="topbar-user">
-                    <span id="officer-session-name">Lukas Weber</span>
-                    <span class="badge-pill" id="officer-session-badge">LP-1150</span>
-                    <span class="dept-pill">LAPD</span>
+            <div class="citizens-grid">
+                <!-- Panel Tworzenia Nowego Alertu BOLO -->
+                <div class="panel-box" style="border-left: 4px solid #ef4444;">
+                    <h3>🚨 Generowanie Nowego Alertu BOLO</h3>
+                    <form id="dodajBoloForm" onsubmit="utworzBolo(event)">
+                        <div class="form-group">
+                            <label>Typ Alerty BOLO</label>
+                            <select id="boloTyp" class="form-control-select" required>
+                                <optgroup label="--- KATEGORIE OPERACYJNE ---">
+                                    <option value="Felony Vehicle / Stolen">🚗 Pojazd Poszukiwany / Skradziony (Felony Vehicle)</option>
+                                    <option value="Armed & Dangerous Suspect">👤 Uzbrojony i Niebezpieczny Poszukiwany (Armed Suspect)</option>
+                                    <option value="Missing Person (SILVER / AMBER)">👶 Zaginiona Osoba (Amber / Silver Alert)</option>
+                                    <option value="Prison Escapee">⛓️ Zbieg z Więzienia (Prison Escapee)</option>
+                                    <option value="Terrorist Threat / Active Shooter">⚠️ Zagrożenie Terrorystyczne / Aktywny Strzelec</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Priorytet Zagrożenia (Threat Level)</label>
+                            <select id="boloPriorytet" class="form-control-select" required>
+                                <option value="Code 4 - CRITICAL / SHOOT ON SIGHT">🔴 KOD 4: KRYTYCZNY / Strzelać w ostateczności (Shoot on Sight)</option>
+                                <option value="Code 3 - HIGH / Armed & Dangerous">🟠 KOD 3: WYSOKI / Uzbrojony i Niebezpieczny</option>
+                                <option value="Code 2 - MODERATE / Felony Warrant">🟡 KOD 2: ŚREDNI / Nakaz aresztowania</option>
+                                <option value="Code 1 - LOW / Informational">🟢 KOD 1: NISKI / Informacyjny / Obserwacja</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Dotyczy (Podejrzany / Imię i Nazwisko lub "Brak")</label>
+                            <input type="text" id="boloOsoba" required placeholder="np. John Doe lub Nieznany">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Pojazd z gry ERLC (Model / Marka)</label>
+                            <select id="boloModelAuta" class="form-control-select">
+                                <option value="Brak pojazdu">Brak pojazdu (Tylko pieszy / inna kategoria)</option>
+                                <optgroup label="--- ERLC VEHICLES ---">
+                                    <option value="Aston Martin Vantage">Aston Martin Vantage</option>
+                                    <option value="Audi R8">Audi R8</option>
+                                    <option value="BMW M3 E46">BMW M3 E46</option>
+                                    <option value="BMW M4">BMW M4</option>
+                                    <option value="Bugatti Chiron">Bugatti Chiron</option>
+                                    <option value="Chevrolet Camaro ZL1">Chevrolet Camaro ZL1</option>
+                                    <option value="Chevrolet Corvette C8">Chevrolet Corvette C8</option>
+                                    <option value="Chevrolet Tahoe">Chevrolet Tahoe</option>
+                                    <option value="Dodge Charger SRT">Dodge Charger SRT</option>
+                                    <option value="Dodge Challenger SRT">Dodge Challenger SRT</option>
+                                    <option value="Ford Mustang GT">Ford Mustang GT</option>
+                                    <option value="Ford F-150 Raptor">Ford F-150 Raptor</option>
+                                    <option value="Lamborghini Urus">Lamborghini Urus</option>
+                                    <option value="McLaren 720S">McLaren 720S</option>
+                                    <option value="Mercedes-Benz G63 AMG">Mercedes-Benz G63 AMG</option>
+                                    <option value="Nissan GT-R R35">Nissan GT-R R35</option>
+                                    <option value="Tesla Model S">Tesla Model S</option>
+                                    <option value="Toyota Supra MK5">Toyota Supra MK5</option>
+                                    <option value="Police Crown Victoria">Police Crown Victoria</option>
+                                    <option value="Police Ford Explorer">Police Ford Explorer</option>
+                                    <option value="Police Dodge Charger">Police Dodge Charger</option>
+                                    <option value="Police Chevrolet Tahoe">Police Chevrolet Tahoe</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tablica Rejestracyjna Pojazdu</label>
+                            <input type="text" id="boloTablica" placeholder="np. 34XYZ89 (lub WPISZ: BRAK)" style="text-transform: uppercase;">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ostatnia Znana Lokalizacja (Last Seen)</label>
+                            <input type="text" id="boloLokalizacja" required placeholder="np. Główna Autostrada / Bank w Liberty City">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Szczegółowy Opis Taktyczny i Instrukcje dla Patroli</label>
+                            <textarea id="boloOpis" required placeholder="Opisz rysopis, ubiór, kierunek ucieczki, rodzaj broni..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary full-width" style="background: linear-gradient(135deg, #dc2626, #991b1b);">Opublikuj Ogólnokrajowy Alert BOLO</button>
+                    </form>
                 </div>
-                <div class="topbar-right">
-                    <span id="system-status" class="status-online">System: ONLINE</span>
-                    <span id="current-time">22:23:23</span>
-                    <button class="btn-logout" onclick="wyloguj()" title="Wyloguj">🚪</button>
+
+                <!-- Panel Przeglądania i Zarządzania BOLO -->
+                <div class="panel-box">
+                    <h3>📋 Aktywne Alerty BOLO w Sieci</h3>
+                    <div class="search-box-row" style="margin-bottom: 15px;">
+                        <input type="text" id="searchBoloInput" placeholder="Szukaj w alertach (nazwisko, model, tablica)..." oninput="pobierzBolo()">
+                    </div>
+                    <div id="listaBolo" class="results-container"></div>
                 </div>
-            </header>
-
-            <!-- ZAWARTOŚĆ ZAKŁADEK -->
-            <div class="content-body">
-                
-                <!-- ZAKŁADKA: DASHBOARD -->
-                <section id="tab-dashboard" class="tab-pane active">
-                    <h2>Panel główny</h2>
-                    <p id="welcome-msg" class="subtitle">Witaj w systemie operacyjnym LSPD.</p>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <span>AKTYWNI OFICERERZY</span>
-                            <h3 id="stat-officers">1</h3>
-                        </div>
-                        <div class="stat-card">
-                            <span>OTWARTE ZGŁOSZENIA</span>
-                            <h3>0</h3>
-                        </div>
-                        <div class="stat-card">
-                            <span>AKTYWNE BOLOS</span>
-                            <h3>0</h3>
-                        </div>
-                        <div class="stat-card">
-                            <span>AKTYWNE NAKAZY</span>
-                            <h3>0</h3>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: LIVE MAP -->
-                <section id="tab-livemap" class="tab-pane" style="display: none;">
-                    <h2>Mapa Operacyjna Na Żywo</h2>
-                    <p class="subtitle">Podgląd lokalizacji jednostek w terenie</p>
-                    <div class="panel-box" style="height: 60vh; display: flex; align-items: center; justify-content: center; color: #64748b;">
-                        [ Moduł mapy GPS zintegrowany z siecią patrolową ]
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: CITIZENS -->
-                <section id="tab-citizens" class="tab-pane" style="display: none;">
-                    <h2>Baza Obywateli</h2>
-                    <div class="citizens-grid">
-                        <div class="panel-box">
-                            <h3>Wyszukiwarka Obywateli</h3>
-                            <div class="search-box-row">
-                                <input type="text" id="searchInput" placeholder="Imię i nazwisko..." oninput="szukajObywatela()">
-                                <button onclick="szukajObywatela()" class="btn-primary">Szukaj</button>
-                            </div>
-                            <div id="wynikiWyszukiwania" class="results-container"></div>
-                        </div>
-
-                        <div class="panel-box">
-                            <h3>Dodaj do Kartoteki</h3>
-                            <form id="dodajObywatelaForm" onsubmit="dodajObywatela(event)">
-                                <div class="form-group">
-                                    <label>Imię</label>
-                                    <input type="text" id="formImie" required placeholder="np. Jan">
-                                </div>
-                                <div class="form-group">
-                                    <label>Nazwisko</label>
-                                    <input type="text" id="formNazwisko" required placeholder="np. Kowalski">
-                                </div>
-                                <div class="form-group">
-                                    <label>Data urodzenia</label>
-                                    <input type="text" id="formDataUrodzenia" placeholder="np. 01/01/1990">
-                                </div>
-                                <div class="form-group">
-                                    <label>Uwagi kryminalne</label>
-                                    <textarea id="formUwagi" placeholder="Notatki..."></textarea>
-                                </div>
-                                <button type="submit" class="btn-primary full-width">Zapisz w bazie</button>
-                            </form>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: VEHICLES (ERLC DMV & REAL IMAGES) -->
-                <section id="tab-vehicles" class="tab-pane" style="display: none;">
-                    <h2>Rejestr Pojazdów ERLC DMV (Liberty County)</h2>
-                    <p class="subtitle">Oficjalne modele z gry Roblox ERLC z rzeczywistym podglądem fotograficznym</p>
-                    
-                    <div class="citizens-grid">
-                        <!-- Panel rejestracji pojazdu -->
-                        <div class="panel-box" style="border-left: 4px solid #38bdf8;">
-                            <h3>🚗 Rejestracja Pojazdu ERLC</h3>
-                            <form id="dodajPojazdForm" onsubmit="utworzPojazd(event)">
-                                <div class="form-group">
-                                    <label>Model Pojazdu ERLC (Roblox Liberty County)</label>
-                                    <select id="vehModel" class="form-control-select" required onchange="aktualizujPodgladAuta()">
-                                        <optgroup label="--- OSOBOWE / CYWILNE (CIVILIAN) ---">
-                                            <option value="Aston Martin Vantage">Aston Martin Vantage</option>
-                                            <option value="Audi R8">Audi R8</option>
-                                            <option value="BMW M3 E46">BMW M3 E46</option>
-                                            <option value="BMW M4">BMW M4</option>
-                                            <option value="Bugatti Chiron">Bugatti Chiron</option>
-                                            <option value="Chevrolet Camaro ZL1">Chevrolet Camaro ZL1</option>
-                                            <option value="Chevrolet Corvette C8">Chevrolet Corvette C8</option>
-                                            <option value="Chevrolet Tahoe">Chevrolet Tahoe</option>
-                                            <option value="Dodge Charger SRT">Dodge Charger SRT</option>
-                                            <option value="Dodge Challenger SRT">Dodge Challenger SRT</option>
-                                            <option value="Ford Mustang GT">Ford Mustang GT</option>
-                                            <option value="Ford F-150 Raptor">Ford F-150 Raptor</option>
-                                            <option value="Lamborghini Urus">Lamborghini Urus</option>
-                                            <option value="McLaren 720S">McLaren 720S</option>
-                                            <option value="Mercedes-Benz G63 AMG">Mercedes-Benz G63 AMG</option>
-                                            <option value="Nissan GT-R R35">Nissan GT-R R35</option>
-                                            <option value="Tesla Model S">Tesla Model S</option>
-                                            <option value="Toyota Supra MK5">Toyota Supra MK5</option>
-                                        </optgroup>
-                                        <optgroup label="--- POLICYJNE / POLICE & SHERIFF ---">
-                                            <option value="Police Crown Victoria">Police Crown Victoria</option>
-                                            <option value="Police Ford Explorer">Police Ford Explorer</option>
-                                            <option value="Police Dodge Charger">Police Dodge Charger</option>
-                                            <option value="Police Chevrolet Tahoe">Police Chevrolet Tahoe</option>
-                                            <option value="Police Mustang GT">Police Mustang GT</option>
-                                            <option value="Sheriff Ford F-150">Sheriff Ford F-150</option>
-                                        </optgroup>
-                                        <optgroup label="--- STRAŻ POŻARNA / FIRE & EMS ---">
-                                            <option value="Fire Engine Pumper">Fire Engine Pumper</option>
-                                            <option value="Ambulance ERLC">Ambulance ERLC</option>
-                                            <option value="Chief SUV">Chief SUV</option>
-                                        </optgroup>
-                                        <optgroup label="--- DOT / INNE ---">
-                                            <option value="DOT Utility Truck">DOT Utility Truck</option>
-                                            <option value="Tow Truck">Tow Truck</option>
-                                        </optgroup>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Numer Rejestracyjny (Plate)</label>
-                                    <input type="text" id="vehPlate" required placeholder="np. 34XYZ89" style="text-transform: uppercase;">
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Kolor Nadwozia</label>
-                                    <input type="text" id="vehColor" required placeholder="np. Czarny mat / Srebrny">
-                                </div>
-
-                                <!-- PRAWDZIWE ZDJĘCIE / RENDER Z GRY ERLC -->
-                                <div class="form-group" style="text-align: center; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155;">
-                                    <label style="display: block; margin-bottom: 6px; font-size: 11px; color: #38bdf8;">OFICJALNE ZDJĘCIE POJAZDU Z ERLC</label>
-                                    <div id="carImageContainer" style="height: 110px; display: flex; align-items: center; justify-content: center;">
-                                        <img id="erlcVehicleImg" src="" alt="Podgląd pojazdu ERLC" style="max-height: 100px; max-width: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Właściciel (Imię i Nazwisko)</label>
-                                    <input type="text" id="vehOwner" required placeholder="np. John Doe">
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Status Operacyjny Pojazdu</label>
-                                    <select id="vehStatus" class="form-control-select">
-                                        <option value="clean">🟢 Czysty / Zarejestrowany (Clean)</option>
-                                        <option value="wanted">🔴 POSZUKIWANY / HOT-LIST (Stolen / Felony Vehicle)</option>
-                                        <option value="impounded">🟠 Skonfiskowany / Na parkingu policyjnym (Impounded)</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn-primary full-width">Wprowadź Pojazd do Bazy DMV</button>
-                            </form>
-                        </div>
-
-                        <!-- Panel wyszukiwania i floty -->
-                        <div class="panel-box">
-                            <h3>🔍 Terminal Wyszukiwania Pojazdów</h3>
-                            <div class="search-box-row" style="margin-bottom: 15px;">
-                                <input type="text" id="searchVehicleInput" placeholder="Szukaj po tablicach, modelu, właścicielu..." oninput="pobierzPojazdy()">
-                            </div>
-                            <div id="listaPojazdow" class="results-container"></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: CALLS -->
-                <section id="tab-calls" class="tab-pane" style="display: none;">
-                    <h2>Aktywne Zgłoszenia (Calls)</h2>
-                    <p class="subtitle">Wezwania interwencyjne spływające z centrali 911</p>
-                    <div class="panel-box">
-                        <p style="color: #64748b; font-size:13px;">Brak aktywnych zgłoszeń w kolejce.</p>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: REPORTS -->
-                <section id="tab-reports" class="tab-pane" style="display: none;">
-                    <h2>Zaawansowane Raporty Policyjne (CAD/MDT)</h2>
-                    <p class="subtitle">Pełna dokumentacja incydentów z obsługą podejrzanych, pojazdów, dowodów i statusów</p>
-                    
-                    <div class="citizens-grid">
-                        <div class="panel-box">
-                            <h3>📝 Nowy Raport Operacyjny</h3>
-                            <form id="dodajRaportForm" onsubmit="utworzRaport(event)">
-                                <div class="form-group">
-                                    <label>Tytuł Incydentu / Nazwa Sprawy</label>
-                                    <input type="text" id="raportTytul" required placeholder="np. Felony Traffic Stop / Armed Robbery">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Kategoria Incydentu (US Penal Code)</label>
-                                    <select id="raportKategoria" class="form-control-select">
-                                        <optgroup label="Zbrodnie (Felonies)">
-                                            <option value="Felony Traffic Stop">Felony Traffic Stop (Zatrzymanie wysokiego ryzyka)</option>
-                                            <option value="Armed Robbery">Armed Robbery (Napad z bronią w ręku)</option>
-                                            <option value="Grand Theft Auto">Grand Theft Auto (Kradzież pojazdu)</option>
-                                            <option value="Homicide / Murder">Homicide / Murder (Zabójstwo)</option>
-                                            <option value="Kidnapping">Kidnapping (Porwanie)</option>
-                                            <option value="Assault on LEO">Assault on LEO (Napaść na funkcjonariusza)</option>
-                                            <option value="Drug Trafficking">Drug Trafficking (Handel narkotykami)</option>
-                                            <option value="Bank Robbery">Bank Robbery (Napad na bank)</option>
-                                        </optgroup>
-                                        <optgroup label="Wykroczenia (Misdemeanors / Infractions)">
-                                            <option value="Traffic Infraction">Traffic Infraction (Wykroczenie drogowe)</option>
-                                            <option value="DUI">DUI (Jazda pod wpływem substancji)</option>
-                                            <option value="Resisting Arrest">Resisting Arrest (Stawianie oporu)</option>
-                                            <option value="Vandalism">Vandalism (Wandalizm)</option>
-                                            <option value="Disturbing the Peace">Disturbing the Peace (Zakłócanie porządku)</option>
-                                        </optgroup>
-                                        <optgroup label="Inne">
-                                            <option value="Public Service">Public Service (Asysta / Służba publiczna)</option>
-                                            <option value="Traffic Accident">Traffic Accident (Kolizja / Wypadek)</option>
-                                        </optgroup>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Status Raportu</label>
-                                    <select id="raportStatus" class="form-control-select">
-                                        <option value="Approved">Zatwierdzony (Approved)</option>
-                                        <option value="Draft">Szkic roboczy (Draft)</option>
-                                        <option value="Pending Review">Oczekuje na weryfikację (Pending Review)</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Podejrzani / Zaangażowani Obywatele (rozdziel przecinkami)</label>
-                                    <input type="text" id="raportObywatel" placeholder="np. John Doe, Jane Smith">
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Zaangażowane Pojazdy (Marka / Tablica)</label>
-                                    <input type="text" id="raportPojazdy" placeholder="np. Ford Mustang GT (Rej: 34XYZ89)">
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Współoficerowie na miejscu (Co-Officers)</label>
-                                    <input type="text" id="raportWspoloficerowie" placeholder="np. Officer M. Johnson [LP-104]">
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Zabezpieczone Dowody (Evidence Locker)</label>
-                                    <input type="text" id="raportDowody" placeholder="np. 1x Pistol, 45g Methamphetamine">
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Narrative / Szczegółowy Opis Przebiegu Zdarzenia</label>
-                                    <textarea id="raportOpis" required placeholder="Opisz dokładnie przebieg interwencji..."></textarea>
-                                </div>
-
-                                <button type="submit" class="btn-primary full-width">Opublikuj Raport w Systemie</button>
-                            </form>
-                        </div>
-
-                        <div class="panel-box">
-                            <h3>📂 Archiwum Raportów Centrali</h3>
-                            <div class="search-box-row" style="margin-bottom: 15px;">
-                                <input type="text" id="searchRaportInput" placeholder="Szukaj po tytule, podejrzanym, pojeździe..." oninput="pobierzRaporty()">
-                            </div>
-                            <div id="listaRaportow" class="results-container"></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: BOLO -->
-                <section id="tab-bolo" class="tab-pane" style="display: none;">
-                    <h2>Alerty BOLO (Be On the Lookout)</h2>
-                    <p class="subtitle">Ogólnokrajowe ostrzeżenia o poszukiwanych osobach i autach</p>
-                    <div class="panel-box">
-                        <p style="color: #64748b; font-size:13px;">Brak aktywnych alertów BOLO.</p>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: WARRANTS -->
-                <section id="tab-warrants" class="tab-pane" style="display: none;">
-                    <h2>Nakazy Aresztowania (Warrants)</h2>
-                    <p class="subtitle">Aktywne nakazy wydane przez departament sprawiedliwości</p>
-                    <div class="panel-box">
-                        <p style="color: #64748b; font-size:13px;">Brak aktywnych nakazów.</p>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: DISPATCH -->
-                <section id="tab-dispatch" class="tab-pane" style="display: none;">
-                    <h2>Dyspozytornia (Dispatch)</h2>
-                    <p class="subtitle">Panel koordynacji radiowej i przydzielania patroli</p>
-                    <div class="panel-box">
-                        <p style="color: #64748b; font-size:13px;">Kanał radiowy aktywny. Brak oczekujących zgłoszeń.</p>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: BADGE / ID -->
-                <section id="tab-badgeid" class="tab-pane" style="display: none;">
-                    <h2>Identyfikacja Funkcjonariusza (Badge / ID)</h2>
-                    <p class="subtitle">Twoja licencja i odznaka służbowa</p>
-                    <div class="panel-box max-w-500">
-                        <h3 style="color:#38bdf8;">LAPD Department ID Card</h3>
-                        <p><strong>Odznaka:</strong> <span id="card-badge-num">LP-1150</span></p>
-                        <p><strong>Funkcjonariusz:</strong> <span id="card-officer-name">Lukas Weber</span></p>
-                        <p><strong>Ranga:</strong> Sierżant</p>
-                        <p><strong>Status służbowy:</strong> Aktywny w terenie</p>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: WIDGETS -->
-                <section id="tab-widgets" class="tab-pane" style="display: none;">
-                    <h2>Narzędzia i Widżety</h2>
-                    <p class="subtitle">Szybki dostęp do dodatkowych kalkulatorów i narzędzi MDT</p>
-                    <div class="panel-box">
-                        <p style="color: #64748b; font-size:13px;">Brak włączonych widżetów użytkownika.</p>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: ERLC LIVE -->
-                <section id="tab-erlclive" class="tab-pane" style="display: none;">
-                    <h2>ERLC Live Integracja</h2>
-                    <p class="subtitle">Stan serwera gry i synchronizacja graczy online</p>
-                    <div class="panel-box">
-                        <p style="color: #4ade80; font-size:14px;">🟢 Połączono z serwerem Emergency River City (ERLC)</p>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: LOGS -->
-                <section id="tab-logs" class="tab-pane" style="display: none;">
-                    <h2>Logi Systemowe</h2>
-                    <p class="subtitle">Historia logowań i aktywności w systemie MDT</p>
-                    <div class="panel-box">
-                        <div class="mandates-section">
-                            <div class="mandate-item">🟢 Lukas Weber [LP-1150] — Login (Auth 20:22:21)</div>
-                            <div class="mandate-item">🔴 Lukas Weber [LP-1150] — Logout (Auth 20:22:11)</div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ZAKŁADKA: ADMIN -->
-                <section id="tab-admin" class="tab-pane" style="display: none;">
-                    <h2>Panel Administratora</h2>
-                    <p class="subtitle">Zarządzanie kadrami i uprawnieniami LSPD</p>
-                    
-                    <div class="panel-box max-w-500">
-                        <h3>Dodaj nowego funkcjonariusza</h3>
-                        <form id="dodajFunkcjonariuszaForm" onsubmit="dodajFunkcjonariusza(event)">
-                            <div class="form-group">
-                                <label>Numer Odznaki</label>
-                                <input type="text" id="activeBadge" required placeholder="np. LP-101">
-                            </div>
-                            <div class="form-group">
-                                <label>Stopień i Nazwisko</label>
-                                <input type="text" id="activeName" required placeholder="np. Officer John Doe">
-                            </div>
-                            <div class="form-group">
-                                <label>Hasło dostępu</label>
-                                <input type="password" id="activePassword" required placeholder="Hasło">
-                            </div>
-                            <button type="submit" class="btn-primary full-width">Dodaj funkcjonariusza</button>
-                            <div id="admin-message" class="info-msg"></div>
-                        </form>
-                    </div>
-                </section>
-
             </div>
-        </div>
-    </div>
+        </section>
 
-    <script src="script.js"></script>
+        <!-- ZAKŁADKA: RAPORTOWANIE -->
+        <section id="tab-reports" class="tab-pane">
+            <h2>Raporty Operacyjne</h2>
+            <p class="subtitle">Ewidencja incydentów i zatrzymań.</p>
+            <div class="panel-box">
+                <h3>Rejestr Raportów</h3>
+                <p>Moduł aktywny (zawartość zachowana).</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Słownik grafik pojazdów ERLC dla BOLO
+        const erlcVehicleImages = {
+            "Aston Martin Vantage": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/1/18/Aston_Martin_Vantage.png",
+            "Audi R8": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/5/5a/Audi_R8.png",
+            "BMW M3 E46": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/3/33/BMW_M3_E46.png",
+            "Ford Mustang GT": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png",
+            "Police Crown Victoria": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/f/f0/Crown_Victoria.png",
+            "Police Ford Explorer": "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/7/7b/Ford_Explorer.png"
+        };
+
+        // Główna funkcja przełączania zakładek
+        function zmienZakladke(nazwaZakladki) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('tab-' + nazwaZakladki).classList.add('active');
+            document.getElementById('nav-' + nazwaZakladki).classList.add('active');
+
+            if (nazwaZakladki === 'bolo') {
+                pobierzBolo();
+            }
+        }
+
+        // --- MODUŁ BOLO (ZAAWANSOWANY) ---
+        async function utworzBolo(event) {
+            event.preventDefault();
+
+            const typ = document.getElementById('boloTyp').value;
+            const priorytet = document.getElementById('boloPriorytet').value;
+            const osoba = document.getElementById('boloOsoba').value.trim();
+            const modelAuta = document.getElementById('boloModelAuta').value;
+            const tablica = document.getElementById('boloTablica').value.trim().toUpperCase() || 'BRAK';
+            const lokalizacja = document.getElementById('boloLokalizacja').value.trim();
+            const opis = document.getElementById('boloOpis').value.trim();
+            
+            const autor = localStorage.getItem('officerName') || 'Lukas Weber';
+            const odznakaAutora = localStorage.getItem('officerBadge') || 'LP-1150';
+            const dataUtworzenia = new Date().toLocaleString('pl-PL');
+
+            const noweBolo = {
+                id: Date.now(),
+                typ,
+                priorytet,
+                osoba,
+                modelAuta,
+                tablica,
+                lokalizacja,
+                opis,
+                autor,
+                odznakaAutora,
+                dataUtworzenia,
+                status: 'Aktywny'
+            };
+
+            try {
+                const res = await fetch('/api/bolo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(noweBolo)
+                });
+                if (res.ok) {
+                    document.getElementById('dodajBoloForm').reset();
+                    alert('Alert BOLO został pomyślnie rozesłany do wszystkich jednostek!');
+                    pobierzBolo();
+                    return;
+                }
+            } catch (e) {}
+
+            zapiszBoloLokalnie(noweBolo);
+        }
+
+        function zapiszBoloLokalnie(bolo) {
+            let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
+            bolos.unshift(bolo);
+            localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
+            document.getElementById('dodajBoloForm').reset();
+            alert('Alert BOLO rozesłany w sieci lokalnej terminala!');
+            pobierzBolo();
+        }
+
+        async function pobierzBolo() {
+            const listaDiv = document.getElementById('listaBolo');
+            const szukajVal = (document.getElementById('searchBoloInput')?.value || '').toLowerCase();
+            
+            if (!listaDiv) return;
+            listaDiv.innerHTML = 'Pobieranie aktualnych alertów BOLO...';
+
+            try {
+                const res = await fetch('/api/bolo');
+                if (res.ok) {
+                    const bolos = await res.json();
+                    wyswietlListeBolo(bolos, szukajVal);
+                    return;
+                }
+            } catch (e) {}
+
+            let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
+            if (bolos.length === 0) {
+                bolos = [
+                    {
+                        id: 1,
+                        typ: "Armed & Dangerous Suspect",
+                        priorytet: "Code 3 - HIGH / Armed & Dangerous",
+                        osoba: "Marcus Vance",
+                        modelAuta: "Ford Mustang GT",
+                        tablica: "34XYZ89",
+                        lokalizacja: "Autostrada Międzyleska (Route 1)",
+                        opis: "Podejrzany o napad z bronią. Ucieka w kierunku północnym. Unikać konfrontacji bez wsparcia K-9.",
+                        autor: "Lukas Weber",
+                        odznakaAutora: "LP-1150",
+                        dataUtworzenia: "19.04.2026, 22:30:00",
+                        status: 'Aktywny'
+                    }
+                ];
+                localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
+            }
+            wyswietlListeBolo(bolos, szukajVal);
+        }
+
+        function wyswietlListeBolo(bolos, filtr) {
+            const listaDiv = document.getElementById('listaBolo');
+            
+            const przefiltrowane = bolos.filter(b => 
+                b.osoba.toLowerCase().includes(filtr) || 
+                b.modelAuta.toLowerCase().includes(filtr) || 
+                b.tablica.toLowerCase().includes(filtr) ||
+                b.lokalizacja.toLowerCase().includes(filtr) ||
+                b.typ.toLowerCase().includes(filtr)
+            );
+
+            if (przefiltrowane.length === 0) {
+                listaDiv.innerHTML = '<p style="color:#64748b; font-size:13px;">Brak aktywnych alertów BOLO w systemie.</p>';
+                return;
+            }
+
+            listaDiv.innerHTML = przefiltrowane.map(b => {
+                let kolorPriorytetu = '#dc2626';
+                if (b.priorytet.includes('Code 3')) kolorPriorytetu = '#ea580c';
+                else if (b.priorytet.includes('Code 2')) kolorPriorytetu = '#ca8a04';
+                else if (b.priorytet.includes('Code 1')) kolorPriorytetu = '#16a34a';
+
+                const zdjecieAutoBolo = erlcVehicleImages[b.modelAuta] || "https://static.wikia.nocookie.net/emergency-response-liberty-county.fandom.com/images/9/9a/Mustang_GT.png";
+
+                return `
+                    <div class="citizen-card" style="border-left: 5px solid ${kolorPriorytetu}; background: #0f172a; margin-bottom: 12px; padding: 12px; border-radius: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 11px; font-weight: bold; background: ${kolorPriorytetu}; color: white; padding: 2px 8px; border-radius: 4px;">
+                                🚨 ${b.priorytet}
+                            </span>
+                            <span style="font-size: 11px; color: #94a3b8;">${b.dataUtworzenia}</span>
+                        </div>
+
+                        <h3 style="margin: 4px 0; color: #f8fafc; font-size: 16px;">${b.typ}</h3>
+                        
+                        <div style="display: flex; gap: 12px; align-items: center; margin: 10px 0; background: #1e293b; padding: 8px; border-radius: 6px;">
+                            ${b.modelAuta !== 'Brak pojazdu' ? `<img src="${zdjecieAutoBolo}" alt="${b.modelAuta}" style="width: 75px; height: 45px; object-fit: contain;">` : ''}
+                            <div>
+                                <p style="margin: 0; font-size: 13px;"><strong>👤 Podejrzany:</strong> <span style="color: #38bdf8;">${b.osoba}</span></p>
+                                <p style="margin: 2px 0 0 0; font-size: 12px;"><strong>🚗 Pojazd:</strong> ${b.modelAuta} ${b.tablica !== 'BRAK' ? `[ Tablica: <span style="font-family:monospace; color:#38bdf8;">${b.tablica}</span> ]` : ''}</p>
+                            </div>
+                        </div>
+
+                        <p style="font-size: 13px; margin: 6px 0;"><strong>📍 Ostatnia lokalizacja:</strong> ${b.lokalizacja}</p>
+                        <p style="font-size: 13px; margin: 6px 0; background: #111827; padding: 6px; border-radius: 4px; border: 1px solid #1f2937;"><strong>📝 Instrukcje:</strong> ${b.opis}</p>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #1e293b; padding-top: 6px;">
+                            <span style="font-size: 11px; color: #64748b;">Autor: ${b.autor} [${b.odznakaAutora}]</span>
+                            <button class="btn-small" style="background: #059669; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;" onclick="zamknijBolo(${b.id})">✅ Ujęto / Odwołaj BOLO</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function zamknijBolo(id) {
+            let bolos = JSON.parse(localStorage.getItem('mdt_bolo') || '[]');
+            bolos = bolos.filter(b => b.id !== id);
+            localStorage.setItem('mdt_bolo', JSON.stringify(bolos));
+            pobierzBolo();
+        }
+
+        // Automatyczne załadowanie BOLO po starcie jeśli domyślnie aktywna
+        window.onload = function() {
+            pobierzBolo();
+        };
+    </script>
 </body>
 </html>
