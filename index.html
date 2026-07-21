@@ -135,7 +135,7 @@
 
                 <main>
                     <!-- DASHBOARD -->
-                    <section id="tab-dashboard" class="tab-pane">
+                    <section id="tab-dashboard" class="tab-pane active">
                         <h2>Panel główny</h2>
                         <p class="subtitle" id="dashboardWelcome">Witaj, Lukas Weber – LAPD Sergeant</p>
                         
@@ -687,7 +687,7 @@
             isAdmin: false
         };
 
-        // Główny publiczny węzeł synchronizacji sieciowej (Baza w chmurze z otwartym protokołem SSE)
+        // Stabilny endpoint synchronizacji chmurowej w czasie rzeczywistym
         const CLOUD_SYNC_ENDPOINT = "https://la-mdt-sync-default-rtdb.europe-west1.firebasedatabase.app/mdt_database_v2.json";
         let isSaving = false;
 
@@ -701,46 +701,16 @@
             return true;
         }
 
-        // --- SILNIK SYNCHRONIZACJI W CZASIE RZECZYWISTYM (REAL-TIME WEBSOCKET/SSE MULTI-IP) ---
+        // --- SILNIK SYNCHRONIZACJI W CZASIE RZECZYWISTYM ---
         function inicjalizujChmureLive() {
-            // Pierwsze wczytanie przy uruchomieniu
             pobierzZChmury();
 
-            // Uruchomienie połączenia typu Server-Sent Events (push z chmury do każdego połączonego komputera na świecie)
-            try {
-                const eventSource = new EventSource(CLOUD_SYNC_ENDPOINT);
-                
-                eventSource.addEventListener('put', function(event) {
-                    if (isSaving) return; // Pomijaj własny zapis
-                    try {
-                        const parsed = JSON.parse(event.data);
-                        if (parsed && parsed.path === '/') {
-                            if (parsed.data && zweryfikujStrukture(parsed.data)) {
-                                bazyDanych = parsed.data;
-                                localStorage.setItem('la_mdt_bazy', JSON.stringify(bazyDanych));
-                                odswiezWszystkieWidoki();
-                                ustawStatusSieci(true);
-                            }
-                        } else {
-                            // Jeśli zmiana dotyczyła konkretnego pola, pobierz świeżą bazę
-                            pobierzZChmury();
-                        }
-                    } catch(err) {
-                        console.error("Błąd Live Stream:", err);
-                    }
-                });
-
-                eventSource.onerror = function() {
-                    ustawStatusSieci(false);
-                };
-            } catch(e) {
-                console.warn("Przeglądarka nie obsługuje SSE, używam szybkiego odświeżania:", e);
-            }
-
-            // Dodatkowe, zapasowe odświeżanie w tle co 3 sekundy na przypadek przerwania połączenia
+            // Bezpieczny, wysokowydajny interwał synchronizacji zapobiegający problemom nagłówków CORS/SSE
             setInterval(() => {
-                if (!isSaving) pobierzZChmury();
-            }, 3000);
+                if (!isSaving) {
+                    pobierzZChmury();
+                }
+            }, 2500);
         }
 
         // Pobieranie danych z serwera chmury
@@ -755,14 +725,16 @@
                         odswiezWszystkieWidoki();
                     }
                     ustawStatusSieci(true);
+                } else {
+                    ustawStatusSieci(false);
                 }
             } catch(err) {
-                console.warn("Błąd połącznia z chmurą:", err);
+                console.warn("Błąd połączenia z chmurą:", err);
                 ustawStatusSieci(false);
             }
         }
 
-        // Zapisywanie danych do chmury i natychmiastowe wysyłanie ich do innych komputerów
+        // Zapisywanie danych do chmury
         async function zapiszDoStorage() {
             isSaving = true;
             zweryfikujStrukture(bazyDanych);
@@ -777,12 +749,14 @@
                 });
                 if (res.ok) {
                     ustawStatusSieci(true);
+                } else {
+                    ustawStatusSieci(false);
                 }
             } catch(e) {
                 console.error("Błąd wysyłania do chmury:", e);
                 ustawStatusSieci(false);
             } finally {
-                setTimeout(() => { isSaving = false; }, 500);
+                setTimeout(() => { isSaving = false; }, 400);
             }
         }
 
