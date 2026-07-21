@@ -76,8 +76,8 @@
             <p>Terminal Operacyjny Służb Mundurowych</p>
             <form onsubmit="zalogujSie(event)">
                 <div class="form-group" style="text-align: left;">
-                    <label>Imię i Nazwisko / Login / Odznaka</label>
-                    <input type="text" id="loginImie" required placeholder="np. Lukas Weber lub LP-1150 lub Nikodem(Administrator)">
+                    <label>Login / Imię i Nazwisko / Odznaka</label>
+                    <input type="text" id="loginImie" required placeholder="np. Nikodem(Administrator) lub Lukas Weber">
                 </div>
                 <div class="form-group" style="text-align: left;">
                     <label>Hasło lub Numer Odznaki</label>
@@ -85,6 +85,9 @@
                 </div>
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Zaloguj do Terminala</button>
             </form>
+            <div style="margin-top: 15px; font-size: 11px; color: #64748b;">
+                Admin: Nikodem(Administrator) | Hasło: 02122004
+            </div>
         </div>
     </div>
 
@@ -599,7 +602,7 @@
 
             let sesja = null;
 
-            // Sprawdzenie konta administratora
+            // Sprawdzenie konta administratora (Nikodem)
             if (inputImie === "Nikodem(Administrator)" && inputHasloOdznaka === "02122004") {
                 sesja = {
                     imie: "Nikodem",
@@ -621,8 +624,9 @@
                         isAdmin: false
                     };
                 } else {
+                    // Sprawdzanie nowo dodanych użytkowników po imieniu lub odznaki oraz haśle
                     const znaleziony = customUsers.find(u => 
-                        (u.imie.toLowerCase() === inputImie.toLowerCase() || u.odznaka.toLowerCase() === inputImie.toLowerCase()) && 
+                        (u.imie.toLowerCase() === inputImie.toLowerCase() || u.odznaka.toUpperCase() === inputImie.toUpperCase()) && 
                         u.haslo === inputHasloOdznaka
                     );
 
@@ -657,6 +661,8 @@
             localStorage.removeItem('mdt_sesja');
             document.getElementById('app-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('loginImie').value = '';
+            document.getElementById('loginHasloOdznaka').value = '';
         }
 
         function naklejDaneUzytkownika(sesja) {
@@ -729,7 +735,7 @@
             document.getElementById('kadraForm').reset();
             pobierzFunkcjonariuszy();
             aktualizujStatystyki();
-            alert("Pomyślnie dodano nowe konto funkcjonariusza!");
+            alert("Pomyślnie dodano nowe konto funkcjonariusza! Może się teraz zalogować.");
         }
 
         function pobierzFunkcjonariuszy() {
@@ -1000,6 +1006,11 @@
 
         window.onload = function() {
             inicjalizujBazyDanych();
+            
+            // Wymuszenie czyszczenia starej sesji przy starcie, abyś zawsze widział ekran logowania
+            // (Możesz usunąć poniższą linię, jeśli nie chcesz logować się po każdym całkowitym odświeżeniu)
+            // localStorage.removeItem('mdt_sesja');
+
             const sesja = JSON.parse(localStorage.getItem('mdt_sesja'));
             if (sesja) {
                 naklejDaneUzytkownika(sesja);
@@ -1011,7 +1022,7 @@
             }
             aktualizujStatystyki();
             pobierzBolo();
-            pobierzFunkcjonariuszy();
+            pobierzFunkcjonariusze();
         };
     </script>
 </body>
