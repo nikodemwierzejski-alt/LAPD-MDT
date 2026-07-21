@@ -716,7 +716,7 @@
         // Pobieranie danych z serwera chmury
         async function pobierzZChmury() {
             try {
-                const res = await fetch(CLOUD_SYNC_ENDPOINT, { cache: 'no-store' });
+                const CLOUD_SYNC_ENDPOINT = "/api/sync";
                 if (res.ok) {
                     const cloudData = await res.json();
                     if (cloudData && zweryfikujStrukture(cloudData)) {
