@@ -54,6 +54,9 @@
         .btn-primary:hover { background: #0369a1; }
         .results-container { margin-top: 15px; max-height: 520px; overflow-y: auto; padding-right: 5px; }
         
+        .citizen-card, .vehicle-card, .report-card, .bolo-card { background: #111827; border: 1px solid #1f2937; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
+        .btn-small { border: none; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        
         .stats-grid-dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .stat-card-dash { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 8px; border-left: 4px solid #0284c7; position: relative; }
         .stat-card-dash h4 { font-size: 11px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
@@ -85,9 +88,9 @@
                 <button type="submit" class="btn-primary" style="margin-top: 10px;">Zaloguj do Terminala</button>
             </form>
             <div style="margin-top: 20px; font-size: 11px; color: #64748b; line-height: 1.4;">
-                Wskazówka (SQL DB):<br>
+                Konta z bazy SQL:<br>
                 • Nikodem (Odznaka: 43, Hasło: 02122004)<br>
-                • Komendant (Odznaka: 99, Hasło: lspd)
+                • Komendant Główny (Odznaka: 99, Hasło: lspd)
             </div>
         </div>
     </div>
@@ -114,7 +117,6 @@
                     <li onclick="zmienZakladke('widgets')" id="nav-widgets">🧩 Widgets</li>
                     <li onclick="zmienZakladke('erlclive')" id="nav-erlclive">🎮 ERLC Live</li>
                     <li onclick="zmienZakladke('logs')" id="nav-logs">📜 Logs</li>
-                    <!-- Zakładka dostępna dynamicznie dla administratorów -->
                     <li onclick="zmienZakladke('kadra')" id="nav-kadra" style="display: none; border-left: 3px solid #38bdf8;">👮 Zarządzanie Kadrą</li>
                     <li onclick="zmienZakladke('admin')" id="nav-admin">⚙️ Admin</li>
                 </ul>
@@ -159,7 +161,7 @@
                             </div>
                             <div class="stat-card-dash" style="border-left-color: #ef4444;">
                                 <h4>AKTYWNE BOLOS</h4>
-                                <div class="val">0</div>
+                                <div class="val" id="statBoloDash">0</div>
                                 <div class="subval">Ogólnokrajowe alerty</div>
                                 <div class="dash-icon">🚨</div>
                             </div>
@@ -178,7 +180,7 @@
                             </div>
                             <div class="panel-box">
                                 <h3>🚨 ALERTY BOLO</h3>
-                                <p style="color: #64748b; font-size: 13px; padding: 10px 0;">Brak aktywnych BOLO</p>
+                                <div id="dashboardBoloList" style="color: #64748b; font-size: 13px; padding: 5px 0;">Brak aktywnych BOLO</div>
                             </div>
                         </div>
                     </section>
@@ -195,21 +197,42 @@
                     <!-- OBYWATELE -->
                     <section id="tab-citizens" class="tab-pane">
                         <h2>Baza Obywateli</h2>
-                        <p class="subtitle">Ewidencja ludności oraz kartoteki kryminalne.</p>
+                        <p class="subtitle">Ewidencja ludności, kartoteki kryminalne oraz statusy poszukiwanych.</p>
+                        
                         <div class="citizens-grid">
                             <div class="panel-box">
-                                <h3>➕ Dodaj Obywatela</h3>
-                                <form onsubmit="event.preventDefault(); alert('Dodano obywatela pomyślnie!');">
-                                    <div class="form-group"><label>Imię i Nazwisko</label><input type="text" required placeholder="np. John Smith"></div>
-                                    <div class="form-group"><label>Wiek / Data Ur.</label><input type="text" required placeholder="np. 25 lat"></div>
-                                    <div class="form-group"><label>Status</label><select><option>Czysty (Clean)</option><option>Poszukiwany</option></select></div>
-                                    <button type="submit" class="btn-primary">Zapisz</button>
+                                <h3>➕ Dodaj / Aktualizuj Obywatela</h3>
+                                <form id="obywatelForm" onsubmit="zapiszObywatela(event)">
+                                    <div class="form-group">
+                                        <label>Imię i Nazwisko</label>
+                                        <input type="text" id="obywatelImie" required placeholder="np. John Smith">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Data Urodzenia / Wiek</label>
+                                        <input type="text" id="obywatelWiek" required placeholder="np. 25 lat (1999)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Status Prawny / Kartoteka</label>
+                                        <select id="obywatelStatus">
+                                            <option value="Czysty (Clean)">Czysty (Clean)</option>
+                                            <option value="Poszukiwany (Warrant)">Poszukiwany (Warrant)</option>
+                                            <option value="Warunkowe Zwolnienie">Warunkowe Zwolnienie</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Notatki / Wyroki / Opis</label>
+                                        <textarea id="obywatelNotatki" placeholder="Wpisz historię kryminalną lub uwagi..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn-primary">Zapisz Kartotekę Obywatela</button>
                                 </form>
                             </div>
+
                             <div class="panel-box">
-                                <h3>🔍 Wyszukiwarka</h3>
-                                <div class="form-group"><input type="text" placeholder="Szukaj obywatela..."></div>
-                                <div class="results-container" style="color: #64748b; font-size: 13px;">Brak wyników wyszukiwania.</div>
+                                <h3>🔍 Wyszukiwarka Mieszkańców</h3>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <input type="text" id="searchObywatelInput" placeholder="Szukaj po imieniu i nazwisku..." oninput="pobierzObywateli()">
+                                </div>
+                                <div id="listaObywateli" class="results-container" style="color: #64748b; font-size: 13px;">Wpisz frazę, aby wyszukać obywatela...</div>
                             </div>
                         </div>
                     </section>
@@ -217,18 +240,179 @@
                     <!-- POJAZDY -->
                     <section id="tab-vehicles" class="tab-pane">
                         <h2>Baza Pojazdów</h2>
-                        <p class="subtitle">Rejestr pojazdów stanowych i tablic.</p>
-                        <div class="panel-box"><p style="color: #94a3b8;">Moduł pojazdów aktywny.</p></div>
+                        <p class="subtitle">Rejestr pojazdów stanowych, tablice rejestracyjne oraz właściciele.</p>
+                        
+                        <div class="citizens-grid">
+                            <div class="panel-box">
+                                <h3>🚗 Rejestracja Pojazdu</h3>
+                                <form id="pojazdForm" onsubmit="zapiszPojazd(event)">
+                                    <div class="form-group">
+                                        <label>Model Pojazdu ERLC</label>
+                                        <input type="text" id="pojazdModel" required placeholder="np. Ford Mustang GT">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Tablica Rejestracyjna</label>
+                                        <input type="text" id="pojazdTablica" required placeholder="np. 34XYZ89" style="text-transform: uppercase;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Właściciel (Imię i Nazwisko)</label>
+                                        <input type="text" id="pojazdWlasciciel" required placeholder="np. John Smith">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Status Rejestracji</label>
+                                        <select id="pojazdStatus">
+                                            <option value="Zarejestrowany / Legalny">Zarejestrowany / Legalny</option>
+                                            <option value="Skradziony / Poszukiwany">Skradziony / Poszukiwany</option>
+                                            <option value="Brak ubezpieczenia">Brak ubezpieczenia</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn-primary">Dodaj Pojazd do Bazy</button>
+                                </form>
+                            </div>
+
+                            <div class="panel-box">
+                                <h3>🔎 Sprawdź Tablicę Rejestracyjną</h3>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <input type="text" id="searchPojazdInput" placeholder="Wpisz numer tablicy lub model..." oninput="pobierzPojazdy()">
+                                </div>
+                                <div id="listaPojazdow" class="results-container" style="color: #64748b; font-size: 13px;">Brak pojazdów w bazie.</div>
+                            </div>
+                        </div>
                     </section>
 
                     <!-- CALLS -->
-                    <section id="tab-calls" class="tab-pane"><h2>Zgłoszenia 911</h2><div class="panel-box"><p style="color: #94a3b8;">Brak zgłoszeń.</p></div></section>
+                    <section id="tab-calls" class="tab-pane">
+                        <h2>Zgłoszenia 911 / Calls</h2>
+                        <p class="subtitle">Aktywne wezwania obywateli i zgłoszenia dyspozytorki.</p>
+                        <div class="panel-box">
+                            <h3>📞 Rejestr Zgłoszeń</h3>
+                            <p style="color: #94a3b8; font-size: 13px;">Brak nowych zgłoszeń w kolejce.</p>
+                        </div>
+                    </section>
 
                     <!-- RAPORTY -->
-                    <section id="tab-reports" class="tab-pane"><h2>Raporty</h2><div class="panel-box"><p style="color: #94a3b8;">Brak raportów.</p></div></section>
+                    <section id="tab-reports" class="tab-pane">
+                        <h2>Raporty Operacyjne</h2>
+                        <p class="subtitle">Ewidencja incydentów, protokołów z zatrzymań oraz notatek służbowych.</p>
+                        
+                        <div class="citizens-grid">
+                            <div class="panel-box">
+                                <h3>📝 Sporządź Nowy Raport</h3>
+                                <form id="raportForm" onsubmit="zapiszRaport(event)">
+                                    <div class="form-group">
+                                        <label>Tytuł / Rodzaj Incydentu</label>
+                                        <input type="text" id="raportTytul" required placeholder="np. Napad z bronią w ręku na sklep">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Funkcjonariusz Sporządzający</label>
+                                        <input type="text" id="raportAutor" required value="-">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Treść i Przebieg Zdarzenia</label>
+                                        <textarea id="raportTresc" required placeholder="Opisz dokładnie przebieg interwencji..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn-primary">Zatwierdź i Archiwizuj Raport</button>
+                                </form>
+                            </div>
+
+                            <div class="panel-box">
+                                <h3>📁 Archiwum Raportów</h3>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <input type="text" id="searchRaportInput" placeholder="Szukaj w raportach..." oninput="pobierzRaporty()">
+                                </div>
+                                <div id="listaRaportow" class="results-container" style="color: #64748b; font-size: 13px;">Brak sporządzonych raportów.</div>
+                            </div>
+                        </div>
+                    </section>
 
                     <!-- BOLO -->
-                    <section id="tab-bolo" class="tab-pane"><h2>Alerty BOLO</h2><div class="panel-box"><p style="color: #94a3b8;">Brak alertów.</p></div></section>
+                    <section id="tab-bolo" class="tab-pane">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <h2>System Alertywny BOLO (Be On the Lookout)</h2>
+                                <p class="subtitle" style="margin: 0;">Ogólnokrajowe, stanowe i lokalne alerty operacyjne dla jednostek LSPD</p>
+                            </div>
+                            <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); padding: 8px 15px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                                <span style="height: 10px; width: 10px; background-color: #ef4444; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
+                                <span style="font-size: 12px; font-weight: bold; color: #ef4444; letter-spacing: 0.5px;">SYSTEM ALERTOWY AKTYWNY</span>
+                            </div>
+                        </div>
+                        
+                        <div class="citizens-grid">
+                            <div class="panel-box" style="border-left: 4px solid #ef4444;">
+                                <h3>🚨 Generowanie Nowego Alertu BOLO</h3>
+                                <form id="dodajBoloForm" onsubmit="utworzBolo(event)">
+                                    <div class="form-group">
+                                        <label>Typ Alerty BOLO</label>
+                                        <select id="boloTyp" required>
+                                            <option value="Felony Vehicle / Stolen">🚗 Pojazd Poszukiwany / Skradziony (Felony Vehicle)</option>
+                                            <option value="Armed & Dangerous Suspect">👤 Uzbrojony i Niebezpieczny Poszukiwany (Armed Suspect)</option>
+                                            <option value="Missing Person (SILVER / AMBER)">👶 Zaginiona Osoba (Amber / Silver Alert)</option>
+                                            <option value="Prison Escapee">⛓️ Zbieg z Więzienia (Prison Escapee)</option>
+                                            <option value="Terrorist Threat / Active Shooter">⚠️ Zagrożenie Terrorystyczne / Aktywny Strzelec</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Priorytet Zagrożenia (Threat Level)</label>
+                                        <select id="boloPriorytet" required>
+                                            <option value="Code 4 - CRITICAL / SHOOT ON SIGHT">🔴 KOD 4: KRYTYCZNY / Strzelać w ostateczności</option>
+                                            <option value="Code 3 - HIGH / Armed & Dangerous">🟠 KOD 3: WYSOKI / Uzbrojony i Niebezpieczny</option>
+                                            <option value="Code 2 - MODERATE / Felony Warrant">🟡 KOD 2: ŚREDNI / Nakaz aresztowania</option>
+                                            <option value="Code 1 - LOW / Informational">🟢 KOD 1: NISKI / Informacyjny / Obserwacja</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Dotyczy (Podejrzany / Imię i Nazwisko)</label>
+                                        <input type="text" id="boloOsoba" required placeholder="np. John Doe lub Nieznany">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Pojazd z gry ERLC (Model / Marka)</label>
+                                        <select id="boloModelAuta">
+                                            <option value="Brak pojazdu">Brak pojazdu (Tylko pieszy / inna kategoria)</option>
+                                            <option value="Aston Martin Vantage">Aston Martin Vantage</option>
+                                            <option value="Audi R8">Audi R8</option>
+                                            <option value="BMW M3 E46">BMW M3 E46</option>
+                                            <option value="BMW M4">BMW M4</option>
+                                            <option value="Chevrolet Camaro ZL1">Chevrolet Camaro ZL1</option>
+                                            <option value="Chevrolet Corvette C8">Chevrolet Corvette C8</option>
+                                            <option value="Dodge Charger SRT">Dodge Charger SRT</option>
+                                            <option value="Ford Mustang GT">Ford Mustang GT</option>
+                                            <option value="Ford F-150 Raptor">Ford F-150 Raptor</option>
+                                            <option value="Police Ford Explorer">Police Ford Explorer</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Tablica Rejestracyjna Pojazdu</label>
+                                        <input type="text" id="boloTablica" placeholder="np. 34XYZ89 (lub BRAK)" style="text-transform: uppercase;">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Ostatnia Znana Lokalizacja (Last Seen)</label>
+                                        <input type="text" id="boloLokalizacja" required placeholder="np. Główna Autostrada / Bank">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Szczegółowy Opis Taktyczny</label>
+                                        <textarea id="boloOpis" required placeholder="Opisz rysopis, ubiór, kierunek ucieczki..."></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #dc2626, #991b1b);">Opublikuj Ogólnokrajowy Alert BOLO</button>
+                                </form>
+                            </div>
+
+                            <div class="panel-box">
+                                <h3>📋 Aktywne Alerty BOLO w Sieci</h3>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <input type="text" id="searchBoloInput" placeholder="Szukaj w alertach..." oninput="pobierzBolo()">
+                                </div>
+                                <div id="listaBolo" class="results-container" style="color: #64748b; font-size: 13px;">Brak aktywnych alertów BOLO.</div>
+                            </div>
+                        </div>
+                    </section>
 
                     <!-- WARRANTS -->
                     <section id="tab-warrants" class="tab-pane"><h2>Nakazy</h2><div class="panel-box"><p style="color: #94a3b8;">Brak nakazów.</p></div></section>
@@ -244,7 +428,7 @@
                             <h3>🪪 LAPD / SOG BADGE</h3>
                             <p style="font-size: 18px; color: #38bdf8; margin: 15px 0;" id="badgeImieText">-</p>
                             <p style="font-size: 14px; color: #94a3b8;" id="badgeOdznakaText">Odznaka: -</p>
-                            <p style="font-size: 13px; color: #64748b; margin-top: 10px;" id="badgeStopienText">Stopień: -</p>
+                            <p style="font-size: 13px; color: #64748b; margin-top: 10px;" id="badgeStopienText">Rola: -</p>
                         </div>
                     </section>
 
@@ -279,7 +463,7 @@
     </div>
 
     <script>
-        // Baza użytkowników odwzorowana bezpośrednio ze zrzutu ekranu SQL
+        // Baza użytkowników ze zrzutu ekranu SQL
         const bazyDanychUzytkownicy = [
             { id: 1, odznaka: "99", stopien_nazwisko: "Komendant Główny", haslo: "lspd", rola: "użytkownik" },
             { id: 4, odznaka: "administrator", stopien_nazwisko: "Administrator Systemu", haslo: "admin123", rola: "użytkownik" },
@@ -291,13 +475,18 @@
 
         let aktualnyUzytkownik = null;
 
+        // Pamięć lokalna sesji dla Obywateli, Pojazdów, Raportów i BOLO
+        let dbObywatele = [];
+        let dbPojazdy = [];
+        let dbRaporty = [];
+        let dbBolo = [];
+
         function zalogujSie(event) {
             event.preventDefault();
             const inputOdznaka = document.getElementById('loginOdznaka').value.trim();
             const inputHaslo = document.getElementById('loginHaslo').value.trim();
             const errorMsg = document.getElementById('loginErrorMsg');
 
-            // Wyszukiwanie użytkownika pasującego do danych z bazy SQL
             const znaleziony = bazyDanychUzytkownicy.find(u => 
                 (u.odznaka.toLowerCase() === inputOdznaka.toLowerCase() || u.stopien_nazwisko.toLowerCase() === inputOdznaka.toLowerCase()) && 
                 u.haslo === inputHaslo
@@ -307,25 +496,22 @@
                 aktualnyUzytkownik = znaleziony;
                 errorMsg.style.display = 'none';
 
-                // Uzupełnienie danych w interfejsie MDT
                 document.getElementById('headerUserImie').innerText = znaleziony.stopien_nazwisko;
                 document.getElementById('headerUserOdznaka').innerText = "ID: " + znaleziony.odznaka;
                 document.getElementById('headerUserStopien').innerText = znaleziony.rola === 'administrator' ? "Administrator / SOG" : "Funkcjonariusz LSPD";
                 document.getElementById('dashboardWelcome').innerText = `Witaj, ${znaleziony.stopien_nazwisko} – System MDT v2.0`;
+                document.getElementById('raportAutor').value = `${znaleziony.stopien_nazwisko} [ID: ${znaleziony.odznaka}]`;
 
-                // Dane w zakładce odznaki
                 document.getElementById('badgeImieText').innerText = znaleziony.stopien_nazwisko;
                 document.getElementById('badgeOdznakaText').innerText = "Identyfikator: " + znaleziony.odznaka;
-                document.getElementById('badgeStopienText').innerText = "Rola w systemie: " + znaleziony.rola;
+                document.getElementById('badgeStopienText').innerText = "Rola: " + znaleziony.rola;
 
-                // Sprawdzanie uprawnień administratora (np. dla Nikodema, Bartka)
                 if (znaleziony.rola === 'administrator' || znaleziony.odznaka.toLowerCase() === 'nikodem' || znaleziony.odznaka === '43') {
                     document.getElementById('nav-kadra').style.display = 'flex';
                 } else {
                     document.getElementById('nav-kadra').style.display = 'none';
                 }
 
-                // Przełączenie ekranów
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-screen').style.display = 'block';
             } else {
@@ -352,7 +538,160 @@
             if(nav) nav.classList.add('active');
         }
 
-        // Zegarek systemowy w czasie rzeczywistym
+        // --- OBSŁUGA OBYWATELI ---
+        function zapiszObywatela(e) {
+            e.preventDefault();
+            const imie = document.getElementById('obywatelImie').value;
+            const wiek = document.getElementById('obywatelWiek').value;
+            const status = document.getElementById('obywatelStatus').value;
+            const notatki = document.getElementById('obywatelNotatki').value;
+
+            dbObywatele.push({ imie, wiek, status, notatki });
+            alert(`Obywatel ${imie} został pomyślnie dodany do bazy!`);
+            document.getElementById('obywatelForm').reset();
+            pobierzObywateli();
+        }
+
+        function pobierzObywateli() {
+            const query = document.getElementById('searchObywatelInput').value.toLowerCase();
+            const container = document.getElementById('listaObywateli');
+            const wyniki = dbObywatele.filter(o => o.imie.toLowerCase().includes(query));
+
+            if (wyniki.length === 0) {
+                container.innerHTML = '<p style="color: #64748b;">Brak pasujących obywateli w bazie.</p>';
+                return;
+            }
+
+            container.innerHTML = wyniki.map(o => `
+                <div class="citizen-card">
+                    <strong style="color: #38bdf8; font-size: 14px;">${o.imie}</strong> (${o.wiek})<br>
+                    <span style="font-size: 12px; color: ${o.status.includes('Poszukiwany') ? '#ef4444' : '#22c55e'}; font-weight: bold;">Status: ${o.status}</span><br>
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Notatki: ${o.notatki || 'Brak uwag'}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- OBSŁUGA POJAZDÓW ---
+        function zapiszPojazd(e) {
+            e.preventDefault();
+            const model = document.getElementById('pojazdModel').value;
+            const tablica = document.getElementById('pojazdTablica').value.toUpperCase();
+            const wlasciciel = document.getElementById('pojazdWlasciciel').value;
+            const status = document.getElementById('pojazdStatus').value;
+
+            dbPojazdy.push({ model, tablica, wlasciciel, status });
+            alert(`Pojazd [${tablica}] został zarejestrowany!`);
+            document.getElementById('pojazdForm').reset();
+            pobierzPojazdy();
+        }
+
+        function pobierzPojazdy() {
+            const query = document.getElementById('searchPojazdInput').value.toLowerCase();
+            const container = document.getElementById('listaPojazdow');
+            const wyniki = dbPojazdy.filter(p => p.tablica.toLowerCase().includes(query) || p.model.toLowerCase().includes(query));
+
+            if (wyniki.length === 0) {
+                container.innerHTML = '<p style="color: #64748b;">Brak pojazdów spełniających kryteria.</p>';
+                return;
+            }
+
+            container.innerHTML = wyniki.map(p => `
+                <div class="vehicle-card">
+                    <strong style="color: #38bdf8;">${p.model}</strong> [Tablica: <span style="color: #eab308;">${p.tablica}</span>]<br>
+                    <span style="font-size: 12px; color: #94a3b8;">Właściciel: ${p.wlasciciel}</span><br>
+                    <span style="font-size: 11px; color: ${p.status.includes('Skradziony') ? '#ef4444' : '#22c55e'}; font-weight: bold;">${p.status}</span>
+                </div>
+            `).join('');
+        }
+
+        // --- OBSŁUGA RAPORTÓW ---
+        function zapiszRaport(e) {
+            e.preventDefault();
+            const tytul = document.getElementById('raportTytul').value;
+            const autor = document.getElementById('raportAutor').value;
+            const tresc = document.getElementById('raportTresc').value;
+            const data = new Date().toLocaleTimeString();
+
+            dbRaporty.push({ tytul, autor, tresc, data });
+            alert('Raport został pomyślnie zarchiwizowany!');
+            document.getElementById('raportTytul').value = '';
+            document.getElementById('raportTresc').value = '';
+            pobierzRaporty();
+        }
+
+        function pobierzRaporty() {
+            const query = document.getElementById('searchRaportInput').value.toLowerCase();
+            const container = document.getElementById('listaRaportow');
+            const wyniki = dbRaporty.filter(r => r.tytul.toLowerCase().includes(query) || r.autor.toLowerCase().includes(query));
+
+            if (wyniki.length === 0) {
+                container.innerHTML = '<p style="color: #64748b;">Brak raportów w archiwum.</p>';
+                return;
+            }
+
+            container.innerHTML = wyniki.map(r => `
+                <div class="report-card">
+                    <strong style="color: #38bdf8;">${r.tytul}</strong><br>
+                    <span style="font-size: 11px; color: #64748b;">Autor: ${r.autor} | ${r.data}</span>
+                    <p style="font-size: 12px; color: #cbd5e1; margin-top: 6px;">${r.tresc}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- OBSŁUGA BOLO ---
+        function utworzBolo(e) {
+            e.preventDefault();
+            const typ = document.getElementById('boloTyp').value;
+            const priorytet = document.getElementById('boloPriorytet').value;
+            const osoba = document.getElementById('boloOsoba').value;
+            const modelAuta = document.getElementById('boloModelAuta').value;
+            const tablica = document.getElementById('boloTablica').value.toUpperCase() || 'BRAK';
+            const lokalizacja = document.getElementById('boloLokalizacja').value;
+            const opis = document.getElementById('boloOpis').value;
+
+            dbBolo.push({ typ, priorytet, osoba, modelAuta, tablica, lokalizacja, opis });
+            alert('Opublikowano ogólnokrajowy alert BOLO!');
+            document.getElementById('dodajBoloForm').reset();
+            pobierzBolo();
+        }
+
+        function pobierzBolo() {
+            const query = document.getElementById('searchBoloInput').value.toLowerCase();
+            const container = document.getElementById('listaBolo');
+            const dashContainer = document.getElementById('dashboardBoloList');
+            const statBoloDash = document.getElementById('statBoloDash');
+
+            statBoloDash.innerText = dbBolo.length;
+
+            if (dbBolo.length === 0) {
+                if(dashContainer) dashContainer.innerHTML = 'Brak aktywnych BOLO';
+                container.innerHTML = '<p style="color: #64748b;">Brak aktywnych alertów BOLO w sieci.</p>';
+                return;
+            }
+
+            if(dashContainer) {
+                dashContainer.innerHTML = dbBolo.map(b => `<div style="color: #ef4444; font-weight: bold; margin-bottom: 4px;">🚨 ${b.typ} (${b.osoba})</div>`).join('');
+            }
+
+            const wyniki = dbBolo.filter(b => b.osoba.toLowerCase().includes(query) || b.tablica.toLowerCase().includes(query) || b.typ.toLowerCase().includes(query));
+
+            if (wyniki.length === 0) {
+                container.innerHTML = '<p style="color: #64748b;">Brak alertów pasujących do zapytania.</p>';
+                return;
+            }
+
+            container.innerHTML = wyniki.map(b => `
+                <div class="bolo-card" style="border-left: 3px solid #ef4444;">
+                    <strong style="color: #ef4444;">🚨 ${b.typ}</strong><br>
+                    <span style="font-size: 12px; color: #f8fafc;">Priorytet: ${b.priorytet}</span><br>
+                    <span style="font-size: 12px; color: #38bdf8;">Podejrzany: ${b.osoba} | Pojazd: ${b.modelAuta} [${b.tablica}]</span><br>
+                    <span style="font-size: 11px; color: #eab308;">Ostatnio widziany: ${b.lokalizacja}</span>
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">${b.opis}</p>
+                </div>
+            `).join('');
+        }
+
+        // Zegarek systemowy
         setInterval(() => {
             const d = new Date();
             const timeStr = d.toTimeString().split(' ')[0];
